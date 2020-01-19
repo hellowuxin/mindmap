@@ -12,6 +12,7 @@
 </template>
 
 <script>
+// 移除键盘监听，通过鼠标操作思维导图
 import DataJSON from '../dataJSON'
 import * as d3 from 'd3'
 
@@ -583,7 +584,22 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
+.wrapper {
+  display: flex;
+  margin: 8px;
+  p {
+    margin: 0;
+  }
+}
+
+$fontColor: rgb(76, 85, 102);
+
+body {
+  color: $fontColor;
+  font-family: sans-serif;
+}
+
 .wrapper {
   display: flex;
   margin: 8px;
@@ -594,83 +610,83 @@ svg {
 }
 
 .mindmap {
-  background-color: #eeeef3;
+  background-color: rgb(238, 238, 243);
   flex: auto;
   height: 650px;
   margin-right: 8px;
-}
 
-.mindmap rect:not(.depth_0) {
-  fill: blue;
-  fill-opacity: 0;
-  stroke: blue;
-  stroke-opacity: 0;
-  stroke-width: 2;
-}
+  rect:not(.depth_0) {
+    fill: blue;
+    fill-opacity: 0;
+    stroke: blue;
+    stroke-opacity: 0;
+    stroke-width: 2;
+  }
 
-.mindmap rect.depth_0 {
-  fill: white;
-  stroke: #bec6f3;
-  stroke-opacity: 0;
-  stroke-width: 2;
-}
+  rect.depth_0 {
+    fill: white;
+    stroke: rgb(190, 198, 243);
+    stroke-opacity: 0;
+    stroke-width: 2;
+  }
 
-.mindmap path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-width: 4;
-}
+  path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 4;
+  }
 
-.mindmap #selectedMindnode > rect:not(.depth_0) {
-  fill-opacity: 1;
-  opacity: 0.2;
-  stroke-opacity: 1;
-}
+  #selectedMindnode > rect:not(.depth_0) {
+    fill-opacity: 1;
+    opacity: 0.2;
+    stroke-opacity: 1;
+  }
 
-.mindmap #selectedMindnode > rect.depth_0 {
-  stroke-opacity: 1;
-}
+  #selectedMindnode > rect.depth_0 {
+    stroke-opacity: 1;
+  }
 
-.mindmap #newParentNode > rect {
-  stroke-opacity: 0.2;
+  #newParentNode > rect {
+    stroke-opacity: 0.2;
+  }
 }
 
 .outline {
   height: 650px;
   margin-right: 8px;
   width: 200px;
-}
 
-.outline rect {
-  fill: #eeeef3;
-}
+  rect {
+    fill: rgb(238, 238, 243);
+  }
 
-.outline .outpath {
-  transform: translate(14px, 15px);
-}
+  .outpath {
+    transform: translate(14px, 15px);
 
-.outline .outpath path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-width: 1.5;
-}
+    path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-width: 1.5;
+    }
+  }
 
-.outline #selectedOutnode > rect {
-  fill: #ccd3fd;
+  #selectedOutnode > rect {
+    fill: rgb(204, 211, 253);
+  }
 }
 
 .tip {
-  background-color: #eeeef3;
+  background-color: rgb(238, 238, 243);
   height: 120px;
   width: 200px;
-}
 
-.tip text {
-  fill: #4c5566;
-}
+  text {
+    fill: $fontColor;
+  }
 
-.tip #hidden {
-  visibility: hidden;
+  #hidden {
+    visibility: hidden;
+  }
 }
 
 foreignObject {
