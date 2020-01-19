@@ -13,12 +13,14 @@
 
 <script>
 import DataJSON from '../dataJSON'
-import dataLearn from '../../public/learn.json'
 import * as d3 from 'd3'
 
 export default {
+  props: {
+    treedata: Object,
+  },
   data: () => ({
-    dataJSON: null,
+    dataJSON: Object,
     svgMindMap: Object,
     svgOutline: Object,
     gMindnode: Object,
@@ -562,7 +564,7 @@ export default {
   },
   mounted() {
     // 初始化
-    this.dataJSON = new DataJSON([dataLearn]);
+    this.dataJSON = new DataJSON([this.treedata]);
     this.dataJSON.addId();
 
     this.gHotkey = d3.select('g#hotkey');
@@ -671,11 +673,8 @@ svg {
   visibility: hidden;
 }
 
-/* stylelint-disable-next-line */
 foreignObject {
   padding: 5px;
 }
-
-/*# sourceMappingURL=mindmap.css.map */
 
 </style>
