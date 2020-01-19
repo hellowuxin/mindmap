@@ -29,7 +29,7 @@ export default {
     outline_g_path: Object,
     hidden_g: Object,
     hotkey_g: Object,
-    zoom: Function,
+    mindmapSvgZoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
   }),
   methods: {
@@ -41,16 +41,16 @@ export default {
       hotkey_g.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
       hotkey_g.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
     },
-    traverse(d, func) { // 深度遍历，func每个元素
+    depthTraverse(d, func) { // 深度遍历，func每个元素
       func(d);
       if (d.children) {
         for (let index = 0; index < d.children.length; index += 1) {
           const dChild = d.children[index];
-          this.traverse(dChild, func);
+          this.depthTraverse(dChild, func);
         }
       }
     },
-    zoomed() {
+    mindmapGZoom() {
       const { transform } = d3.event;
       this.mindmap_g.attr('transform', transform);
     },
@@ -555,10 +555,10 @@ export default {
     },
     init() {
       const { mindmap_data } = this;
-      const { drawHiddenText, drawOutline, drawMindnode, listenKeyDown, traverse } = this;
+      const { drawHiddenText, drawOutline, drawMindnode, listenKeyDown, depthTraverse } = this;
 
       document.addEventListener('keydown', listenKeyDown);
-      traverse(mindmap_data.data[0], drawHiddenText);
+      depthTraverse(mindmap_data.data[0], drawHiddenText);
       drawMindnode(mindmap_data);
       drawOutline(mindmap_data);
     }
@@ -572,12 +572,12 @@ export default {
     this.mindmap_svg = d3.select('svg.mindmap');
     this.outline_svg = d3.select('svg.outline');
     this.mindmap_g = d3.select('g#mindmapRoot');
-    this.zoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', this.zoomed);
+    this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', this.mindmapGZoom);
     this.outline_g_node = this.outline_svg.append('g');
     this.outline_g_path = this.outline_svg.append('g').attr('class', 'outpath');
     this.hidden_g = d3.select('g#hidden');
 
-    this.mindmap_svg.call(this.zoom).on('dblclick.zoom', null);
+    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
     this.drawHotkey();
     this.init();
   }
