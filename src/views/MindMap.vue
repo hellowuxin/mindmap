@@ -50,10 +50,6 @@ export default {
         }
       }
     },
-    mindmapGZoom() {
-      const { transform } = d3.event;
-      this.mindmap_g.attr('transform', transform);
-    },
     seleOutNode(id) {
       const gList = this.outline_g_node.selectAll('g');
       gList.filter((d) => d.data.id === id).attr('id', 'selectedOutnode');
@@ -568,14 +564,17 @@ export default {
     this.mindmap_data = new JSONData([this.data]);
     this.mindmap_data.addId();
 
-    this.hotkey_g = d3.select('g#hotkey');
     this.mindmap_svg = d3.select('svg.mindmap');
     this.outline_svg = d3.select('svg.outline');
     this.mindmap_g = d3.select('g#mindmapRoot');
-    this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', this.mindmapGZoom);
-    this.outline_g_node = this.outline_svg.append('g');
+    this.hotkey_g = d3.select('g#hotkey');
+    this.outline_g_node = this.outline_svg.append('g').attr('class', 'outnodes');
     this.outline_g_path = this.outline_svg.append('g').attr('class', 'outpath');
     this.hidden_g = d3.select('g#hidden');
+    this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', () => {
+      const { transform } = d3.event;
+      this.mindmap_g.attr('transform', transform);
+    });
 
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
     this.drawHotkey();
