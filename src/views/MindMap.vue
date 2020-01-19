@@ -2,7 +2,7 @@
   <div class="wrapper">
     <svg class="outline"></svg>
     <svg class="mindmap">
-      <g id="mindnode"></g>
+      <g id="mindmapRoot"></g>
     </svg>
     <svg class="tip">
       <g id="hotkey"></g>
@@ -13,33 +13,33 @@
 
 <script>
 // 移除键盘监听，通过鼠标操作思维导图
-import DataJSON from '../dataJSON'
+import JSONData from '../JSONData'
 import * as d3 from 'd3'
 
 export default {
   props: {
-    treedata: Object,
+    data: Object,
   },
   data: () => ({
-    dataJSON: Object,
-    svgMindMap: Object,
-    svgOutline: Object,
-    gMindnode: Object,
-    gOutNode: Object,
-    gOutPath: Object,
-    gHidden: Object,
-    gHotkey: Object,
+    mindmap_data: Object,
+    mindmap_svg: Object,
+    outline_svg: Object,
+    mindmap_g: Object,
+    outline_g_node: Object,
+    outline_g_path: Object,
+    hidden_g: Object,
+    hotkey_g: Object,
     zoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
   }),
   methods: {
     drawHotkey() {
-      const { gHotkey } = this;
-      gHotkey.append('text').text('选中状态下：').attr('transform', 'translate(0, 20)');
-      gHotkey.append('text').text('Tab添加子节点').attr('transform', 'translate(20, 40)');
-      gHotkey.append('text').text('Enter添加弟弟节点').attr('transform', 'translate(20, 60)');
-      gHotkey.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
-      gHotkey.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
+      const { hotkey_g } = this;
+      hotkey_g.append('text').text('选中状态下：').attr('transform', 'translate(0, 20)');
+      hotkey_g.append('text').text('Tab添加子节点').attr('transform', 'translate(20, 40)');
+      hotkey_g.append('text').text('Enter添加弟弟节点').attr('transform', 'translate(20, 60)');
+      hotkey_g.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
+      hotkey_g.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
     },
     traverse(d, func) { // 深度遍历，func每个元素
       func(d);
@@ -52,10 +52,10 @@ export default {
     },
     zoomed() {
       const { transform } = d3.event;
-      this.gMindnode.attr('transform', transform);
+      this.mindmap_g.attr('transform', transform);
     },
     seleOutNode(id) {
-      const gList = this.gOutNode.selectAll('g');
+      const gList = this.outline_g_node.selectAll('g');
       gList.filter((d) => d.data.id === id).attr('id', 'selectedOutnode');
       gList.filter((d) => d.data.id !== id).attr('id', '');
     },
@@ -76,11 +76,11 @@ export default {
       return false;
     },
     drawHiddenText(d) { // 取得textWidth
-      const text = this.gHidden.append('text').text(d.name).nodes()[0];
+      const text = this.hidden_g.append('text').text(d.name).nodes()[0];
       d.textWidth = text.getBBox().width;
     },
     drawOutline(dJSON) {
-      const { dataJSON, gOutNode, gOutPath, gMindnode } = this;
+      const { mindmap_data, outline_g_node, outline_g_path, mindmap_g } = this;
       const { seleMindNode, drawMindnode, drawOutline, drawHiddenText } = this;
       const nodeSize = { width: 200, height: 30 };
       function shapePath(d) {
@@ -117,7 +117,7 @@ export default {
             if (seleMind.nodes()[0]) {
               seleMind.attr('id', '');
             }
-            seleMindNode(gMindnode, id);
+            seleMindNode(mindmap_g, id);
           });
         }
       }
@@ -147,8 +147,8 @@ export default {
             if (d.data.name !== editText) {
               d.data.name = editText;
               drawHiddenText(d.data);
-              drawOutline(dataJSON);// eslint-disable-line no-use-before-define
-              drawMindnode(dataJSON);// eslint-disable-line no-use-before-define
+              drawOutline(mindmap_data);// eslint-disable-line no-use-before-define
+              drawMindnode(mindmap_data);// eslint-disable-line no-use-before-define
             }
           });
         });
@@ -172,13 +172,13 @@ export default {
           index += 1;
         });
         const rDescendants = r.descendants();
-        gOutNode.selectAll('g')
+        outline_g_node.selectAll('g')
           .data(rDescendants)
           .join(
             (enter) => appendNode(enter),
             (update) => updateNode(update),
           );
-        gOutPath.selectAll('path')
+        outline_g_path.selectAll('path')
           .data(r.links())
           .join(
             (enter) => appendPath(enter),
@@ -188,7 +188,7 @@ export default {
       draw(d3.hierarchy(dJSON.data[0]));
     },
     drawMindnode(dJSON) {
-      const { gMindnode, easePolyInOut, dataJSON } = this;
+      const { mindmap_g, easePolyInOut, mindmap_data } = this;
       const { seleOutNode, seleMindNode, drawHiddenText, drawOutline, drawMindnode } = this;
 
       let root = null;
@@ -268,7 +268,7 @@ export default {
         const targetX = subject.dx + px;
         draggedNodeRenew(draggedNode, targetX, targetY, 0);
         // 重叠触发矩形边框
-        const gSelection = gMindnode.selectAll('g').filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
+        const gSelection = mindmap_g.selectAll('g').filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
         gSelection.each((d, i, n) => {
           const gNode = n[i];
           const gRect = gNode.getElementsByTagName('rect')[0];
@@ -290,7 +290,7 @@ export default {
         const { subject } = d3.event;
         const draggedNode = this;
         let draggedParentNode = draggedNode.parentNode;
-        if (draggedParentNode.isEqualNode(gMindnode.nodes()[0])) { // 拖拽的是根节点时复原
+        if (draggedParentNode.isEqualNode(mindmap_g.nodes()[0])) { // 拖拽的是根节点时复原
           dragback(subject, draggedNode);
           return;
         }
@@ -310,7 +310,7 @@ export default {
               d3.select(draggedNode).each((d) => {
                 const { id } = d.data;
                 seleOutNode(id);
-                seleMindNode(gMindnode, id);
+                seleMindNode(mindmap_g, id);
               });
             });
           });
@@ -380,8 +380,8 @@ export default {
             if (d.data.name !== editText) {
               d.data.name = editText;
               drawHiddenText(d.data);
-              drawOutline(dataJSON);// eslint-disable-line no-use-before-define
-              drawMindnode(dataJSON);// eslint-disable-line no-use-before-define
+              drawOutline(mindmap_data);// eslint-disable-line no-use-before-define
+              drawMindnode(mindmap_data);// eslint-disable-line no-use-before-define
             }
           });
         });
@@ -495,23 +495,23 @@ export default {
           a.dx = a.x - (a.parent ? a.parent.x : 0);
           a.dy = a.y - (a.parent ? a.parent.y : 0);
         });
-        gNodeNest([root], gMindnode);
+        gNodeNest([root], mindmap_g);
       }
       chart(dJSON);
     },
     keyboardSvg(newJSON, sele) {
-      const { dataJSON, gMindnode } = this;
+      const { mindmap_data, mindmap_g } = this;
       const { drawHiddenText, drawMindnode, drawOutline, seleOutNode, seleMindNode } = this;
-      dataJSON.addId();
+      mindmap_data.addId();
       if (newJSON) {
         drawHiddenText(newJSON);
       }
-      drawMindnode(dataJSON);
-      drawOutline(dataJSON);
+      drawMindnode(mindmap_data);
+      drawOutline(mindmap_data);
       if (sele) {
         seleOutNode(newJSON.id);
         sele.attr('id', '');
-        seleMindNode(gMindnode, newJSON.id);
+        seleMindNode(mindmap_g, newJSON.id);
         d3.select('#selectedMindnode')
           .attr('id', 'editing')
           .select('p')
@@ -521,7 +521,7 @@ export default {
       }
     },
     listenKeyDown(event) {
-      const { dataJSON, gMindnode } = this;
+      const { mindmap_data, mindmap_g } = this;
       const { keyboardSvg } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
@@ -532,52 +532,52 @@ export default {
       if (keyName === 'Tab') { // 添加子节点
         event.preventDefault();
         sele.each((d) => {
-          dataJSON.add(d.data, newJSON);
+          mindmap_data.add(d.data, newJSON);
           keyboardSvg(newJSON, sele);
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
         sele.each((d, i, n) => {
-          if (n[i].parentNode.isSameNode(gMindnode.nodes()[0])) { // 根节点enter时，等效tab
-            dataJSON.add(d.data, newJSON);
+          if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
+            mindmap_data.add(d.data, newJSON);
           } else {
-            dataJSON.insert(d.data, newJSON, 1);
+            mindmap_data.insert(d.data, newJSON, 1);
           }
           keyboardSvg(newJSON, sele);
         });
       } else if (keyName === 'Backspace') { // 删除节点
         event.preventDefault();
         sele.each((d) => {
-          dataJSON.del(d.data);
+          mindmap_data.del(d.data);
           keyboardSvg();
         });
       }
     },
     init() {
-      const { dataJSON } = this;
+      const { mindmap_data } = this;
       const { drawHiddenText, drawOutline, drawMindnode, listenKeyDown, traverse } = this;
 
       document.addEventListener('keydown', listenKeyDown);
-      traverse(dataJSON.data[0], drawHiddenText);
-      drawMindnode(dataJSON);
-      drawOutline(dataJSON);
+      traverse(mindmap_data.data[0], drawHiddenText);
+      drawMindnode(mindmap_data);
+      drawOutline(mindmap_data);
     }
   },
   mounted() {
     // 初始化
-    this.dataJSON = new DataJSON([this.treedata]);
-    this.dataJSON.addId();
+    this.mindmap_data = new JSONData([this.data]);
+    this.mindmap_data.addId();
 
-    this.gHotkey = d3.select('g#hotkey');
-    this.svgMindMap = d3.select('svg.mindmap');
-    this.svgOutline = d3.select('svg.outline');
-    this.gMindnode = d3.select('g#mindnode');
+    this.hotkey_g = d3.select('g#hotkey');
+    this.mindmap_svg = d3.select('svg.mindmap');
+    this.outline_svg = d3.select('svg.outline');
+    this.mindmap_g = d3.select('g#mindmapRoot');
     this.zoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', this.zoomed);
-    this.gOutNode = this.svgOutline.append('g');
-    this.gOutPath = this.svgOutline.append('g').attr('class', 'outpath');
-    this.gHidden = d3.select('g#hidden');
+    this.outline_g_node = this.outline_svg.append('g');
+    this.outline_g_path = this.outline_svg.append('g').attr('class', 'outpath');
+    this.hidden_g = d3.select('g#hidden');
 
-    this.svgMindMap.call(this.zoom).on('dblclick.zoom', null);
+    this.mindmap_svg.call(this.zoom).on('dblclick.zoom', null);
     this.drawHotkey();
     this.init();
   }

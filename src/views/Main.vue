@@ -7,7 +7,7 @@
         </v-btn>
       </v-col>
     </v-row> -->
-    <mind-map :treedata="treedata"></mind-map>
+    <mind-map :data="data"></mind-map>
   </div>
 </template>
 
@@ -19,7 +19,7 @@ export default {
     MindMap,
   },
   data: () => ({
-    treedata: dataLearn,
+    data: dataLearn,
   }),
   methods: {
     addMindMap() {

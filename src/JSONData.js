@@ -38,7 +38,7 @@ function inheritColor(d, c) { // 赋予新颜色，并更新子节点的颜色
     }
   }
 }
-class DataJSON { // eslint-disable-line
+class JSONData { // eslint-disable-line
   constructor(d) { // d为数组
     breadthTraverse(d[0]);
     this.data = d;
@@ -142,4 +142,4 @@ class DataJSON { // eslint-disable-line
   }
 }
 
-export default DataJSON;
+export default JSONData;
