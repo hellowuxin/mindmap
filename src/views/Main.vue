@@ -7,7 +7,7 @@
         </v-btn>
       </v-col>
     </v-row> -->
-    <mind-map :data="data"></mind-map>
+    <mind-map v-model="data"></mind-map>
   </div>
 </template>
 
