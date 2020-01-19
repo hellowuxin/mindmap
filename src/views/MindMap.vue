@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="wrapper">
     <svg class="outline"></svg>
     <svg class="mindmap">
       <g id="mindnode"></g>
@@ -18,32 +18,43 @@ import * as d3 from 'd3'
 
 export default {
   data: () => ({
+    svgMindMap: Object,
+    svgOutline: Object,
+    gMindnode: Object,
+    gOutNode: Object,
+    gOutPath: Object,
+    gHidden: Object,
+    gHotkey: Object,
+    zoom: Function,
   }),
   methods: {
+    drawHotkey() {
+      const { gHotkey } = this;
+      gHotkey.append('text').text('选中状态下：').attr('transform', 'translate(0, 20)');
+      gHotkey.append('text').text('Tab添加子节点').attr('transform', 'translate(20, 40)');
+      gHotkey.append('text').text('Enter添加弟弟节点').attr('transform', 'translate(20, 60)');
+      gHotkey.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
+      gHotkey.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
+    },
+    traverse(d, func) { // 深度遍历，func每个元素
+      func(d);
+      if (d.children) {
+        for (let index = 0; index < d.children.length; index += 1) {
+          const dChild = d.children[index];
+          this.traverse(dChild, func);
+        }
+      }
+    },
+    zoomed() {
+      const { transform } = d3.event;
+      this.gMindnode.attr('transform', transform);
+    },
     init() {
       let dataJSON = null;
       const transition = d3.transition().duration(1000).ease(d3.easePolyInOut);
 
-      const svgOutline = d3.select('.outline');
-      const gOutNode = svgOutline.append('g');
-      const gOutPath = svgOutline.append('g').attr('class', 'outpath');
+      const { gMindnode, gOutNode, gOutPath, gHidden } = this;
 
-      const gHotkey = d3.select('g#hotkey');
-      const gMindnode = d3.select('g#mindnode');
-
-      const gHidden = d3.select('g#hidden');
-
-      function zoomed() {
-        const { transform } = d3.event;
-        gMindnode.attr('transform', transform);
-      }
-      function drawHotkey() {
-        gHotkey.append('text').text('选中状态下：').attr('transform', 'translate(0, 20)');
-        gHotkey.append('text').text('Tab添加子节点').attr('transform', 'translate(20, 40)');
-        gHotkey.append('text').text('Enter添加弟弟节点').attr('transform', 'translate(20, 60)');
-        gHotkey.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
-        gHotkey.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
-      }
       function seleOutNode(id) {
         const gList = gOutNode.selectAll('g');
         gList.filter((d) => d.data.id === id).attr('id', 'selectedOutnode');
@@ -68,15 +79,6 @@ export default {
       function drawHiddenText(d) { // 取得textWidth
         const text = gHidden.append('text').text(d.name).nodes()[0];
         d.textWidth = text.getBBox().width;
-      }
-      function traverse(d) { // 深度遍历
-        drawHiddenText(d);
-        if (d.children) {
-          for (let index = 0; index < d.children.length; index += 1) {
-            const dChild = d.children[index];
-            traverse(dChild);
-          }
-        }
       }
       function drawOutline(dJSON) {
         const nodeSize = { width: 200, height: 30 };
@@ -544,23 +546,126 @@ export default {
           });
         }
       });
-      const svg = d3.select('svg.mindmap');
-      const zoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', zoomed);
-      svg.call(zoom).on('dblclick.zoom', null);
       dataJSON = new DataJSON([dataLearn]);
       dataJSON.addId();
-      traverse(dataJSON.data[0]);
-      drawHotkey();
+      this.traverse(dataJSON.data[0], drawHiddenText);
       drawMindnode(dataJSON);
       drawOutline(dataJSON);
     }
   },
   mounted() {
+    // 初始化
+    this.gHotkey = d3.select('g#hotkey');
+    this.svgMindMap = d3.select('svg.mindmap');
+    this.svgOutline = d3.select('svg.outline');
+    this.gMindnode = d3.select('g#mindnode');
+    this.zoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', this.zoomed);
+    this.gOutNode = this.svgOutline.append('g');
+    this.gOutPath = this.svgOutline.append('g').attr('class', 'outpath');
+    this.gHidden = d3.select('g#hidden');
+
+    this.svgMindMap.call(this.zoom).on('dblclick.zoom', null);
+    this.drawHotkey();
     this.init();
   }
 }
 </script>
 
 <style>
+.wrapper {
+  display: flex;
+  margin: 8px;
+}
+
+svg {
+  font-size: 14px;
+}
+
+.mindmap {
+  background-color: #eeeef3;
+  flex: auto;
+  height: 650px;
+  margin-right: 8px;
+}
+
+.mindmap rect:not(.depth_0) {
+  fill: blue;
+  fill-opacity: 0;
+  stroke: blue;
+  stroke-opacity: 0;
+  stroke-width: 2;
+}
+
+.mindmap rect.depth_0 {
+  fill: white;
+  stroke: #bec6f3;
+  stroke-opacity: 0;
+  stroke-width: 2;
+}
+
+.mindmap path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.mindmap #selectedMindnode > rect:not(.depth_0) {
+  fill-opacity: 1;
+  opacity: 0.2;
+  stroke-opacity: 1;
+}
+
+.mindmap #selectedMindnode > rect.depth_0 {
+  stroke-opacity: 1;
+}
+
+.mindmap #newParentNode > rect {
+  stroke-opacity: 0.2;
+}
+
+.outline {
+  height: 650px;
+  margin-right: 8px;
+  width: 200px;
+}
+
+.outline rect {
+  fill: #eeeef3;
+}
+
+.outline .outpath {
+  transform: translate(14px, 15px);
+}
+
+.outline .outpath path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+
+.outline #selectedOutnode > rect {
+  fill: #ccd3fd;
+}
+
+.tip {
+  background-color: #eeeef3;
+  height: 120px;
+  width: 200px;
+}
+
+.tip text {
+  fill: #4c5566;
+}
+
+.tip #hidden {
+  visibility: hidden;
+}
+
+/* stylelint-disable-next-line */
+foreignObject {
+  padding: 5px;
+}
+
+/*# sourceMappingURL=mindmap.css.map */
 
 </style>
