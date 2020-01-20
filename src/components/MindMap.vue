@@ -343,6 +343,46 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
+.mindmap {
+  background-color: rgb(238, 238, 243);
+  flex: auto;
+  height: 650px;
+  margin-right: 8px;
 
+  rect:not(.depth_0) {
+    fill: blue;
+    fill-opacity: 0;
+    stroke: blue;
+    stroke-opacity: 0;
+    stroke-width: 2;
+  }
+
+  rect.depth_0 {
+    fill: white;
+    stroke: rgb(190, 198, 243);
+    stroke-opacity: 0;
+    stroke-width: 2;
+  }
+
+  path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 4;
+  }
+
+  #selectedMindnode > rect:not(.depth_0) {
+    fill-opacity: 1;
+    opacity: 0.2;
+    stroke-opacity: 1;
+  }
+
+  #selectedMindnode > rect.depth_0 {
+    stroke-opacity: 1;
+  }
+
+  #newParentNode > rect {
+    stroke-opacity: 0.2;
+  }
+}
 </style>

@@ -70,12 +70,11 @@ export default {
           sele.attr('id', 'selectedOutnode');
           // 选中新的selectedMindnode
           sele.each((d) => {
-            const { id } = d.data;
             const seleMind = d3.select('g#selectedMindnode');
             if (seleMind.nodes()[0]) {
               seleMind.attr('id', '');
             }
-            emit('selectedNode', id);
+            emit('selectedOutNode', d);
           });
         }
       }
