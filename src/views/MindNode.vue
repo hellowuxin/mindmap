@@ -1,11 +1,11 @@
 <template>
   <div class="wrapper">
     <outline 
-      v-model="mindmap_data"
+      v-model="mindnode_data"
     ></outline>
-    <svg class="mindmap">
-      <g id="mindmapRoot"></g>
-    </svg>
+    <mindmap
+      v-model="mindnode_data"
+    ></mindmap>
     <svg class="tip">
       <g id="hotkey"></g>
       <g id="hidden"></g>
@@ -18,16 +18,18 @@
 import JSONData from '../JSONData'
 import * as d3 from 'd3'
 import outline from '../components/Outline'
+import mindmap from '../components/MindMap'
 
 export default {
   components: {
     outline,
+    mindmap,
   },
   props: {
     value: Object,
   },
   data: () => ({
-    mindmap_data: null,
+    mindnode_data: null,
     mindmap_svg: Object,
     mindmap_g: Object,
     hidden_g: Object,
@@ -83,7 +85,7 @@ export default {
       d.textWidth = text.getBBox().width;
     },
     updateNodeName() { // 文本编辑完成时
-      const { mindmap_data } = this;
+      const { mindnode_data } = this;
       const { drawMindnode, drawHiddenText } = this;
       const editP = document.querySelector('#editing p');
       window.getSelection().removeAllRanges();// 清除选中
@@ -95,8 +97,8 @@ export default {
         if (d.data.name !== editText) {
           d.data.name = editText;
           drawHiddenText(d.data);
-          // drawOutline(mindmap_data);
-          drawMindnode(mindmap_data);
+          // drawOutline(mindnode_data);
+          drawMindnode(mindnode_data);
         }
       });
     },
@@ -399,14 +401,14 @@ export default {
       chart(dJSON);
     },
     keyboardSvg(newJSON, sele) {
-      const { mindmap_data, mindmap_g } = this;
+      const { mindnode_data, mindmap_g } = this;
       const { drawHiddenText, drawMindnode, drawOutline, seleOutNode, seleMindNode } = this;
-      mindmap_data.addId();
+      mindnode_data.addId();
       if (newJSON) {
         drawHiddenText(newJSON);
       }
-      drawMindnode(mindmap_data);
-      drawOutline(mindmap_data);
+      drawMindnode(mindnode_data);
+      drawOutline(mindnode_data);
       if (sele) {
         seleOutNode(newJSON.id);
         sele.attr('id', '');
@@ -420,7 +422,7 @@ export default {
       }
     },
     listenKeyDown(event) {
-      const { mindmap_data, mindmap_g } = this;
+      const { mindnode_data, mindmap_g } = this;
       const { keyboardSvg } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
@@ -431,51 +433,43 @@ export default {
       if (keyName === 'Tab') { // 添加子节点
         event.preventDefault();
         sele.each((d) => {
-          mindmap_data.add(d.data, newJSON);
+          mindnode_data.add(d.data, newJSON);
           keyboardSvg(newJSON, sele);
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
         sele.each((d, i, n) => {
           if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
-            mindmap_data.add(d.data, newJSON);
+            mindnode_data.add(d.data, newJSON);
           } else {
-            mindmap_data.insert(d.data, newJSON, 1);
+            mindnode_data.insert(d.data, newJSON, 1);
           }
           keyboardSvg(newJSON, sele);
         });
       } else if (keyName === 'Backspace') { // 删除节点
         event.preventDefault();
         sele.each((d) => {
-          mindmap_data.del(d.data);
+          mindnode_data.del(d.data);
           keyboardSvg();
         });
       }
     },
     init() {
-      const { mindmap_data } = this;
-      const { drawHiddenText, drawMindnode, listenKeyDown, depthTraverse } = this;
+      const { mindnode_data } = this;
+      const { drawHiddenText, listenKeyDown, depthTraverse } = this;
 
       document.addEventListener('keydown', listenKeyDown);
-      depthTraverse(mindmap_data.data[0], drawHiddenText);
-      drawMindnode(mindmap_data);
+      depthTraverse(mindnode_data.data[0], drawHiddenText);
     }
   },
   mounted() {
     // 初始化
-    this.mindmap_data = new JSONData([this.value]);
-    this.mindmap_data.addId();
+    this.mindnode_data = new JSONData([this.value]);
+    this.mindnode_data.addId();
 
-    this.mindmap_svg = d3.select('svg.mindmap');
-    this.mindmap_g = d3.select('g#mindmapRoot');
     this.hotkey_g = d3.select('g#hotkey');
     this.hidden_g = d3.select('g#hidden');
-    this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', () => {
-      const { transform } = d3.event;
-      this.mindmap_g.attr('transform', transform);
-    });
-
-    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
+    
     this.drawHotkey();
     this.init();
   }
