@@ -57,11 +57,11 @@ export default {
         }
       }
     },
-    seleOutNode(id) {
-      const gList = this.outline_g_node.selectAll('g');
-      gList.filter((d) => d.data.id === id).attr('id', 'selectedOutnode');
-      gList.filter((d) => d.data.id !== id).attr('id', '');
-    },
+    // seleOutNode(id) {
+    //   const gList = this.outline_g_node.selectAll('g');
+    //   gList.filter((d) => d.data.id === id).attr('id', 'selectedOutnode');
+    //   gList.filter((d) => d.data.id !== id).attr('id', '');
+    // },
     seleMindNode(g, id) {
       const gList = g.selectAll('g');
       const sele = gList.filter((d) => d.data.id === id);
@@ -84,7 +84,7 @@ export default {
     },
     updateNodeName() { // 文本编辑完成时
       const { mindmap_data } = this;
-      const { drawMindnode, drawOutline, drawHiddenText } = this;
+      const { drawMindnode, drawHiddenText } = this;
       const editP = document.querySelector('#editing p');
       window.getSelection().removeAllRanges();// 清除选中
       const editText = editP.textContent;
@@ -95,14 +95,14 @@ export default {
         if (d.data.name !== editText) {
           d.data.name = editText;
           drawHiddenText(d.data);
-          drawOutline(mindmap_data);
+          // drawOutline(mindmap_data);
           drawMindnode(mindmap_data);
         }
       });
     },
     drawMindnode(dJSON) {
       const { mindmap_g, easePolyInOut } = this;
-      const { seleOutNode, seleMindNode, drawOutline, updateNodeName } = this;
+      const { drawOutline, updateNodeName } = this;
 
       let root = null;
       const link = d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]);
@@ -153,10 +153,10 @@ export default {
           sele = d3.select(clickedNode);
           sele.attr('id', 'selectedMindnode');
           // 选中新的selectedOutnode
-          sele.each((d) => {
-            const { id } = d.data;
-            seleOutNode(id);
-          });
+          // sele.each((d) => {
+          //   const { id } = d.data;
+          //   seleOutNode(id);
+          // });
         }
       }
       function dragged() {
@@ -166,11 +166,11 @@ export default {
         if (sele && !sele.isSameNode(draggedNode)) {
           sele.removeAttribute('id');
         }
-        d3.select(draggedNode).attr('id', 'selectedMindnode')
-          .each((d) => {
-            const { id } = d.data;
-            seleOutNode(id);
-          });
+        // d3.select(draggedNode).attr('id', 'selectedMindnode')
+        //   .each((d) => {
+        //     const { id } = d.data;
+        //     seleOutNode(id);
+        //   });
         // 拖拽
         const { subject } = d3.event;
         const py = d3.event.x - subject.x;
@@ -220,11 +220,11 @@ export default {
               // 绘制图形
               chart(dJSON);// eslint-disable-line no-use-before-define
               drawOutline(dJSON);
-              d3.select(draggedNode).each((d) => {
-                const { id } = d.data;
-                seleOutNode(id);
-                seleMindNode(mindmap_g, id);
-              });
+              // d3.select(draggedNode).each((d) => {
+              //   const { id } = d.data;
+              //   seleOutNode(id);
+              //   seleMindNode(mindmap_g, id);
+              // });
             });
           });
           return;
@@ -266,7 +266,7 @@ export default {
             dJSON.addId();
             drawOutline(dJSON);
             chart(dJSON);// eslint-disable-line no-use-before-define
-            d3.select(draggedNode).each((p) => seleOutNode(p.data.id));
+            // d3.select(draggedNode).each((p) => seleOutNode(p.data.id));
           } else {
             dragback(subject, draggedNode);
           }

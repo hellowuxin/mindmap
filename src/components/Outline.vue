@@ -17,8 +17,6 @@ export default {
   watch: {
     value: {
         handler() {
-          // eslint-disable-next-line
-          console.log(1)
           this.drawOutline(this.value);
         },
         deep: true,// watch for nested data

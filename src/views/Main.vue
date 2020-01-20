@@ -7,16 +7,16 @@
         </v-btn>
       </v-col>
     </v-row> -->
-    <mind-map v-model="data"></mind-map>
+    <mind-node v-model="data"></mind-node>
   </div>
 </template>
 
 <script>
 import dataLearn from '../../public/learn.json'
-import MindMap from './MindMap'
+import MindNode from './MindNode'
 export default {
   components: {
-    MindMap,
+    MindNode,
   },
   data: () => ({
     data: dataLearn,
