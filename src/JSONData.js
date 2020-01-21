@@ -38,18 +38,19 @@ function inheritColor(d, c) { // 赋予新颜色，并更新子节点的颜色
     }
   }
 }
-class JSONData { // eslint-disable-line
+class JSONData {
   constructor(d) { // d为数组
-    breadthTraverse(d[0]);
-    this.data = d;
+    this.data = JSON.parse(JSON.stringify(d));// 深拷贝对象
+    breadthTraverse(this.data[0]);
+    this._addId();
   }
 
-  addId(id = '', d = this.data) { // 添加唯一标识
+  _addId(id = '', d = this.data) { // 添加唯一标识
     for (let index = 0; index < d.length; index += 1) {
       const dChild = d[index];
       dChild.id = `${id}${index}`;
       if (dChild.children) {
-        this.addId(`${id}${index}`, dChild.children);
+        this._addId(`${id}${index}`, dChild.children);
       }
     }
   }
@@ -84,6 +85,7 @@ class JSONData { // eslint-disable-line
           d.color = dataChild.color; // 继承父节点的color
         }
         inheritColor(d, d.color);
+        d.id = `${dataChild.id}${dataChild.children.length}`
         dataChild.children.push(d);
         return true;
       }

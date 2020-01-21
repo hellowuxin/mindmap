@@ -19,7 +19,7 @@ export default {
     MindNode,
   },
   data: () => ({
-    data: dataLearn,
+    data: [dataLearn],
   }),
   methods: {
     addMindMap() {

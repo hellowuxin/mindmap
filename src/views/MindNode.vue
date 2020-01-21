@@ -6,6 +6,8 @@
     ></outline>
     <mindmap
       v-model="mindnode_data"
+      :draw="drawMindMap"
+      @complete="drawMindMap = false"
     ></mindmap>
     <svg class="tip">
       <g id="hotkey"></g>
@@ -27,15 +29,19 @@ export default {
     mindmap,
   },
   props: {
-    value: Object,
+    value: Array,
   },
   data: () => ({
     mindnode_data: null,
+    drawMindMap: false,
     selectedNode: null,
     hidden_g: Object,
     hotkey_g: Object,
   }),
   methods: {
+    draw() {
+      this.drawMindMap = true;
+    },
     getSelectedNode(d) {
       this.selectedNode = d;
     },
@@ -60,30 +66,15 @@ export default {
       const text = this.hidden_g.append('text').text(d.name).nodes()[0];
       d.textWidth = text.getBBox().width;
     },
-    keyboardSvg(newJSON, sele) {
-      const { mindnode_data, mindmap_g } = this;
-      const { drawHiddenText, drawMindnode, drawOutline, seleOutNode, seleMindNode } = this;
-      mindnode_data.addId();
+    keyboardSvg(newJSON) {
+      const { drawHiddenText } = this;
       if (newJSON) {
         drawHiddenText(newJSON);
-      }
-      drawMindnode(mindnode_data);
-      drawOutline(mindnode_data);
-      if (sele) {
-        seleOutNode(newJSON.id);
-        sele.attr('id', '');
-        seleMindNode(mindmap_g, newJSON.id);
-        d3.select('#selectedMindnode')
-          .attr('id', 'editing')
-          .select('p')
-          .attr('contenteditable', true);
-        document.querySelector('#editing p').focus();
-        document.execCommand('selectAll', false);
       }
     },
     listenKeyDown(event) {
       const { mindnode_data, mindmap_g } = this;
-      const { keyboardSvg } = this;
+      const { keyboardSvg, draw } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
         return;
@@ -93,24 +84,27 @@ export default {
       if (keyName === 'Tab') { // 添加子节点
         event.preventDefault();
         sele.each((d) => {
+          keyboardSvg(newJSON);
           mindnode_data.add(d.data, newJSON);
-          keyboardSvg(newJSON, sele);
+          draw();
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
         sele.each((d, i, n) => {
+          keyboardSvg(newJSON, sele);
           if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
             mindnode_data.add(d.data, newJSON);
           } else {
             mindnode_data.insert(d.data, newJSON, 1);
           }
-          keyboardSvg(newJSON, sele);
+          draw();
         });
       } else if (keyName === 'Backspace') { // 删除节点
         event.preventDefault();
         sele.each((d) => {
           mindnode_data.del(d.data);
           keyboardSvg();
+          draw();
         });
       }
     },
@@ -124,9 +118,7 @@ export default {
   },
   mounted() {
     // 初始化
-    this.mindnode_data = new JSONData([this.value]);
-    this.mindnode_data.addId();
-
+    this.mindnode_data = new JSONData(this.value);
     this.hotkey_g = d3.select('g#hotkey');
     this.hidden_g = d3.select('g#hidden');
     
