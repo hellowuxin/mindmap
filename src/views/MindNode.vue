@@ -2,12 +2,14 @@
   <div class="wrapper">
     <outline 
       v-model="mindnode_data"
+      :renew="renewOutline"
+      @complete="renewOutline = false"
       @selectedOutNode="getSelectedNode"
     ></outline>
     <mindmap
       v-model="mindnode_data"
-      :draw="drawMindMap"
-      @complete="drawMindMap = false"
+      :renew="renewMindMap"
+      @complete="renewMindMap = false"
     ></mindmap>
     <svg class="tip">
       <g id="hotkey"></g>
@@ -33,14 +35,16 @@ export default {
   },
   data: () => ({
     mindnode_data: null,
-    drawMindMap: false,
+    renewMindMap: false,
+    renewOutline: false,
     selectedNode: null,
     hidden_g: Object,
     hotkey_g: Object,
   }),
   methods: {
     draw() {
-      this.drawMindMap = true;
+      this.renewOutline = true;
+      this.renewMindMap = true;
     },
     getSelectedNode(d) {
       this.selectedNode = d;
