@@ -70,15 +70,9 @@ export default {
       const text = this.hidden_g.append('text').text(d.name).nodes()[0];
       d.textWidth = text.getBBox().width;
     },
-    keyboardSvg(newJSON) {
-      const { drawHiddenText } = this;
-      if (newJSON) {
-        drawHiddenText(newJSON);
-      }
-    },
     listenKeyDown(event) {
       const { mindnode_data, mindmap_g } = this;
-      const { keyboardSvg, draw } = this;
+      const { draw, drawHiddenText } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
         return;
@@ -88,14 +82,14 @@ export default {
       if (keyName === 'Tab') { // 添加子节点
         event.preventDefault();
         sele.each((d) => {
-          keyboardSvg(newJSON);
+          drawHiddenText(newJSON);
           mindnode_data.add(d.data, newJSON);
           draw();
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
         sele.each((d, i, n) => {
-          keyboardSvg(newJSON, sele);
+          drawHiddenText(newJSON);
           if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
             mindnode_data.add(d.data, newJSON);
           } else {
@@ -107,7 +101,6 @@ export default {
         event.preventDefault();
         sele.each((d) => {
           mindnode_data.del(d.data);
-          keyboardSvg();
           draw();
         });
       }
