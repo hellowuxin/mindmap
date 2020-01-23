@@ -55,20 +55,21 @@ class JSONData {
     }
   }
 
-  del(s, d = this.data) { // 删除s
-    for (let index = 0; d && index < d.length; index += 1) {
-      const dChild = d[index];
-      if (isEqualJSON(dChild, s)) {
-        d.splice(index, 1);
-        return true;
-      }
-      if (dChild.children) {
-        if (this.del(s, dChild.children)) {
-          return true;
+  del(s) { // 删除s
+    const parent = this.getParent(s);
+    if (parent) {
+      const children = parent.children;
+      let position = 0;
+
+      for (let index = 0; index < children.length; index++) {
+        const child = children[index];
+        if (isEqualJSON(child, s)) {
+          position = index;
         }
       }
+      children.splice(position, 1);
+      this._addId(parent.id, parent.children);
     }
-    return false;
   }
 
   add(dParent, d, data = this.data) { // dParent添加子节点d
