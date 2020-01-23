@@ -85,7 +85,7 @@ class JSONData {
           d.color = dataChild.color; // 继承父节点的color
         }
         inheritColor(d, d.color);
-        d.id = `${dataChild.id}${dataChild.children.length}`
+        d.id = `${dataChild.id}${dataChild.children.length}`;
         dataChild.children.push(d);
         return true;
       }
@@ -120,27 +120,55 @@ class JSONData {
     return false;
   }
 
-  insert(dPosition, d, i = 0, data = this.data) { // 把d插入到dPosition的前面(i=0)或者后面(i=1)
-    for (let index = 0; index < data.length; index += 1) {
-      const dataChild = data[index];
-      if (isEqualJSON(dataChild, dPosition)) {
-        if (dPosition.id.substring(0, 1) === '0' && dPosition.id.length === 2) { // 根节点的直接子节点
-          colorNumber += 1;
-          d.color = colorScale(colorNumber);
-        } else {
-          d.color = dPosition.color;
-        }
-        inheritColor(d, d.color);
-        data.splice(index + i, 0, d);
-        return true;
+  getParent(d, data = this.data) {
+    let dParent = data;
+    const id = d.id.split('').map(s => parseInt(s, 10));
+    id.pop();
+    if (id.length > 0) {
+      for (let index = 0; index < id.length - 1; index++) {
+        const number = id[index];
+        dParent = dParent[number].children;
       }
-      if (dataChild.children) {
-        if (this.insert(dPosition, d, i, dataChild.children)) {
-          return true;
-        }
-      }
+      dParent = dParent[id[id.length - 1]];
+      return dParent; 
     }
     return false;
+  }
+
+  insert(dPosition, d, i = 0) { // 把d插入到dPosition的前面(i=0)或者后面(i=1)
+    const parent = this.getParent(dPosition);
+    if (parent) {
+      const children = parent.children;
+      let position = 0;
+
+      for (let index = 0; index < children.length; index++) {
+        const child = children[index];
+        if (isEqualJSON(child, dPosition)) {
+          position = index;
+        }
+      }
+      if ((position+i) < children.length) { // 更新id
+        d.id = children[position + i].id;
+        for (let index = position + i; index < children.length; index++) {
+          const child = children[index];
+          const id = child.id.split('');
+          id[id.length-1] = (parseInt(id[id.length-1], 10) + 1).toString();
+          child.id = id.join('');
+          if (child.children.length > 0) {
+            this._addId(child.id, child.children);
+          }
+        }
+        if (parent.color) {
+          d.color = parent.color; 
+        } else {
+          colorNumber += 1;
+          d.color = colorScale(colorNumber);
+        }
+        children.splice(position + i, 0, d);
+      } else {
+        this.add(parent, d);
+      }
+    }
   }
 }
 

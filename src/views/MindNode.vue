@@ -61,7 +61,7 @@ export default {
       d.textWidth = text.getBBox().width;
     },
     listenKeyDown(event) {
-      const { mindnode_data, mindmap_g } = this;
+      const { mindnode_data } = this;
       const { drawHiddenText } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
@@ -78,6 +78,7 @@ export default {
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
         sele.each((d, i, n) => {
+          const mindmap_g = d3.select('g#mindmapRoot');
           drawHiddenText(newJSON);
           if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
             mindnode_data.add(d.data, newJSON);
