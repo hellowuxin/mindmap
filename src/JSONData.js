@@ -72,31 +72,31 @@ class JSONData {
     }
   }
 
-  add(dParent, d, data = this.data) { // dParent添加子节点d
-    for (let index = 0; index < data.length; index += 1) {
-      const dataChild = data[index];
-      if (isEqualJSON(dataChild, dParent)) {
-        if (!dataChild.children) {
-          dataChild.children = [];
-        }
-        if (dataChild.id === '0') { // 根节点
-          d.color = colorScale(colorNumber);
-          colorNumber += 1;
-        } else {
-          d.color = dataChild.color; // 继承父节点的color
-        }
-        inheritColor(d, d.color);
-        d.id = `${dataChild.id}${dataChild.children.length}`;
-        dataChild.children.push(d);
-        return true;
+  getItself(d, data = this.data) {
+    let dSelf = data;
+    const id = d.id.split('').map(s => parseInt(s, 10));
+    if (id.length > 0) {
+      for (let index = 0; index < id.length - 1; index++) {
+        const number = id[index];
+        dSelf = dSelf[number].children;
       }
-      if (dataChild.children) {
-        if (this.add(dParent, d, dataChild.children)) {
-          return true;
-        }
-      }
+      dSelf = dSelf[id[id.length - 1]];
+      return dSelf; 
     }
     return false;
+  }
+
+  add(dParent, d) { // dParent添加子节点d
+    const parent = this.getItself(dParent);
+    if (parent.id === '0') { // 根节点
+      d.color = colorScale(colorNumber);
+      colorNumber += 1;
+    } else {
+      d.color = parent.color; // 继承父节点的color
+    }
+    inheritColor(d, d.color);
+    d.id = `${parent.id}${parent.children.length}`;
+    parent.children.push(d);
   }
 
   exchange(a, b, d = this.data) { // 同一父节点下的a,b调换

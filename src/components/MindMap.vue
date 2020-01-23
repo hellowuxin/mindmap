@@ -154,7 +154,6 @@ export default {
               // 处理数据
               dJSON.del(draggedD.data);
               dJSON.add(newParentD.data, draggedD.data);
-              dJSON.addId();
               draggedNode.parentNode.removeChild(draggedNode);
               // 绘制图形
               chart(dJSON);
@@ -196,7 +195,6 @@ export default {
               dJSON.insert(a.b1, subject.data, 1);
               draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling);
             }
-            dJSON.addId();
             chart(dJSON);
           } else {
             dragback(subject, draggedNode);
