@@ -1,6 +1,7 @@
 <template>
   <svg class="mindmap">
     <g id="mindmapRoot"></g>
+    <g id="dummy"></g>
   </svg>
 </template>
 
@@ -14,18 +15,29 @@ export default {
   data: () => ({
     mindmap_svg: Object,
     mindmap_g: Object,
+    dummy_g: Object,
     mindmapSvgZoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
   }),
   watch: {
     value: {
       handler(newVal) {
+        this.depthTraverse(newVal.data[0], this.getTextWidth);
         this.drawMindnode(newVal);
       },
       deep: true,// watch for nested data
     },
   },
   methods: {
+    depthTraverse(d, func) { // 深度遍历，func每个元素
+      func(d);
+      if (d.children) {
+        for (let index = 0; index < d.children.length; index += 1) {
+          const dChild = d.children[index];
+          this.depthTraverse(dChild, func);
+        }
+      }
+    },
     emit(event, params) {
       this.$emit(event, params);
     },
@@ -327,6 +339,24 @@ export default {
       }
       chart(dJSON);
     },
+    getTextWidth(t) {
+      const { dummy_g } = this;
+      let textWidth = 0;
+
+      dummy_g
+        .selectAll('.dummyText')
+        .data([t.name])
+        .enter()
+        .append("text")
+        .text((d) => d)
+        .each(function() {
+          const thisWidth = this.getComputedTextLength();
+          textWidth = thisWidth;
+          this.remove() // remove them just after displaying them
+        })
+        
+      t.textWidth = textWidth;
+    }
   },
   mounted() {
     this.mindmap_svg = d3.select('svg.mindmap');
@@ -335,8 +365,9 @@ export default {
       const { transform } = d3.event;
       this.mindmap_g.attr('transform', transform);
     });
-
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
+
+    this.dummy_g = d3.select('g#dummy');
   }
 }
 </script>

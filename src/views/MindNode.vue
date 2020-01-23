@@ -16,6 +16,7 @@
 
 <script>
 // 移除键盘监听，通过鼠标操作思维导图
+// 得到文本宽度然后再绘制文本
 import JSONData from '../JSONData'
 import * as d3 from 'd3'
 import outline from '../components/Outline'
@@ -46,15 +47,6 @@ export default {
       hotkey_g.append('text').text('Enter添加弟弟节点').attr('transform', 'translate(20, 60)');
       hotkey_g.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
       hotkey_g.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
-    },
-    depthTraverse(d, func) { // 深度遍历，func每个元素
-      func(d);
-      if (d.children) {
-        for (let index = 0; index < d.children.length; index += 1) {
-          const dChild = d.children[index];
-          this.depthTraverse(dChild, func);
-        }
-      }
     },
     drawHiddenText(d) { // 取得textWidth
       const text = this.hidden_g.append('text').text(d.name).nodes()[0];
@@ -94,11 +86,9 @@ export default {
       }
     },
     init() {
-      const { mindnode_data } = this;
-      const { drawHiddenText, listenKeyDown, depthTraverse } = this;
+      const { listenKeyDown } = this;
 
       document.addEventListener('keydown', listenKeyDown);
-      depthTraverse(mindnode_data.data[0], drawHiddenText);
     }
   },
   mounted() {
