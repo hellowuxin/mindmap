@@ -6,36 +6,37 @@
 			"name":"预备知识",
 			"children":
 			[
-				{"name":"HTML & CSS" },
-				{"name":"JavaScript" },
-				{"name":"DOM"},
-        {"name":"SVG"},
-        {"name":"test"}]
+				{"name":"HTML & CSS", "children": []},
+				{"name":"JavaScript", "children": []},
+				{"name":"DOM", "children": []},
+        {"name":"SVG", "children": []},
+        {"name":"test", "children": []}]
 		},
 		{
-			"name":"安装"
+      "name":"安装",
+      "children": []
 		},
 		{
 			"name":"入门",
 			"children":
 			[
-        {"name":"选择集"},
-        {"name":"test"},
-				{"name":"绑定数据"},
-				{"name":"添加删除元素"},
+        {"name":"选择集", "children": []},
+        {"name":"test", "children": []},
+				{"name":"绑定数据", "children": []},
+				{"name":"添加删除元素", "children": []},
 				{
 					"name":"简单图形",
 					"children":
 					[
-						{"name":"柱形图"},
-						{"name":"折线图"},
-						{"name":"散点图"}]
+						{"name":"柱形图", "children": []},
+						{"name":"折线图", "children": []},
+						{"name":"散点图", "children": []}]
 				},
-				{"name":"比例尺"},
-				{"name":"生成器"},
-				{"name":"过渡"}]
+				{"name":"比例尺", "children": []},
+				{"name":"生成器", "children": []},
+				{"name":"过渡", "children": []}]
 		},
 		{
-			"name":"进阶"
+			"name":"进阶", "children": []
 		}]
 }

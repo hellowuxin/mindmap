@@ -2,14 +2,10 @@
   <div class="wrapper">
     <outline 
       v-model="mindnode_data"
-      :renew="renewOutline"
-      @complete="renewOutline = false"
       @selectedOutNode="getSelectedNode"
     ></outline>
     <mindmap
       v-model="mindnode_data"
-      :renew="renewMindMap"
-      @complete="renewMindMap = false"
     ></mindmap>
     <svg class="tip">
       <g id="hotkey"></g>
@@ -35,17 +31,11 @@ export default {
   },
   data: () => ({
     mindnode_data: null,
-    renewMindMap: false,
-    renewOutline: false,
     selectedNode: null,
     hidden_g: Object,
     hotkey_g: Object,
   }),
   methods: {
-    draw() {
-      this.renewOutline = true;
-      this.renewMindMap = true;
-    },
     getSelectedNode(d) {
       this.selectedNode = d;
     },
@@ -72,19 +62,18 @@ export default {
     },
     listenKeyDown(event) {
       const { mindnode_data, mindmap_g } = this;
-      const { draw, drawHiddenText } = this;
+      const { drawHiddenText } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
         return;
       }
-      const newJSON = { name: '新建节点' };
+      const newJSON = { name: '新建节点', children: [] };
       const keyName = event.key;
       if (keyName === 'Tab') { // 添加子节点
         event.preventDefault();
         sele.each((d) => {
           drawHiddenText(newJSON);
           mindnode_data.add(d.data, newJSON);
-          draw();
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
@@ -95,13 +84,11 @@ export default {
           } else {
             mindnode_data.insert(d.data, newJSON, 1);
           }
-          draw();
         });
       } else if (keyName === 'Backspace') { // 删除节点
         event.preventDefault();
         sele.each((d) => {
           mindnode_data.del(d.data);
-          draw();
         });
       }
     },
