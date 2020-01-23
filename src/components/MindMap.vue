@@ -10,7 +10,6 @@ import * as d3 from 'd3'
 export default {
   props: {
     value: Object,
-    renew: Boolean,// 提示该更新视图【一般出现于value添加新的属性，watch无法检测到
   },
   data: () => ({
     mindmap_svg: Object,
@@ -25,12 +24,6 @@ export default {
       },
       deep: true,// watch for nested data
     },
-    renew(newVal) {
-      if (newVal) {
-        this.drawMindnode(this.value);
-        this.$emit('complete');
-      }
-    }
   },
   methods: {
     emit(event, params) {
