@@ -33,7 +33,6 @@ export default {
   data: () => ({
     mindnode_data: null,
     selectedNode: null,
-    hidden_g: Object,
     hotkey_g: Object,
   }),
   methods: {
@@ -48,13 +47,8 @@ export default {
       hotkey_g.append('text').text('Backspace/delete删除节点').attr('transform', 'translate(20, 80)');
       hotkey_g.append('text').text('单击编辑节点').attr('transform', 'translate(20, 100)');
     },
-    drawHiddenText(d) { // 取得textWidth
-      const text = this.hidden_g.append('text').text(d.name).nodes()[0];
-      d.textWidth = text.getBBox().width;
-    },
     listenKeyDown(event) {
       const { mindnode_data } = this;
-      const { drawHiddenText } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
         return;
@@ -64,14 +58,12 @@ export default {
       if (keyName === 'Tab') { // 添加子节点
         event.preventDefault();
         sele.each((d) => {
-          drawHiddenText(newJSON);
           mindnode_data.add(d.data, newJSON);
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
         event.preventDefault();
         sele.each((d, i, n) => {
           const mindmap_g = d3.select('g#mindmapRoot');
-          drawHiddenText(newJSON);
           if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
             mindnode_data.add(d.data, newJSON);
           } else {
@@ -95,7 +87,6 @@ export default {
     // 初始化
     this.mindnode_data = new JSONData(this.value);
     this.hotkey_g = d3.select('g#hotkey');
-    this.hidden_g = d3.select('g#hidden');
     
     this.drawHotkey();
     this.init();
