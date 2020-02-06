@@ -239,7 +239,7 @@ export default {
           .attr('opacity', 0)
           .on("mouseover", rectTriggerOver)
           .on("mouseout", rectTriggerOut);
-        gNode.append('rect').attr('class', 'rectButton')
+        const rectBtn = gNode.append('rect').attr('class', 'rectButton')
           .attr('y', -9)
           .attr('x', (d) => d.data.textWidth + 8)
           .attr('width', 16)
@@ -265,15 +265,10 @@ export default {
             rect.attr('y', -9 - 4).attr('x', -5 - 4);
           }
 
-          gNode.attr('', (d, i) => {
-            let dd = null;
-            if (d.children) {
-              dd = d.children;
-            } else {
-              dd = [];
-            }
+          gNode.each((d, i) => {
+            const dd = d.children;
 
-            if (dd.length > 0) {
+            if (dd) {
               const gChildren = gNode.filter((a, index) => {
                 return i === index
               }).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}` : ''}`)
@@ -290,6 +285,7 @@ export default {
           });
         }
 
+        rectBtn.raise();
         return gNode;
       }
       function updateNode(update) {
@@ -319,25 +315,12 @@ export default {
         return update;
       }
       function gNodeNest(d, gParent) {
-        // const gNode = 
         gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
           .data(d)
           .join(
             (enter) => appendNode(enter),
             (update) => updateNode(update),
           );
-        // gNode.on('click', clicked);
-        // if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
-        //   gNode.call(d3.drag().on('drag', dragged).on('end', dragended));
-        // }
-        // // 生成嵌套节点
-        // for (let index = 0; index < d.length; index += 1) {
-        //   let dChildren = d[index].children;
-        //   if (!dChildren) {
-        //     dChildren = [];
-        //   }
-        //   gNodeNest(dChildren, gNode.filter((a, i) => i === index));
-        // }
       }
       function renewY(r, textWidth) {
         r.y += textWidth;
