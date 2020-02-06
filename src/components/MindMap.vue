@@ -57,6 +57,14 @@ export default {
 
       let root = null;
       const link = d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]);
+      function rectTriggerOver() {
+        // // eslint-disable-next-line 
+        // console.log(1);
+      }
+      function rectTriggerOut() {
+        // // eslint-disable-next-line 
+        // console.log(2);
+      }
       function draggedNodeRenew(draggedNode, targetX, targetY, dura) {
         const tran = d3.transition().duration(dura).ease(d3.easePoly);
         d3.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`);
@@ -95,7 +103,6 @@ export default {
           d3.select(sele).select('p').attr('contenteditable', true);
           document.querySelector('#editing p').focus();
           document.execCommand('selectAll', false, null);
-          // checkEditTimer = setInterval(checkEditFocus, interval);
         } else { // 选中
           // 选中新的selectedMindnode
           if (sele) {
@@ -103,11 +110,6 @@ export default {
           }
           sele = d3.select(clickedNode);
           sele.attr('id', 'selectedMindnode');
-          // 选中新的selectedOutnode
-          // sele.each((d) => {
-          //   const { id } = d.data;
-          //   seleOutNode(id);
-          // });
         }
       }
       function dragged() {
@@ -117,11 +119,6 @@ export default {
         if (sele && !sele.isSameNode(draggedNode)) {
           sele.removeAttribute('id');
         }
-        // d3.select(draggedNode).attr('id', 'selectedMindnode')
-        //   .each((d) => {
-        //     const { id } = d.data;
-        //     seleOutNode(id);
-        //   });
         // 拖拽
         const { subject } = d3.event;
         const py = d3.event.x - subject.x;
@@ -226,7 +223,7 @@ export default {
           .text((d) => d.data.name);
         foreignP.on('blur', updateNodeName);
         const rect = gNode.append('rect')
-          .attr('class', (d) => `depth_${d.depth}`)
+          .attr('class', (d) => `depth_${d.depth} textRect`)
           .attr('y', -17 - 4)
           .attr('x', -4)
           .attr('width', (d) => d.data.textWidth + 8)
@@ -234,7 +231,20 @@ export default {
           .attr('rx', 3)
           .attr('ry', 3)
           .lower();
-
+        gNode.append('rect').attr('class', 'rectTrigger')
+          .attr('y', -17 - 8)
+          .attr('x', -8)
+          .attr('width', (d) => d.data.textWidth + 16)
+          .attr('height', 16 + 16)
+          .attr('opacity', 0)
+          .on("mouseover", rectTriggerOver)
+          .on("mouseout", rectTriggerOut);
+        gNode.append('rect').attr('class', 'rectButton')
+          .attr('y', -9)
+          .attr('x', (d) => d.data.textWidth + 8)
+          .attr('width', 16)
+          .attr('height', 16);
+        
         const enterData = enter.data();
         if (enterData.length) {
           if (enterData[0].data.id !== '0') {
@@ -254,6 +264,30 @@ export default {
             foreign.attr('transform', `translate(${-10},${-15})`);
             rect.attr('y', -9 - 4).attr('x', -5 - 4);
           }
+
+          gNode.attr('', (d, i) => {
+            let dd = null;
+            if (d.children) {
+              dd = d.children;
+            } else {
+              dd = [];
+            }
+
+            if (dd.length > 0) {
+              const gChildren = gNode.filter((a, index) => {
+                return i === index
+              }).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}` : ''}`)
+                .data(dd)
+                .join(
+                  (enter) => appendNode(enter),
+                  (update) => updateNode(update),
+                );
+              gChildren.on('click', clicked);
+              if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
+                gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
+              }
+            }
+          });
         }
 
         return gNode;
@@ -266,8 +300,8 @@ export default {
           const node = d3.select(n[i]);
           node.select('foreignObject').attr('width', d.data.textWidth + 11);
           node.select('p').text(d.data.name);
-          node.select('rect')
-            .attr('class', `depth_${d.depth}`)
+          node.select('rect.textRect')
+            .attr('class', `depth_${d.depth} textRect`)
             .attr('width', d.data.textWidth + 8);
           node.select('path')
             .attr('id', `path_${d.data.id}`)
@@ -285,24 +319,25 @@ export default {
         return update;
       }
       function gNodeNest(d, gParent) {
-        const gNode = gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
+        // const gNode = 
+        gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
           .data(d)
           .join(
             (enter) => appendNode(enter),
             (update) => updateNode(update),
           );
-        gNode.on('click', clicked);
-        if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
-          gNode.call(d3.drag().on('drag', dragged).on('end', dragended));
-        }
-        // 生成嵌套节点
-        for (let index = 0; index < d.length; index += 1) {
-          let dChildren = d[index].children;
-          if (!dChildren) {
-            dChildren = [];
-          }
-          gNodeNest(dChildren, gNode.filter((a, i) => i === index));
-        }
+        // gNode.on('click', clicked);
+        // if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
+        //   gNode.call(d3.drag().on('drag', dragged).on('end', dragended));
+        // }
+        // // 生成嵌套节点
+        // for (let index = 0; index < d.length; index += 1) {
+        //   let dChildren = d[index].children;
+        //   if (!dChildren) {
+        //     dChildren = [];
+        //   }
+        //   gNodeNest(dChildren, gNode.filter((a, i) => i === index));
+        // }
       }
       function renewY(r, textWidth) {
         r.y += textWidth;
@@ -379,7 +414,7 @@ export default {
   height: 650px;
   margin-right: 8px;
 
-  rect:not(.depth_0) {
+  rect.textRect:not(.depth_0) {
     fill: blue;
     fill-opacity: 0;
     stroke: blue;
@@ -387,7 +422,7 @@ export default {
     stroke-width: 2;
   }
 
-  rect.depth_0 {
+  rect.textRect.depth_0 {
     fill: white;
     stroke: rgb(190, 198, 243);
     stroke-opacity: 0;
@@ -400,17 +435,17 @@ export default {
     stroke-width: 4;
   }
 
-  #selectedMindnode > rect:not(.depth_0) {
+  #selectedMindnode > rect.textRect:not(.depth_0) {
     fill-opacity: 1;
     opacity: 0.2;
     stroke-opacity: 1;
   }
 
-  #selectedMindnode > rect.depth_0 {
+  #selectedMindnode > rect.textRect.depth_0 {
     stroke-opacity: 1;
   }
 
-  #newParentNode > rect {
+  #newParentNode > rect.textRect {
     stroke-opacity: 0.2;
   }
 }

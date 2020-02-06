@@ -16,7 +16,6 @@
 
 <script>
 // 移除键盘监听，通过鼠标操作思维导图
-// 得到文本宽度然后再绘制文本
 import JSONData from '../JSONData'
 import * as d3 from 'd3'
 import outline from '../components/Outline'
