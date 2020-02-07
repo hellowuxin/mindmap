@@ -89,8 +89,10 @@ class JSONData {
   add(dParent, d) { // dParent添加子节点d
     const parent = this.getItself(dParent);
     if (parent.id === '0') { // 根节点
-      d.color = colorScale(colorNumber);
-      colorNumber += 1;
+      if (!d.color) {
+        d.color = colorScale(colorNumber);
+        colorNumber += 1;
+      }
     } else {
       d.color = parent.color; // 继承父节点的color
     }
@@ -128,23 +130,16 @@ class JSONData {
         }
       }
       if ((position+i) < children.length) { // 更新id
-        d.id = children[position + i].id;
-        for (let index = position + i; index < children.length; index++) {
-          const child = children[index];
-          const id = child.id.split('');
-          id[id.length-1] = (parseInt(id[id.length-1], 10) + 1).toString();
-          child.id = id.join('');
-          if (child.children.length > 0) {
-            this._addId(child.id, child.children);
+        if (parent.id === '0') { // 根节点
+          if (!d.color) {
+            d.color = colorScale(colorNumber);
+            colorNumber += 1;
           }
-        }
-        if (parent.color) {
-          d.color = parent.color; 
         } else {
-          colorNumber += 1;
-          d.color = colorScale(colorNumber);
+          d.color = parent.color; // 继承父节点的color
         }
         children.splice(position + i, 0, d);
+        this._addId(parent.id, children)
       } else {
         this.add(parent, d);
       }

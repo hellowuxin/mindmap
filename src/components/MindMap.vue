@@ -222,8 +222,7 @@ export default {
           .attr('contenteditable', false)
           .text((d) => d.data.name);
         foreignP.on('blur', updateNodeName);
-        const rect = gNode.append('rect')
-          .attr('class', (d) => `depth_${d.depth} textRect`)
+        const rect = gNode.append('rect').attr('class', (d) => `depth_${d.depth} textRect`)
           .attr('y', -17 - 4)
           .attr('x', -4)
           .attr('width', (d) => d.data.textWidth + 8)
@@ -231,7 +230,7 @@ export default {
           .attr('rx', 3)
           .attr('ry', 3)
           .lower();
-        gNode.append('rect').attr('class', 'rectTrigger')
+        gNode.append('rect').attr('class', (d) => `depth_${d.depth} rectTrigger`)
           .attr('y', -17 - 8)
           .attr('x', -8)
           .attr('width', (d) => d.data.textWidth + 16)
@@ -239,7 +238,7 @@ export default {
           .attr('opacity', 0)
           .on("mouseover", rectTriggerOver)
           .on("mouseout", rectTriggerOut);
-        const rectBtn = gNode.append('rect').attr('class', 'rectButton')
+        const rectBtn = gNode.append('rect').attr('class', (d) => `depth_${d.depth} rectButton`)
           .attr('y', -9)
           .attr('x', (d) => d.data.textWidth + 8)
           .attr('width', 16)
@@ -276,6 +275,7 @@ export default {
                 .join(
                   (enter) => appendNode(enter),
                   (update) => updateNode(update),
+                  (exit) => exitNode(exit)
                 );
               gChildren.on('click', clicked);
               if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
@@ -296,9 +296,10 @@ export default {
           const node = d3.select(n[i]);
           node.select('foreignObject').attr('width', d.data.textWidth + 11);
           node.select('p').text(d.data.name);
-          node.select('rect.textRect')
-            .attr('class', `depth_${d.depth} textRect`)
+          node.select('rect.textRect').attr('class', `depth_${d.depth} textRect`)
             .attr('width', d.data.textWidth + 8);
+          node.select('rect.rectTrigger').attr('class', `depth_${d.depth} rectTrigger`)
+            .attr('width', (d) => d.data.textWidth + 16)
           node.select('path')
             .attr('id', `path_${d.data.id}`)
             .attr('class', `depth_${d.depth}`)
@@ -311,10 +312,10 @@ export default {
               ],
               target: [0, 0],
             })}L${d.data.textWidth},0`);
-
+          
           node.each((d, i) => {
             const dd = d.children;
-
+            
             if (dd) {
               const gChildren = node.filter((a, index) => {
                 return i === index
@@ -323,6 +324,7 @@ export default {
                 .join(
                   (enter) => appendNode(enter),
                   (update) => updateNode(update),
+                  (exit) => exitNode(exit)
                 );
               gChildren.on('click', clicked);
               if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
@@ -330,16 +332,30 @@ export default {
               }
             }
           });
+          
+          node.selectAll('rect.rectButton')
+            .filter((d, i, n) => n[i].parentNode === node.node())
+            .attr('class', `depth_${d.depth} rectButton`)
+            .attr('x', (d) => d.data.textWidth + 8)
+            .raise();
         });
         return update;
       }
+      function exitNode(exit) {
+        exit.remove();
+      }
       function gNodeNest(d, gParent) {
-        gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
+        const gChildren = gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
           .data(d)
           .join(
             (enter) => appendNode(enter),
             (update) => updateNode(update),
+            (exit) => exitNode(exit)
           );
+        gChildren.on('click', clicked);
+        if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
+          gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
+        }
       }
       function renewY(r, textWidth) {
         r.y += textWidth;
@@ -371,6 +387,10 @@ export default {
           // 相对偏移
           a.dx = a.x - (a.parent ? a.parent.x : 0);
           a.dy = a.y - (a.parent ? a.parent.y : 0);
+
+          if (!a.children) {
+            a.children = [];
+          }
         });
         gNodeNest([root], mindmap_g);
       }
