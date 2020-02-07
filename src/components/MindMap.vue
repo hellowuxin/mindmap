@@ -336,7 +336,7 @@ export default {
           node.selectAll('rect.rectButton')
             .filter((d, i, n) => n[i].parentNode === node.node())
             .attr('class', `depth_${d.depth} rectButton`)
-            .attr('x', (d) => d.data.textWidth + 8)
+            .attr('x', d.data.textWidth + 8)
             .raise();
         });
         return update;
