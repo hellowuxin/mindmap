@@ -311,6 +311,25 @@ export default {
               ],
               target: [0, 0],
             })}L${d.data.textWidth},0`);
+
+          node.each((d, i) => {
+            const dd = d.children;
+
+            if (dd) {
+              const gChildren = node.filter((a, index) => {
+                return i === index
+              }).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}` : ''}`)
+                .data(dd)
+                .join(
+                  (enter) => appendNode(enter),
+                  (update) => updateNode(update),
+                );
+              gChildren.on('click', clicked);
+              if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
+                gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
+              }
+            }
+          });
         });
         return update;
       }

@@ -97,28 +97,7 @@ class JSONData {
     inheritColor(d, d.color);
     d.id = `${parent.id}${parent.children.length}`;
     parent.children.push(d);
-  }
-
-  exchange(a, b, d = this.data) { // 同一父节点下的a,b调换
-    for (let index = 0; index < d.length; index += 1) {
-      const dChildA = d[index];
-      if (isEqualJSON(dChildA, a)) {
-        for (let i = 0; i < d.length; i += 1) {
-          const dChildB = d[i];
-          if (isEqualJSON(dChildB, b)) {
-            d[index] = dChildB;
-            d[i] = dChildA;
-          }
-        }
-        return true;
-      }
-      if (dChildA.children) {
-        if (this.exchange(a, b, dChildA.children)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    this._addId(`${d.id}`, d.children);
   }
 
   getParent(d, data = this.data) {
