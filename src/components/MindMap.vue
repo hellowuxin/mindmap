@@ -1,8 +1,11 @@
 <template>
-  <svg class="mindmap">
-    <g id="mindmapRoot"></g>
-    <g id="dummy"></g>
-  </svg>
+  <div id="mindmap">
+    <svg>
+      <g id="content"></g>
+      <g id="dummy"></g>
+      <g id="contextMenu"></g>
+    </svg>
+  </div>
 </template>
 
 <script>
@@ -16,6 +19,7 @@ export default {
     mindmap_svg: Object,
     mindmap_g: Object,
     dummy_g: Object,
+    contextMenu_g: Object,
     mindmapSvgZoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
   }),
@@ -111,11 +115,11 @@ export default {
         draggedNodeChildrenRenew(subject, 0, 0);
         draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000);
       }
-      function clicked() {
+      function clicked(d, i, n) {
         d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
         let sele = document.getElementById('selectedMindnode');
         const edit = document.getElementById('editing');
-        const clickedNode = this;
+        const clickedNode = n[i];
         if (clickedNode.isSameNode(edit)) { // 正在编辑
           return;
         }
@@ -133,8 +137,30 @@ export default {
           sele.attr('id', 'selectedMindnode');
         }
       }
-      function dragged() {
-        const draggedNode = this;
+      function rightClick(d, i, n) {
+        d3.event.preventDefault();
+        d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
+        let sele = document.getElementById('selectedMindnode');
+        const edit = document.getElementById('editing');
+        const clickedNode = n[i];
+        if (clickedNode.isSameNode(edit)) { // 正在编辑
+          return;
+        }
+        if (clickedNode.isSameNode(sele)) {
+          return;
+        } else { // 选中
+          // 选中新的selectedMindnode
+          if (sele) {
+            sele.removeAttribute('id');
+          }
+          sele = d3.select(clickedNode);
+          sele.attr('id', 'selectedMindnode');
+        }
+        // eslint-disable-next-line 
+        console.log(d.data.name, i, n);
+      }
+      function dragged(d, i, n) {
+        const draggedNode = n[i];
         // 选中
         const sele = document.getElementById('selectedMindnode');
         if (sele && !sele.isSameNode(draggedNode)) {
@@ -168,9 +194,9 @@ export default {
           }
         });
       }
-      function dragended() {
+      function dragended(d, i, n) {
         const { subject } = d3.event;
-        const draggedNode = this;
+        const draggedNode = n[i];
         let draggedParentNode = draggedNode.parentNode;
         if (draggedParentNode.isEqualNode(mindmap_g.nodes()[0])) { // 拖拽的是根节点时复原
           dragback(subject, draggedNode);
@@ -306,7 +332,7 @@ export default {
                   (update) => updateNode(update),
                   (exit) => exitNode(exit)
                 );
-              gChildren.on('click', clicked);
+              gChildren.on('click', clicked).on('contextmenu', rightClick);
               if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
                 gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
               }
@@ -355,7 +381,7 @@ export default {
                   (update) => updateNode(update),
                   (exit) => exitNode(exit)
                 );
-              gChildren.on('click', clicked);
+              gChildren.on('click', clicked).on('contextmenu', rightClick);
               if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
                 gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
               }
@@ -385,7 +411,7 @@ export default {
             (update) => updateNode(update),
             (exit) => exitNode(exit)
           );
-        gChildren.on('click', clicked);
+        gChildren.on('click', clicked).on('contextmenu', rightClick);
         if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
           gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
         }
@@ -429,6 +455,12 @@ export default {
       }
       chart(dJSON);
     },
+    drawContextMenu() {
+      const { contextMenu_g } = this;
+      contextMenu_g.append('rect')
+        .attr('width', 32)
+        .attr('height', 32)
+    },
     getTextWidth(t) {
       const { dummy_g } = this;
       let textWidth = 0;
@@ -439,18 +471,18 @@ export default {
         .enter()
         .append("text")
         .text((d) => d)
-        .each(function() {
-          const thisWidth = this.getComputedTextLength();
+        .each((d, i, n) => {
+          const thisWidth = n[i].getComputedTextLength();
           textWidth = thisWidth;
-          this.remove() // remove them just after displaying them
+          n[i].remove() // remove them just after displaying them
         })
         
       t.textWidth = textWidth;
     }
   },
   mounted() {
-    this.mindmap_svg = d3.select('svg.mindmap');
-    this.mindmap_g = d3.select('g#mindmapRoot');
+    this.mindmap_svg = d3.select('div#mindmap svg');
+    this.mindmap_g = d3.select('g#content');
     this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', () => {
       const { transform } = d3.event;
       this.mindmap_g.attr('transform', transform);
@@ -458,64 +490,72 @@ export default {
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
 
     this.dummy_g = d3.select('g#dummy');
+
+    this.contextMenu_g = d3.select('g#contextMenu');
+    this.drawContextMenu();
   }
 }
 </script>
 
 <style lang="scss">
-.mindmap {
-  background-color: rgb(238, 238, 243);
+div#mindmap {
+  display: flex;
   flex: auto;
-  height: 650px;
-  margin-right: 8px;
 
-  rect.textRect:not(.depth_0) {
-    fill: blue;
-    fill-opacity: 0;
-    stroke: blue;
-    stroke-opacity: 0;
-    stroke-width: 2;
-  }
+  svg {
+    background-color: rgb(238, 238, 243);
+    flex: auto;
+    height: 650px;
+    margin-right: 8px;
 
-  rect.textRect.depth_0 {
-    fill: white;
-    stroke: rgb(190, 198, 243);
-    stroke-opacity: 0;
-    stroke-width: 2;
-  }
+    rect.textRect:not(.depth_0) {
+      fill: blue;
+      fill-opacity: 0;
+      stroke: blue;
+      stroke-opacity: 0;
+      stroke-width: 2;
+    }
 
-  g.gButton {
-    opacity: 0;
-    > {
-      path {
-        fill: blue;
-      }
-      rect {
-        fill: white;
-        stroke: grey;
-        stroke-width: 0.5;
+    rect.textRect.depth_0 {
+      fill: white;
+      stroke: rgb(190, 198, 243);
+      stroke-opacity: 0;
+      stroke-width: 2;
+    }
+
+    g.gButton {
+      opacity: 0;
+      > {
+        path {
+          fill: blue;
+        }
+        rect {
+          fill: white;
+          stroke: grey;
+          stroke-width: 0.5;
+        }
       }
     }
-  }
 
-  path {
-    fill: none;
-    stroke-linecap: round;
-    stroke-width: 4;
-  }
+    path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-width: 4;
+    }
 
-  #selectedMindnode > rect.textRect:not(.depth_0) {
-    fill-opacity: 1;
-    opacity: 0.2;
-    stroke-opacity: 1;
-  }
+    #selectedMindnode > rect.textRect:not(.depth_0) {
+      fill-opacity: 1;
+      opacity: 0.2;
+      stroke-opacity: 1;
+    }
 
-  #selectedMindnode > rect.textRect.depth_0 {
-    stroke-opacity: 1;
-  }
+    #selectedMindnode > rect.textRect.depth_0 {
+      stroke-opacity: 1;
+    }
 
-  #newParentNode > rect.textRect {
-    stroke-opacity: 0.2;
+    #newParentNode > rect.textRect {
+      stroke-opacity: 0.2;
+    }
   }
 }
 </style>

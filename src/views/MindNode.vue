@@ -109,11 +109,6 @@ body {
   font-family: sans-serif;
 }
 
-.wrapper {
-  display: flex;
-  margin: 8px;
-}
-
 svg {
   font-size: 14px;
 }
