@@ -57,13 +57,17 @@ export default {
 
       let root = null;
       const link = d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]);
-      function rectTriggerOver() {
-        // // eslint-disable-next-line 
-        // console.log(1);
+      function rectTriggerOver(d, i, n) {
+        // const collection = 
+        n[i].parentNode.children;
+        // const gBtn = d3.select(collection[collection.length - 1]);
+        // gBtn.style('display', 'block');
       }
-      function rectTriggerOut() {
-        // // eslint-disable-next-line 
-        // console.log(2);
+      function rectTriggerOut(d, i, n) {
+        // const collection = 
+        n[i].parentNode.children;
+        // const gBtn = d3.select(collection[collection.length - 1]);
+        // gBtn.style('display', 'none');
       }
       function draggedNodeRenew(draggedNode, targetX, targetY, dura) {
         const tran = d3.transition().duration(dura).ease(d3.easePoly);
@@ -163,7 +167,7 @@ export default {
               // 处理数据
               dJSON.del(draggedD.data);
               dJSON.add(newParentD.data, draggedD.data);
-              draggedNode.parentNode.removeChild(draggedNode);
+              draggedNode.parentNode.removeChild(draggedNode);// 必要，使动画看起来更流畅
               // 绘制图形
               chart(dJSON);
             });
@@ -238,11 +242,16 @@ export default {
           .attr('opacity', 0)
           .on("mouseover", rectTriggerOver)
           .on("mouseout", rectTriggerOut);
-        const rectBtn = gNode.append('rect').attr('class', (d) => `depth_${d.depth} rectButton`)
-          .attr('y', -9)
-          .attr('x', (d) => d.data.textWidth + 8)
-          .attr('width', 16)
-          .attr('height', 16);
+        
+        const gBtn = gNode.append('g').attr('class', 'gButton')
+          .attr('transform', (d) => `translate(${d.data.textWidth + 8},${-12})`);
+        gBtn.append('rect')
+          .attr('width', 24)
+          .attr('height', 24)
+          .attr('rx', 3)
+          .attr('ry', 3);
+        gBtn.append('path')
+          .attr('d', 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z');
         
         const enterData = enter.data();
         if (enterData.length) {
@@ -285,7 +294,7 @@ export default {
           });
         }
 
-        rectBtn.raise();
+        gBtn.raise();
         return gNode;
       }
       function updateNode(update) {
@@ -333,15 +342,19 @@ export default {
             }
           });
           
-          node.selectAll('rect.rectButton')
+          node.selectAll('g.gButton')
             .filter((d, i, n) => n[i].parentNode === node.node())
-            .attr('class', `depth_${d.depth} rectButton`)
-            .attr('x', d.data.textWidth + 8)
+            .attr('transform', `translate(${d.data.textWidth + 8},${-12})`)
             .raise();
         });
         return update;
       }
       function exitNode(exit) {
+        if (!exit.empty()) {
+          if (exit.attr('class').includes('gButton')) {
+            return ;
+          }
+        }
         exit.remove();
       }
       function gNodeNest(d, gParent) {
@@ -449,6 +462,15 @@ export default {
     stroke: rgb(190, 198, 243);
     stroke-opacity: 0;
     stroke-width: 2;
+  }
+
+  g.gButton > {
+    path {
+      fill: blue;
+    }
+    rect {
+      fill: white;
+    }
   }
 
   path {
