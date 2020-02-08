@@ -57,17 +57,34 @@ export default {
 
       let root = null;
       const link = d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]);
+      function gBtnClick(d, i, n) { // 添加子节点
+        d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
+        d3.select(n[i].parentNode).each((d) => {
+          const newJSON = { name: '新建节点', children: [] };
+          dJSON.add(d.data, newJSON);
+        })
+      }
       function rectTriggerOver(d, i, n) {
-        // const collection = 
-        n[i].parentNode.children;
-        // const gBtn = d3.select(collection[collection.length - 1]);
-        // gBtn.style('display', 'block');
+        let gBtn = null;
+        if (n[i].className.baseVal.includes('gButton')) {
+          gBtn = d3.select(n[i]);
+          gBtn.style('opacity', 1);
+        } else {
+          const collection = n[i].parentNode.children;
+          gBtn = d3.select(collection[collection.length - 1]);
+          gBtn.style('opacity', 0.5);
+        }
       }
       function rectTriggerOut(d, i, n) {
-        // const collection = 
-        n[i].parentNode.children;
-        // const gBtn = d3.select(collection[collection.length - 1]);
-        // gBtn.style('display', 'none');
+        let gBtn = null;
+        if (n[i].className.baseVal.includes('gButton')) {
+          gBtn = d3.select(n[i]);
+          gBtn.style('opacity', 0);
+        } else {
+          const collection = n[i].parentNode.children;
+          gBtn = d3.select(collection[collection.length - 1]);
+          gBtn.style('opacity', 0);
+        }
       }
       function draggedNodeRenew(draggedNode, targetX, targetY, dura) {
         const tran = d3.transition().duration(dura).ease(d3.easePoly);
@@ -240,11 +257,14 @@ export default {
           .attr('width', (d) => d.data.textWidth + 16)
           .attr('height', 16 + 16)
           .attr('opacity', 0)
-          .on("mouseover", rectTriggerOver)
-          .on("mouseout", rectTriggerOut);
+          .on('mouseover', rectTriggerOver)
+          .on('mouseout', rectTriggerOut);
         
         const gBtn = gNode.append('g').attr('class', 'gButton')
-          .attr('transform', (d) => `translate(${d.data.textWidth + 8},${-12})`);
+          .attr('transform', (d) => `translate(${d.data.textWidth + 8},${-12})`)
+          .on('mouseover', rectTriggerOver)
+          .on('mouseout', rectTriggerOut)
+          .on('click', gBtnClick);
         gBtn.append('rect')
           .attr('width', 24)
           .attr('height', 24)
@@ -357,7 +377,7 @@ export default {
         }
         exit.remove();
       }
-      function gNodeNest(d, gParent) {
+      function gNodeNest(d, gParent) { // 生成svg
         const gChildren = gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
           .data(d)
           .join(
@@ -379,7 +399,7 @@ export default {
           }
         }
       }
-      function chart(d) {
+      function chart(d) { // 数据处理
         const r = d3.hierarchy(d.data[0]);// 根据指定的分层数据构造根节点
         r.nodeHeight = 35;
         r.nodeWidth = 100;// r.height与叶子节点的最大距离
@@ -464,12 +484,17 @@ export default {
     stroke-width: 2;
   }
 
-  g.gButton > {
-    path {
-      fill: blue;
-    }
-    rect {
-      fill: white;
+  g.gButton {
+    opacity: 0;
+    > {
+      path {
+        fill: blue;
+      }
+      rect {
+        fill: white;
+        stroke: grey;
+        stroke-width: 0.5;
+      }
     }
   }
 
