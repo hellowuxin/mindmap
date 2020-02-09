@@ -75,6 +75,36 @@ export default {
     }
   },
   methods: {
+    listenKeyDown(event) {
+      const { mmdata } = this;
+      const sele = d3.select('#selectedMindnode');
+      if (!sele.nodes()[0]) {
+        return;
+      }
+      const newJSON = { name: '新建节点', children: [] };
+      const keyName = event.key;
+      if (keyName === 'Tab') { // 添加子节点
+        event.preventDefault();
+        sele.each((d) => {
+          mmdata.add(d.data, newJSON);
+        });
+      } else if (keyName === 'Enter') { // 添加弟弟节点
+        event.preventDefault();
+        sele.each((d, i, n) => {
+          const mindmap_g = d3.select('g#content');
+          if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
+            mmdata.add(d.data, newJSON);
+          } else {
+            mmdata.insert(d.data, newJSON, 1);
+          }
+        });
+      } else if (keyName === 'Backspace') { // 删除节点
+        event.preventDefault();
+        sele.each((d) => {
+          mmdata.del(d.data);
+        });
+      }
+    },
     clickMenu(item) {
       if (item.command === 0) { // 删除节点
         const sele = d3.select('g#selectedMindnode');
@@ -96,9 +126,6 @@ export default {
           this.depthTraverse(dChild, func);
         }
       }
-    },
-    emit(event, params) {
-      this.$emit(event, params);
     },
     updateNodeName() { // 文本编辑完成时
       const editP = document.querySelector('#editing p');
@@ -442,12 +469,12 @@ export default {
         return update;
       }
       function exitNode(exit) {
-        if (!exit.empty()) {
-          if (exit.attr('class').includes('gButton')) {
-            return ;
+        exit.filter((d, i, n) => {
+          if (n[i].classList[0] === 'gButton') {
+            return false;
           }
-        }
-        exit.remove();
+          return true;
+        }).remove();
       }
       function gNodeNest(d, gParent) { // 生成svg
         const gChildren = gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
@@ -530,6 +557,8 @@ export default {
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
 
     this.dummy_g = d3.select('g#dummy');
+
+    document.addEventListener('keydown', this.listenKeyDown);
   }
 }
 </script>
