@@ -33,6 +33,7 @@ import * as d3 from 'd3'
 import JSONData from '../JSONData'
 
 export default {
+  name: 'mindmap',
   props: {
     value: Array,// 源数据
     width: Number,

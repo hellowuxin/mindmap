@@ -7,7 +7,9 @@
 
     <v-content>
       <v-container fluid>
-        <router-view></router-view>
+        <mindmap
+          v-model="data"
+        ></mindmap>
       </v-container>
     </v-content>
 
@@ -17,8 +19,17 @@
 </template>
 
 <script>
+import dataLearn from '../public/learn.json'
+import mindmap from './components/MindMap'
 export default {
-
+  components: {
+    mindmap
+  },
+  data: () => ({
+    data: [dataLearn],
+  }),
+  methods: {
+  }
 }
 </script>
 
