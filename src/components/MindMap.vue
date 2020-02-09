@@ -3,8 +3,23 @@
     <svg>
       <g id="content"></g>
       <g id="dummy"></g>
-      <g id="contextMenu"></g>
     </svg>
+    <v-menu
+      absolute
+      v-model="showMenu"
+      :position-x="menuX"
+      :position-y="menuY"
+    >
+      <v-list>
+        <v-list-item
+          v-for="(item, index) in items"
+          :key="index"
+          @click="clickMenu"
+        >
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </div>
 </template>
 
@@ -16,10 +31,18 @@ export default {
     value: Object,
   },
   data: () => ({
+    showMenu: false,
+    menuX: 0,
+    menuY: 0,
+    items: [
+      { title: '删除节点' },
+      { title: 'Click Me' },
+      { title: 'Click Me' },
+      { title: 'Click Me 2' },
+    ],
     mindmap_svg: Object,
     mindmap_g: Object,
     dummy_g: Object,
-    contextMenu_g: Object,
     mindmapSvgZoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
   }),
@@ -33,6 +56,14 @@ export default {
     },
   },
   methods: {
+    clickMenu() {
+
+    },
+    showContextMenu(e) {
+      this.menuX = e.clientX
+      this.menuY = e.clientY
+      this.showMenu = true;
+    },
     depthTraverse(d, func) { // 深度遍历，func每个元素
       func(d);
       if (d.children) {
@@ -57,7 +88,7 @@ export default {
     },
     drawMindnode(dJSON) {
       const { mindmap_g, easePolyInOut } = this;
-      const { updateNodeName } = this;
+      const { updateNodeName, showContextMenu } = this;
 
       let root = null;
       const link = d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]);
@@ -115,26 +146,24 @@ export default {
         draggedNodeChildrenRenew(subject, 0, 0);
         draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000);
       }
-      function clicked(d, i, n) {
+      function selectMindnode(clickedNode, sele) {
+        // 选中新的selectedMindnode
+        if (sele) { sele.removeAttribute('id') }
+        sele = d3.select(clickedNode);
+        sele.attr('id', 'selectedMindnode');
+      }
+      function click(d, i, n) {
         d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
         let sele = document.getElementById('selectedMindnode');
         const edit = document.getElementById('editing');
-        const clickedNode = n[i];
-        if (clickedNode.isSameNode(edit)) { // 正在编辑
-          return;
-        }
-        if (clickedNode.isSameNode(sele)) { // 进入编辑状态
+        const clickedNode = n[i].parentNode;
+        if (edit) { // 正在编辑
+        } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
           sele.setAttribute('id', 'editing');
           d3.select(sele).select('p').attr('contenteditable', true);
           document.querySelector('#editing p').focus();
-          document.execCommand('selectAll', false, null);
         } else { // 选中
-          // 选中新的selectedMindnode
-          if (sele) {
-            sele.removeAttribute('id');
-          }
-          sele = d3.select(clickedNode);
-          sele.attr('id', 'selectedMindnode');
+          selectMindnode(clickedNode, sele);
         }
       }
       function rightClick(d, i, n) {
@@ -142,22 +171,14 @@ export default {
         d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
         let sele = document.getElementById('selectedMindnode');
         const edit = document.getElementById('editing');
-        const clickedNode = n[i];
+        const clickedNode = n[i].parentNode;
         if (clickedNode.isSameNode(edit)) { // 正在编辑
           return;
         }
-        if (clickedNode.isSameNode(sele)) {
-          return;
-        } else { // 选中
-          // 选中新的selectedMindnode
-          if (sele) {
-            sele.removeAttribute('id');
-          }
-          sele = d3.select(clickedNode);
-          sele.attr('id', 'selectedMindnode');
+        if (!clickedNode.isSameNode(sele)) { // 选中
+          selectMindnode(clickedNode, sele);
         }
-        // eslint-disable-next-line 
-        console.log(d.data.name, i, n);
+        showContextMenu(d3.event);
       }
       function dragged(d, i, n) {
         const draggedNode = n[i];
@@ -277,14 +298,16 @@ export default {
           .attr('rx', 3)
           .attr('ry', 3)
           .lower();
-        gNode.append('rect').attr('class', (d) => `depth_${d.depth} rectTrigger`)
+        const rectTrigger = gNode.append('rect').attr('class', (d) => `depth_${d.depth} rectTrigger`)
           .attr('y', -17 - 8)
           .attr('x', -8)
           .attr('width', (d) => d.data.textWidth + 16)
           .attr('height', 16 + 16)
           .attr('opacity', 0)
           .on('mouseover', rectTriggerOver)
-          .on('mouseout', rectTriggerOut);
+          .on('mouseout', rectTriggerOut)
+          .on('click', click)
+          .on('contextmenu', rightClick);
         
         const gBtn = gNode.append('g').attr('class', 'gButton')
           .attr('transform', (d) => `translate(${d.data.textWidth + 8},${-12})`)
@@ -317,6 +340,7 @@ export default {
           } else if (enterData[0].data.id === '0') { // 根节点
             foreign.attr('transform', `translate(${-10},${-15})`);
             rect.attr('y', -9 - 4).attr('x', -5 - 4);
+            rectTrigger.attr('y', -9 - 8).attr('x', -5 - 8);
           }
 
           gNode.each((d, i) => {
@@ -332,7 +356,6 @@ export default {
                   (update) => updateNode(update),
                   (exit) => exitNode(exit)
                 );
-              gChildren.on('click', clicked).on('contextmenu', rightClick);
               if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
                 gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
               }
@@ -381,7 +404,6 @@ export default {
                   (update) => updateNode(update),
                   (exit) => exitNode(exit)
                 );
-              gChildren.on('click', clicked).on('contextmenu', rightClick);
               if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
                 gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
               }
@@ -411,7 +433,6 @@ export default {
             (update) => updateNode(update),
             (exit) => exitNode(exit)
           );
-        gChildren.on('click', clicked).on('contextmenu', rightClick);
         if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
           gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
         }
@@ -455,12 +476,6 @@ export default {
       }
       chart(dJSON);
     },
-    drawContextMenu() {
-      const { contextMenu_g } = this;
-      contextMenu_g.append('rect')
-        .attr('width', 32)
-        .attr('height', 32)
-    },
     getTextWidth(t) {
       const { dummy_g } = this;
       let textWidth = 0;
@@ -490,23 +505,26 @@ export default {
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
 
     this.dummy_g = d3.select('g#dummy');
-
-    this.contextMenu_g = d3.select('g#contextMenu');
-    this.drawContextMenu();
   }
 }
 </script>
 
 <style lang="scss">
 div#mindmap {
+  position: relative;
   display: flex;
   flex: auto;
+
+  div.rightClickTrigger {
+    position: absolute; 
+    width: 100%; 
+    height: 100%
+  }
 
   svg {
     background-color: rgb(238, 238, 243);
     flex: auto;
     height: 650px;
-    margin-right: 8px;
 
     rect.textRect:not(.depth_0) {
       fill: blue;

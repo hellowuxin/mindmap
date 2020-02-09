@@ -5,6 +5,7 @@
       @selectedOutNode="getSelectedNode"
     ></outline>
     <mindmap
+      class="mr-2"
       v-model="mindnode_data"
     ></mindmap>
     <svg class="tip">
