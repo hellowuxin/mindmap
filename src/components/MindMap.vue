@@ -1,5 +1,5 @@
 <template>
-  <div id="mindmap">
+  <div id="mindmap" :style="mmStyle">
     <svg>
       <g id="content"></g>
       <g id="dummy"></g>
@@ -35,10 +35,20 @@ import JSONData from '../JSONData'
 export default {
   props: {
     value: Array,// 源数据
+    width: Number,
+    height: Number,
   },
   model: { // 双向绑定
     prop: 'value',
     event: 'change'
+  },
+  computed: {
+    mmStyle() {
+      return {
+        width: `${this.width ? this.width : 700}px`,
+        height: `${this.height ? this.height : 700}px`,
+      }
+    }
   },
   data: () => ({
     mmdata: Object,// 思维导图数据
@@ -529,7 +539,6 @@ div#mindmap {
   font-size: 14px;
   position: relative;
   display: flex;
-  width: 800px;
   box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 
     0px 2px 2px 0px rgba(0, 0, 0, 0.14), 
     0px 1px 5px 0px rgba(0, 0, 0, 0.12);
@@ -546,7 +555,6 @@ div#mindmap {
 
   svg {
     flex: auto;
-    height: 650px;
 
     rect.textRect:not(.depth_0) {
       fill: blue;
