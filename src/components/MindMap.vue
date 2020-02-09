@@ -30,12 +30,18 @@
 
 <script>
 import * as d3 from 'd3'
+import JSONData from '../JSONData'
 
 export default {
   props: {
-    value: Object,
+    value: Array,// 源数据
+  },
+  model: { // 双向绑定
+    prop: 'value',
+    event: 'change'
   },
   data: () => ({
+    mmdata: Object,// 思维导图数据
     showMenu: false,
     menuX: 0,
     menuY: 0,
@@ -49,20 +55,21 @@ export default {
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
   }),
   watch: {
-    value: {
+    mmdata: {
       handler(newVal) {
         this.depthTraverse(newVal.data[0], this.getTextWidth);
         this.drawMindnode(newVal);
+        this.$emit('change', this.mmdata.getPuredata())
       },
       deep: true,// watch for nested data
-    },
+    }
   },
   methods: {
     clickMenu(item) {
       if (item.command === 0) { // 删除节点
         const sele = d3.select('g#selectedMindnode');
         sele.each((d) => {
-          this.value.del(d.data);
+          this.mmdata.del(d.data);
         })
       }
     },
@@ -503,6 +510,7 @@ export default {
     }
   },
   mounted() {
+    this.mmdata = new JSONData(this.value);
     this.mindmap_svg = d3.select('div#mindmap svg');
     this.mindmap_g = d3.select('g#content');
     this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', () => {
@@ -518,9 +526,17 @@ export default {
 
 <style lang="scss">
 div#mindmap {
+  font-size: 14px;
   position: relative;
   display: flex;
-  flex: auto;
+  width: 800px;
+  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 
+    0px 2px 2px 0px rgba(0, 0, 0, 0.14), 
+    0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  
+  p { margin: 0; }
+  foreignObject { padding: 5px; }
+
 
   div.rightClickTrigger {
     position: absolute; 
@@ -529,7 +545,6 @@ div#mindmap {
   }
 
   svg {
-    background-color: rgb(238, 238, 243);
     flex: auto;
     height: 650px;
 

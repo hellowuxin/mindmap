@@ -1,17 +1,17 @@
 <template>
   <div class="wrapper">
-    <outline 
+    <!-- <outline 
       v-model="mindnode_data"
       @selectedOutNode="getSelectedNode"
-    ></outline>
+    ></outline> -->
     <mindmap
       class="mr-2"
       v-model="mindnode_data"
     ></mindmap>
-    <svg class="tip">
+    <!-- <svg class="tip">
       <g id="hotkey"></g>
       <g id="hidden"></g>
-    </svg>
+    </svg> -->
   </div>
 </template>
 
@@ -19,12 +19,12 @@
 // 移除键盘监听，通过鼠标操作思维导图
 import JSONData from '../JSONData'
 import * as d3 from 'd3'
-import outline from '../components/Outline'
+// import outline from '../components/Outline'
 import mindmap from '../components/MindMap'
 
 export default {
   components: {
-    outline,
+    // outline,
     mindmap,
   },
   props: {

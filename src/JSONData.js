@@ -55,6 +55,23 @@ class JSONData {
     }
   }
 
+  getPuredata(d = JSON.parse(JSON.stringify(this.data))) {
+    for (let index = 0; index < d.length; index += 1) {
+      const dd = d[index];
+      const keys = Object.keys(dd);
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        if (k !== 'name' && k !== 'children') {
+          delete dd[k];
+        }
+      }
+      if (dd.children) {
+        this.getPuredata(dd.children);
+      }
+    }
+    return d;
+  }
+
   del(s) { // 删除s
     const parent = this.getParent(s);
     if (parent) {
