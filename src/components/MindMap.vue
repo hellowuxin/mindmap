@@ -10,11 +10,16 @@
       :position-x="menuX"
       :position-y="menuY"
     >
-      <v-list>
+      <v-list
+        dense
+        class="py-1"
+        color="grey lighten-3"
+      >
         <v-list-item
           v-for="(item, index) in items"
           :key="index"
-          @click="clickMenu"
+          @click="clickMenu(item)"
+          style="min-height: 20px"
         >
           <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
@@ -35,10 +40,7 @@ export default {
     menuX: 0,
     menuY: 0,
     items: [
-      { title: '删除节点' },
-      { title: 'Click Me' },
-      { title: 'Click Me' },
-      { title: 'Click Me 2' },
+      { title: '删除节点', command: 0 },
     ],
     mindmap_svg: Object,
     mindmap_g: Object,
@@ -56,8 +58,13 @@ export default {
     },
   },
   methods: {
-    clickMenu() {
-
+    clickMenu(item) {
+      if (item.command === 0) { // 删除节点
+        const sele = d3.select('g#selectedMindnode');
+        sele.each((d) => {
+          this.value.del(d.data);
+        })
+      }
     },
     showContextMenu(e) {
       this.menuX = e.clientX
