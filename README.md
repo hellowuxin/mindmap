@@ -6,6 +6,17 @@
 
 功能：拖拽、编辑、删除、添加、缩放...
 
+支持键盘和鼠标操作
+
+- Tab - 添加子节点
+- Enter - 添加兄弟节点
+- delete - 删除节点
+- 右键 - 菜单
+- 单击两次 - 编辑
+- ...
+
+在线演示：<https://mindnode.5xin.xyz>
+
 ## 背景-Background
 
 初衷是想实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图web mindmap
