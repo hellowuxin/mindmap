@@ -25,6 +25,22 @@
         </v-list-item>
       </v-list>
     </v-menu> -->
+    <div 
+      id="menu"
+      tabindex="0"
+      v-show="showMenu"
+      :style="{ top: menuY+'px', left: menuX+'px' }"
+      @blur="showMenu = false"
+    >
+      <div 
+        class="menu-item"
+        v-for="(item, index) in items"
+        :key="index"
+        @click="clickMenu(item)"
+      >
+        <div>{{ item.title }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -107,6 +123,7 @@ export default {
       }
     },
     clickMenu(item) {
+      this.showMenu = false;
       if (item.command === 0) { // 删除节点
         const sele = d3.select('g#selectedMindnode');
         sele.each((d) => {
@@ -115,9 +132,10 @@ export default {
       }
     },
     showContextMenu(e) {
-      this.menuX = e.clientX
-      this.menuY = e.clientY
+      this.menuX = e.offsetX;
+      this.menuY = e.offsetY;
       this.showMenu = true;
+      setTimeout(function() { document.getElementById("menu").focus() }, 300);
     },
     depthTraverse(d, func) { // 深度遍历，func每个元素
       func(d);
@@ -633,6 +651,43 @@ div#mindmap {
 
     #newParentNode > rect.textRect {
       stroke-opacity: 0.2;
+    }
+  }
+
+  #menu {
+    position: absolute;
+    border-radius: 4px;
+    box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 
+      0px 8px 10px 1px rgba(0, 0, 0, 0.14),
+      0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+    background-color: #FAFAFA;
+    padding: 4px 0;
+
+    &:focus {
+      outline: none;
+    }
+
+    .menu-item {
+      position: relative;
+      padding: 4px 8px;
+      cursor: pointer;
+
+      &::before {
+        background-color: black;
+        bottom: 0;
+        content: "";
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+      }
+
+      &:hover::before {
+        opacity: 0.09;
+      }
     }
   }
 }
