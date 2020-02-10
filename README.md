@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="./public/mindmap.gif" width="300"/>
+</p>
 # 思维导图组件-mindmap
 
 尝试将思维导图组件化并发布到npm
@@ -25,7 +28,9 @@ import mindmap from '@hellowuxin/mindmap'
 
 ## 样例-Example
 
-![思维导图](./public/mindmap.png)
+<p align="center">
+  <img src="./public/mindmap.png" width="300"/>
+</p>
 
 ```html
 <template>
