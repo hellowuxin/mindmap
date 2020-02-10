@@ -1,11 +1,18 @@
 <p align="center">
   <img src="./public/mindmap.png" width="300"/>
 </p>
+
 # 思维导图组件-mindmap
 
-尝试将思维导图组件化并发布到npm
+功能：拖拽、编辑、删除、添加、缩放...
 
 ## 背景-Background
+
+初衷是想实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图web mindmap
+
+目前正尝试将思维导图组件化
+
+目标是实现一个完整的思维导图组件
 
 ## 安装-Install
 
