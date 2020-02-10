@@ -2,6 +2,9 @@
   "name": "@hellowuxin/mindmap",
   "version": "0.2.0",
   "main": "./dist/mindmap.umd.min.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
