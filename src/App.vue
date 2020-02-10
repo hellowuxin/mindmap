@@ -20,7 +20,7 @@
 
 <script>
 import dataLearn from '../public/learn.json'
-import mindmap from './components/MindMap'
+import mindmap from './index'
 export default {
   components: {
     mindmap
