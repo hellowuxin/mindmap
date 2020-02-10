@@ -1,6 +1,6 @@
 {
   "name": "@hellowuxin/mindmap",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "./dist/mindmap.umd.min.js",
   "files": [
     "dist"
