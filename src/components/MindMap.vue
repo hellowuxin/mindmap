@@ -4,27 +4,6 @@
       <g id="content"></g>
       <g id="dummy"></g>
     </svg>
-    <!-- <v-menu
-      absolute
-      v-model="showMenu"
-      :position-x="menuX"
-      :position-y="menuY"
-    >
-      <v-list
-        dense
-        class="py-1"
-        color="grey lighten-3"
-      >
-        <v-list-item
-          v-for="(item, index) in items"
-          :key="index"
-          @click="clickMenu(item)"
-          style="min-height: 20px"
-        >
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu> -->
     <div 
       id="menu"
       tabindex="0"
