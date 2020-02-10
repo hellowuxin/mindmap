@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/mindmap.gif" width="300"/>
+  <img src="./public/mindmap.png" width="300"/>
 </p>
 # 思维导图组件-mindmap
 
@@ -27,10 +27,6 @@ import mindmap from '@hellowuxin/mindmap'
 | height  | Number | 700       | 设置组件高度     |
 
 ## 样例-Example
-
-<p align="center">
-  <img src="./public/mindmap.png" width="300"/>
-</p>
 
 ```html
 <template>
