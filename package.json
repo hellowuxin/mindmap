@@ -52,8 +52,5 @@
   "bugs": {
     "url": "https://github.com/hellowuxin/mindmap/issues"
   },
-  "homepage": "https://github.com/hellowuxin/mindmap#readme",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  }
+  "homepage": "https://github.com/hellowuxin/mindmap#readme"
 }
