@@ -4,7 +4,7 @@
       <g id="content"></g>
       <g id="dummy"></g>
     </svg>
-    <v-menu
+    <!-- <v-menu
       absolute
       v-model="showMenu"
       :position-x="menuX"
@@ -24,7 +24,7 @@
           <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
       </v-list>
-    </v-menu>
+    </v-menu> -->
   </div>
 </template>
 
