@@ -1,6 +1,6 @@
 {
   "name": "@hellowuxin/mindmap",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "main": "./dist/mindmap.umd.min.js",
   "files": [
     "dist"
@@ -49,7 +49,11 @@
     "type": "git",
     "url": "git+https://github.com/hellowuxin/mindmap.git"
   },
-  "keywords": ["mindmap", "vue", "d3"],
+  "keywords": [
+    "mindmap",
+    "vue",
+    "d3"
+  ],
   "author": "伍鑫",
   "license": "ISC",
   "bugs": {
