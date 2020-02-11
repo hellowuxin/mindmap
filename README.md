@@ -2,7 +2,7 @@
   <img src="./public/mindmap.png" width="300"/>
 </p>
 
-# 思维导图组件-mindmap
+# 思维导图组件-mindmap: web component
 
 功能：拖拽、编辑、删除、添加、缩放...
 
