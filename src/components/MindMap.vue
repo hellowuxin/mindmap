@@ -41,8 +41,8 @@ export default {
   computed: {
     mmStyle() {
       return {
-        width: `${this.width ? this.width : 700}px`,
-        height: `${this.height ? this.height : 700}px`,
+        width: this.width ? `${this.width}px` : '100%',
+        height: this.height ? `${this.height}px` : '100%',
       }
     }
   },
@@ -566,9 +566,6 @@ div#mindmap {
   font-size: 14px;
   position: relative;
   display: flex;
-  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 
-    0px 2px 2px 0px rgba(0, 0, 0, 0.14), 
-    0px 1px 5px 0px rgba(0, 0, 0, 0.12);
   
   p { margin: 0; }
   foreignObject { padding: 5px; }

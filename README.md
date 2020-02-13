@@ -42,8 +42,8 @@ import mindmap from '@hellowuxin/mindmap'
 | Name    | Type   | Default   | Description    |
 | ---     | ---    | ---       | ---            |
 | v-model | Array  | undefined | Set the data for the component.   |
-| width   | Number | 700       | Set the width for the component.  |
-| height  | Number | 700       | Set the height for the component. |
+| width   | Number | 100%      | Set the width for the component.  |
+| height  | Number | 100%      | Set the height for the component. |
 
 ## Example
 

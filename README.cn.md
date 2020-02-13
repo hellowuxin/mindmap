@@ -42,8 +42,8 @@ import mindmap from '@hellowuxin/mindmap'
 | Name    | Type   | Default   | Description    |
 | ---     | ---    | ---       | ---            |
 | v-model | Array  | undefined | 设置思维导图数据  |
-| width   | Number | 700       | 设置组件宽度     |
-| height  | Number | 700       | 设置组件高度     |
+| width   | Number | 100%      | 设置组件宽度     |
+| height  | Number | 100%      | 设置组件高度     |
 
 ## 样例
 
