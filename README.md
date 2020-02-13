@@ -1,50 +1,49 @@
-<p align="center">
-  <img src="./public/mindmap.png" width="300"/>
-</p>
+<img src="./public/mindmap.png" width="300"/>
 
-# 思维导图组件-mindmap: vue component
+# Mindmap Vue Component
 
-功能：拖拽、编辑、删除、添加、缩放...
+Make a mindmap component similar to [MindNode](https://mindnode.com)
 
-支持键盘和鼠标操作
+## Function
 
-- Tab - 添加子节点
-- Enter - 添加兄弟节点
-- delete - 删除节点
-- 右键 - 菜单
-- 单击两次 - 编辑
+Support keyboard and mouse
+
+- Drag
+- Zoom
+- Add, delete and edit node
 - ...
 
-在线演示：<https://mindnode.5xin.xyz>
+## Usage
 
-## 背景-Background
+- tab - Add child node
+- enter - Add siblings
+- delete - Delete node
+- right click - Open contextMenu
+- click twice - Edit node content
+- ...
 
-初衷是想实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图web mindmap
+Online demo：<https://mindnode.5xin.xyz>
 
-目前正尝试将思维导图组件化
-
-目标是实现一个完整的思维导图组件
-
-## 安装-Install
+## Install
 
 ```sh
 npm install @hellowuxin/mindmap
 ```
 
 ```js
-// 在你的vue文件中引入思维导图组件
+// In your vue file
 import mindmap from '@hellowuxin/mindmap'
 ```
 
-## 使用方法-Usage
+## API
 
 | Name    | Type   | Default   | Description    |
 | ---     | ---    | ---       | ---            |
-| v-model | Array  | undefined | 设置思维导图数据  |
-| width   | Number | 700       | 设置组件宽度     |
-| height  | Number | 700       | 设置组件高度     |
+| v-model | Array  | undefined | Set the data for the component.   |
+| width   | Number | 700       | Set the width for the component.  |
+| height  | Number | 700       | Set the height for the component. |
 
-## 样例-Example
+## Example
 
 ```html
 <template>
