@@ -4,7 +4,7 @@
 
 目标是实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图组件
 
-[English Readme](./README.md).
+[English Readme](./README.md)
 
 ## 功能
 
