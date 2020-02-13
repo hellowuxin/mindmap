@@ -1,5 +1,5 @@
 <template>
-  <div id="app" style="height: 500px">
+  <div id="app" style="height: 700px">
     <mindmap 
       v-model="data"
     ></mindmap>

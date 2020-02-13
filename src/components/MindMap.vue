@@ -126,7 +126,7 @@ export default {
       }
     },
     updateNodeName() { // 文本编辑完成时
-      const editP = document.querySelector('#editing p');
+      const editP = document.querySelector('#editing div');
       window.getSelection().removeAllRanges();// 清除选中
       const editText = editP.textContent;
       d3.select('g#editing').each((d, i, n) => {
@@ -209,8 +209,8 @@ export default {
         if (edit) { // 正在编辑
         } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
           sele.setAttribute('id', 'editing');
-          d3.select(sele).select('p').attr('contenteditable', true);
-          document.querySelector('#editing p').focus();
+          d3.select(sele).select('div').attr('contenteditable', true);
+          document.querySelector('#editing div').focus();
         } else { // 选中
           selectMindnode(clickedNode, sele);
         }
@@ -335,7 +335,7 @@ export default {
           .attr('width', (d) => d.data.textWidth + 11)
           .attr('height', 30)
           .attr('transform', `translate(${-5},${-27})`);
-        const foreignP = foreign.append('xhtml:p')
+        const foreignP = foreign.append('xhtml:div')
           .attr('contenteditable', false)
           .text((d) => d.data.name);
         foreignP.on('blur', updateNodeName);
@@ -422,7 +422,7 @@ export default {
         update.each((d, i, n) => {
           const node = d3.select(n[i]);
           node.select('foreignObject').attr('width', d.data.textWidth + 11);
-          node.select('p').text(d.data.name);
+          node.select('div').text(d.data.name);
           node.select('rect.textRect').attr('class', `depth_${d.depth} textRect`)
             .attr('width', d.data.textWidth + 8);
           node.select('rect.rectTrigger').attr('class', `depth_${d.depth} rectTrigger`)
@@ -567,9 +567,7 @@ div#mindmap {
   position: relative;
   display: flex;
   
-  p { margin: 0; }
   foreignObject { padding: 5px; }
-
 
   div.rightClickTrigger {
     position: absolute; 
