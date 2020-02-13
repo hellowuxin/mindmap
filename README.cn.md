@@ -4,6 +4,8 @@
 
 目标是实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图组件
 
+[English Version](./README.md).
+
 ## 功能
 
 支持键盘和鼠标

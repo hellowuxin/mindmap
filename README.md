@@ -4,6 +4,8 @@
 
 Make a mindmap component similar to [MindNode](https://mindnode.com)
 
+[中文说明](./README.cn.md).
+
 ## Function
 
 Support keyboard and mouse
