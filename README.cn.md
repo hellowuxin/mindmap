@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="./public/mindmap.png" width="300"/>
-</p>
+<img src="./public/mindmap.png" width="300"/>
 
-# 思维导图组件-mindmap: vue component
+# 思维导图VUE组件
 
 功能：拖拽、编辑、删除、添加、缩放...
 
@@ -17,15 +15,11 @@
 
 在线演示：<https://mindnode.5xin.xyz>
 
-## 背景-Background
+## 背景
 
-初衷是想实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图web mindmap
+初衷是想实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图，目前正尝试将思维导图组件化，目标是实现一个完整的思维导图组件
 
-目前正尝试将思维导图组件化
-
-目标是实现一个完整的思维导图组件
-
-## 安装-Install
+## 安装
 
 ```sh
 npm install @hellowuxin/mindmap
@@ -36,7 +30,7 @@ npm install @hellowuxin/mindmap
 import mindmap from '@hellowuxin/mindmap'
 ```
 
-## 使用方法-Usage
+## API
 
 | Name    | Type   | Default   | Description    |
 | ---     | ---    | ---       | ---            |
@@ -44,7 +38,7 @@ import mindmap from '@hellowuxin/mindmap'
 | width   | Number | 700       | 设置组件宽度     |
 | height  | Number | 700       | 设置组件高度     |
 
-## 样例-Example
+## 样例
 
 ```html
 <template>
