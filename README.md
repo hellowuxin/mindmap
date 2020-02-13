@@ -87,3 +87,11 @@ export default {
 }
 </script>
 ```
+
+## Todo
+
+- [] Tree Algorithm
+- [] Text Editor
+- [] Set node width and height
+- [] Multiple root nodes
+- ...
