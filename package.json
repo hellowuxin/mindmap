@@ -44,7 +44,7 @@
     "> 1%",
     "last 2 versions"
   ],
-  "description": "尝试将思维导图组件化",
+  "description": "Mindmap Vue Component",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hellowuxin/mindmap.git"
