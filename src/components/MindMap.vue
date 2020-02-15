@@ -30,9 +30,16 @@ import JSONData from '../JSONData'
 export default {
   name: 'mindmap',
   props: {
-    value: Array,// 源数据
+    value: { // 源数据
+      type: Array,
+      required: true
+    },
     width: Number,
     height: Number,
+    draggble: { // 是否可拖拽
+      type: Boolean,
+      default: true
+    },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -66,7 +73,8 @@ export default {
     mmdata: {
       handler(newVal) {
         this.depthTraverse(newVal.data[0], this.getTextWidth);
-        this.chart();
+        this.draw();
+        if (this.draggble) { this.makeDraggable() }
         this.$emit('change', this.mmdata.getPuredata())
       },
       deep: true,// watch for nested data
@@ -267,7 +275,7 @@ export default {
       draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000);
     },
     dragended(d, i, n) {
-      const { mindmap_g, dragback, mmdata, chart, root } = this;
+      const { mindmap_g, dragback, mmdata, draw, root } = this;
       const { subject } = d3.event;
       const draggedNode = n[i];
       let draggedParentNode = draggedNode.parentNode;
@@ -285,7 +293,7 @@ export default {
             mmdata.add(newParentD.data, draggedD.data);
             draggedNode.parentNode.removeChild(draggedNode);// 必要，使动画看起来更流畅
             // 绘制图形
-            chart(mmdata);
+            draw();
           });
         });
         return;
@@ -324,7 +332,7 @@ export default {
             mmdata.insert(a.b1, subject.data, 1);
             draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling);
           }
-          chart(mmdata);
+          draw();
         } else {
           dragback(subject, draggedNode);
         }
@@ -342,11 +350,10 @@ export default {
         rightClick, 
         gBtnClick, 
         link,
-        dragged,
-        dragended,
       } = this;
+
       const gNode = enter.append('g');
-      gNode.attr('class', (d) => `depth_${d.depth}`)
+      gNode.attr('class', (d) => `depth_${d.depth} node`)
         .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
       const foreign = gNode.append('foreignObject')
         .attr('width', (d) => d.data.textWidth + 11)
@@ -409,22 +416,16 @@ export default {
           rectTrigger.attr('y', -9 - 8).attr('x', -5 - 8);
         }
 
-        gNode.each((d, i) => {
+        gNode.each((d, i, n) => {
           const dd = d.children;
-
           if (dd) {
-            const gChildren = gNode.filter((a, index) => {
-              return i === index
-            }).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}` : ''}`)
+            d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
               .data(dd)
               .join(
                 (enter) => appendNode(enter),
                 (update) => updateNode(update),
                 (exit) => exitNode(exit)
               );
-            if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
-              gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
-            }
           }
         });
       }
@@ -433,8 +434,15 @@ export default {
       return gNode;
     },
     updateNode(update) {
-      const { easePolyInOut, link, appendNode, updateNode, exitNode, dragged, dragended } = this;
-      update.attr('class', (d) => `depth_${d.depth}`)
+      const { 
+        easePolyInOut, 
+        link, 
+        appendNode, 
+        updateNode, 
+        exitNode 
+      } = this;
+
+      update.attr('class', (d) => `depth_${d.depth} node`)
         .transition(easePolyInOut)
         .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
       update.each((d, i, n) => {
@@ -458,22 +466,16 @@ export default {
             target: [0, 0],
           })}L${d.data.textWidth},0`);
         
-        node.each((d, i) => {
+        node.each((d, i, n) => {
           const dd = d.children;
-          
           if (dd) {
-            const gChildren = node.filter((a, index) => {
-              return i === index
-            }).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}` : ''}`)
+            d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
               .data(dd)
               .join(
                 (enter) => appendNode(enter),
                 (update) => updateNode(update),
                 (exit) => exitNode(exit)
               );
-            if (!dd[0] || dd[0].depth !== 0) { // 非根节点才可以拖拽
-              gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
-            }
           }
         });
         
@@ -492,18 +494,25 @@ export default {
         return true;
       }).remove();
     },
-    gNodeNest(d, gParent) { // 生成svg
-      const { appendNode, updateNode, exitNode, dragged, dragended } = this;
-      const gChildren = gParent.selectAll(`g${d[0] ? `.depth_${d[0].depth}` : ''}`)
+    draw() { // 生成svg
+      const { 
+        mindmap_g, 
+        appendNode, 
+        updateNode, 
+        exitNode,
+        tree
+      } = this;
+
+      tree();
+      const d = [ this.root ];
+
+      mindmap_g.selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ''}`)
         .data(d)
         .join(
           (enter) => appendNode(enter),
           (update) => updateNode(update),
           (exit) => exitNode(exit)
         );
-      if (!d[0] || d[0].depth !== 0) { // 非根节点才可以拖拽
-        gChildren.call(d3.drag().on('drag', dragged).on('end', dragended));
-      }
     },
     renewY(r, textWidth) {
       r.y += textWidth;
@@ -514,22 +523,24 @@ export default {
         }
       }
     },
-    chart() { // 数据处理
-      let { mmdata, root, renewY, gNodeNest, mindmap_g } = this;
+    tree() { // 数据处理
+      const { mmdata, renewY } = this;
+
       const r = d3.hierarchy(mmdata.data[0]);// 根据指定的分层数据构造根节点
       r.nodeHeight = 35;
       r.nodeWidth = 100;// r.height与叶子节点的最大距离
       // nodeSize设置了节点的大小（高宽)
       // 高指两个叶子节点的纵向距离，宽指两个节点的横向距离
-      root = d3.tree().nodeSize([r.nodeHeight, r.nodeWidth])(r);
+      this.root = d3.tree().nodeSize([r.nodeHeight, r.nodeWidth])(r);
+
       let x0 = Infinity;
       let x1 = -x0;
-      renewY(root, 0);
-      root.each((a) => {
+      renewY(this.root, 0);
+      this.root.each((a) => {
         if (a.x > x1) x1 = a.x;// 求得最大，即最低点
         if (a.x < x0) x0 = a.x;// 求得最小，即最高点
       });
-      root.each((a) => {
+      this.root.each((a) => {
         // 处理偏移量确保图像完全显示
         a.x -= (x0 - 30);
         a.y += 15;
@@ -537,29 +548,35 @@ export default {
         a.dx = a.x - (a.parent ? a.parent.x : 0);
         a.dy = a.y - (a.parent ? a.parent.y : 0);
 
-        if (!a.children) {
-          a.children = [];
-        }
+        if (!a.children) { a.children = [] }
       });
-      gNodeNest([root], mindmap_g);
     },
     getTextWidth(t) {
       const { dummy_g } = this;
       let textWidth = 0;
 
-      dummy_g
-        .selectAll('.dummyText')
+      dummy_g.selectAll('.dummyText')
         .data([t.name])
         .enter()
         .append("text")
         .text((d) => d)
         .each((d, i, n) => {
-          const thisWidth = n[i].getComputedTextLength();
-          textWidth = thisWidth;
+          textWidth = n[i].getComputedTextLength();
           n[i].remove() // remove them just after displaying them
         })
         
       t.textWidth = textWidth;
+    },
+    makeDraggable() {
+      const {
+        mindmap_g,
+        dragged,
+        dragended,
+      } = this;
+
+      mindmap_g.selectAll('g.node')
+        .filter((d) => { return d.depth !== 0 })// 非根节点才可以拖拽
+        .call(d3.drag().on('drag', dragged).on('end', dragended));
     }
   },
   mounted() {
