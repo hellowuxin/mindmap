@@ -91,7 +91,7 @@ export default {
 ## Todo
 
 - [ ] Tree Algorithm
-- [ ] Text Editor
+- [x] Text Editor
 - [ ] Set node width and height
 - [ ] Multiple root nodes
 - [ ] ...
