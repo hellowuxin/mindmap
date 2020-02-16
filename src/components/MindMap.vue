@@ -1,6 +1,6 @@
 <template>
   <div id="mindmap" :style="mmStyle">
-    <svg>
+    <svg tabindex="0">
       <g id="content"></g>
       <g id="dummy"></g>
     </svg>
@@ -81,21 +81,21 @@ export default {
     }
   },
   methods: {
-    listenKeyDown(event) {
+    listenKeyDown() {
       const { mmdata } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
         return;
       }
       const newJSON = { name: '新建节点', children: [] };
-      const keyName = event.key;
+      const keyName = d3.event.key;
       if (keyName === 'Tab') { // 添加子节点
-        event.preventDefault();
+        d3.event.preventDefault();
         sele.each((d) => {
           mmdata.add(d.data, newJSON);
         });
       } else if (keyName === 'Enter') { // 添加弟弟节点
-        event.preventDefault();
+        d3.event.preventDefault();
         sele.each((d, i, n) => {
           const mindmap_g = d3.select('g#content');
           if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
@@ -105,7 +105,7 @@ export default {
           }
         });
       } else if (keyName === 'Backspace') { // 删除节点
-        event.preventDefault();
+        d3.event.preventDefault();
         sele.each((d) => {
           mmdata.del(d.data);
         });
@@ -587,7 +587,7 @@ export default {
 
     this.dummy_g = d3.select('g#dummy');
 
-    document.addEventListener('keydown', this.listenKeyDown);
+    this.mindmap_svg.on('keydown', this.listenKeyDown);
   }
 }
 </script>
@@ -606,6 +606,7 @@ div#mindmap {
 
   svg {
     flex: auto;
+    outline: none;
 
     foreignObject {
       border-radius: 5px;
