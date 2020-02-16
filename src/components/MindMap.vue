@@ -121,8 +121,8 @@ export default {
       }
     },
     showContextMenu(e) {
-      this.menuX = e.offsetX;
-      this.menuY = e.offsetY;
+      this.menuX = e.layerX;
+      this.menuY = e.layerY;
       this.showMenu = true;
       setTimeout(function() { document.getElementById("menu").focus() }, 300);
     },
@@ -136,7 +136,7 @@ export default {
       }
     },
     updateNodeName() { // 文本编辑完成时
-      const editP = document.querySelector('#editing div');
+      const editP = document.querySelector('#editing > foreignObject > div');
       window.getSelection().removeAllRanges();// 清除选中
       const editText = editP.textContent;
       d3.select('g#editing').each((d, i, n) => {
@@ -159,7 +159,7 @@ export default {
         gBtn.style('opacity', 0);
       } else {
         const collection = n[i].parentNode.children;
-        gBtn = d3.select(collection[collection.length - 1]);
+        gBtn = d3.select(collection[collection.length - 2]);
         gBtn.style('opacity', 0);
       }
     },
@@ -170,7 +170,7 @@ export default {
         gBtn.style('opacity', 1);
       } else {
         const collection = n[i].parentNode.children;
-        gBtn = d3.select(collection[collection.length - 1]);
+        gBtn = d3.select(collection[collection.length - 2]);
         gBtn.style('opacity', 0.5);
       }
     },
@@ -212,8 +212,11 @@ export default {
       if (edit) { // 正在编辑
       } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
         sele.setAttribute('id', 'editing');
-        d3.select(sele).select('div').attr('contenteditable', true);
-        document.querySelector('#editing div').focus();
+        const collection = clickedNode.children;
+        d3.select(collection[collection.length - 1])
+          .select('div')
+          .attr('contenteditable', true);
+        document.querySelector('#editing > foreignObject > div').focus();
       } else { // 选中
         selectMindnode(clickedNode, sele);
       }
@@ -242,20 +245,23 @@ export default {
         sele.removeAttribute('id');
       }
       // 拖拽
+      // subject是被拖拽的点
       const { subject } = d3.event;
+      // 鼠标相对subject原本位置的位移
       const py = d3.event.x - subject.x;
       const px = d3.event.y - subject.y;
       draggedNodeChildrenRenew(subject, px, py);
-      // 相对subject.parent的坐标
+      // 鼠标相对subject.parent位置的坐标
       const targetY = subject.dy + py;
       const targetX = subject.dx + px;
       draggedNodeRenew(draggedNode, targetX, targetY, 0);
       // 重叠触发矩形边框
-      const gSelection = mindmap_g.selectAll('g').filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
-      gSelection.each((d, i, n) => {
+      const gOthers = mindmap_g.selectAll('g.node')
+        .filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
+      gOthers.each((d, i, n) => {
         const gNode = n[i];
-        const gRect = gNode.getElementsByTagName('rect')[0];
-        const rect = { // 各个gRect相对subject.parent的坐标，以及gRect的宽高
+        const gRect = gNode.getElementsByTagName('foreignObject')[0];
+        const rect = { // 其他gRect相对subject.parent的坐标，以及gRect的宽高
           y: parseInt(gRect.getAttribute('x'), 10) + d.y + (d.py ? d.py : 0) - (subject.parent ? subject.parent.y : 0),
           x: parseInt(gRect.getAttribute('y'), 10) + d.x + (d.px ? d.px : 0) - (subject.parent ? subject.parent.x : 0),
           width: parseInt(gRect.getAttribute('width'), 10),
@@ -356,31 +362,24 @@ export default {
       gNode.attr('class', (d) => `depth_${d.depth} node`)
         .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
       const foreign = gNode.append('foreignObject')
-        .attr('width', (d) => d.data.textWidth + 11)
-        .attr('height', 30)
-        .attr('transform', `translate(${-5},${-27})`);
-      const foreignP = foreign.append('xhtml:div')
-        .attr('contenteditable', false)
-        .text((d) => d.data.name);
-      foreignP.on('blur', updateNodeName);
-      const rect = gNode.append('rect').attr('class', (d) => `depth_${d.depth} textRect`)
-        .attr('y', -17 - 4)
-        .attr('x', -4)
-        .attr('width', (d) => d.data.textWidth + 8)
-        .attr('height', 16 + 8)
-        .attr('rx', 3)
-        .attr('ry', 3)
-        .lower();
-      const rectTrigger = gNode.append('rect').attr('class', (d) => `depth_${d.depth} rectTrigger`)
-        .attr('y', -17 - 8)
-        .attr('x', -8)
-        .attr('width', (d) => d.data.textWidth + 16)
-        .attr('height', 16 + 16)
-        .attr('opacity', 0)
+        .attr('x', -5)
+        .attr('y', -27)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', click)
         .on('contextmenu', rightClick);
+      const foreignDiv = foreign.append('xhtml:div')
+        .attr('contenteditable', false)
+        .text((d) => d.data.name);
+      foreignDiv.on('blur', updateNodeName);
+      foreignDiv.each((d, i, n) => {
+        const observer = new ResizeObserver((l) => {
+          foreign.filter((d, index) => i === index)
+            .attr('width', l[0].contentRect.width + 12)
+            .attr('height', l[0].contentRect.height + 12);
+        });
+        observer.observe(n[i]);
+      })
       
       const gBtn = gNode.append('g').attr('class', 'gButton')
         .attr('transform', (d) => `translate(${d.data.textWidth + 8},${-12})`)
@@ -411,9 +410,7 @@ export default {
               target: [0, 0],
             })}L${d.data.textWidth},0`);
         } else if (enterData[0].data.id === '0') { // 根节点
-          foreign.attr('transform', `translate(${-10},${-15})`);
-          rect.attr('y', -9 - 4).attr('x', -5 - 4);
-          rectTrigger.attr('y', -9 - 8).attr('x', -5 - 8);
+          foreign.attr('x', -10).attr('y', -15);
         }
 
         gNode.each((d, i, n) => {
@@ -431,6 +428,7 @@ export default {
       }
 
       gBtn.raise();
+      foreign.raise();
       return gNode;
     },
     updateNode(update) {
@@ -447,12 +445,10 @@ export default {
         .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
       update.each((d, i, n) => {
         const node = d3.select(n[i]);
-        node.select('foreignObject').attr('width', d.data.textWidth + 11);
+        const foreign = node.selectAll('foreignObject')
+          .filter((d, i, n) => n[i].parentNode === node.node())
+          .attr('width', d.data.textWidth + 11);
         node.select('div').text(d.data.name);
-        node.select('rect.textRect').attr('class', `depth_${d.depth} textRect`)
-          .attr('width', d.data.textWidth + 8);
-        node.select('rect.rectTrigger').attr('class', `depth_${d.depth} rectTrigger`)
-          .attr('width', (d) => d.data.textWidth + 16)
         node.select('path')
           .attr('id', `path_${d.data.id}`)
           .attr('class', `depth_${d.depth}`)
@@ -483,6 +479,7 @@ export default {
           .filter((d, i, n) => n[i].parentNode === node.node())
           .attr('transform', `translate(${d.data.textWidth + 8},${-12})`)
           .raise();
+        foreign.raise();
       });
       return update;
     },
@@ -554,7 +551,6 @@ export default {
     getTextWidth(t) {
       const { dummy_g } = this;
       let textWidth = 0;
-
       dummy_g.selectAll('.dummyText')
         .data([t.name])
         .enter()
@@ -601,8 +597,6 @@ div#mindmap {
   font-size: 14px;
   position: relative;
   display: flex;
-  
-  foreignObject { padding: 5px; }
 
   div.rightClickTrigger {
     position: absolute; 
@@ -613,19 +607,20 @@ div#mindmap {
   svg {
     flex: auto;
 
-    rect.textRect:not(.depth_0) {
-      fill: blue;
-      fill-opacity: 0;
-      stroke: blue;
-      stroke-opacity: 0;
-      stroke-width: 2;
-    }
-
-    rect.textRect.depth_0 {
-      fill: white;
-      stroke: rgb(190, 198, 243);
-      stroke-opacity: 0;
-      stroke-width: 2;
+    foreignObject {
+      border-radius: 5px;
+      border-width: 5px;
+      border-color: transparent;
+      border-style: solid;
+      div {
+        text-align: left;
+        border: 1px solid transparent;
+        width: max-content;
+        &:focus {
+          border-color: rgb(154, 154, 154);
+          outline: none;
+        }
+      }
     }
 
     g.gButton {
@@ -648,18 +643,16 @@ div#mindmap {
       stroke-width: 4;
     }
 
-    #selectedMindnode > rect.textRect:not(.depth_0) {
-      fill-opacity: 1;
-      opacity: 0.2;
-      stroke-opacity: 1;
+    #selectedMindnode > foreignObject {
+      background-color: rgba($color: blue, $alpha: 0.2);
     }
 
-    #selectedMindnode > rect.textRect.depth_0 {
-      stroke-opacity: 1;
+    #newParentNode > foreignObject {
+      border-color: rgba($color: blue, $alpha: 0.2);
     }
 
-    #newParentNode > rect.textRect {
-      stroke-opacity: 0.2;
+    #editing > foreignObject > div {
+      background-color: white;
     }
   }
 
