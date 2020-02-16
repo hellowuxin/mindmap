@@ -72,7 +72,7 @@ export default {
   watch: {
     mmdata: {
       handler(newVal) {
-        this.depthTraverse(newVal.data[0], this.getTextWidth);
+        this.depthTraverse(newVal.data[0], this.getTextSize);
         this.draw();
         if (this.draggble) { this.makeDraggable() }
         this.$emit('change', this.mmdata.getPuredata())
@@ -81,7 +81,7 @@ export default {
     }
   },
   methods: {
-    listenKeyDown() {
+    svgKeyDown() {
       const { mmdata } = this;
       const sele = d3.select('#selectedMindnode');
       if (!sele.nodes()[0]) {
@@ -111,6 +111,12 @@ export default {
         });
       }
     },
+    divKeyDown() {
+      if (d3.event.key === 'Enter') {
+        // d3.event.preventDefault();
+        // document.execCommand('insertHTML', false, '<br>');
+      }   
+    },
     clickMenu(item) {
       this.showMenu = false;
       if (item.command === 0) { // 删除节点
@@ -138,7 +144,7 @@ export default {
     updateNodeName() { // 文本编辑完成时
       const editP = document.querySelector('#editing > foreignObject > div');
       window.getSelection().removeAllRanges();// 清除选中
-      const editText = editP.textContent;
+      const editText = editP.innerText;
       d3.select('g#editing').each((d, i, n) => {
         n[i].removeAttribute('id');
         editP.setAttribute('contenteditable', false);
@@ -356,6 +362,7 @@ export default {
         rightClick, 
         gBtnClick, 
         link,
+        divKeyDown
       } = this;
 
       const gNode = enter.append('g');
@@ -371,7 +378,8 @@ export default {
       const foreignDiv = foreign.append('xhtml:div')
         .attr('contenteditable', false)
         .text((d) => d.data.name);
-      foreignDiv.on('blur', updateNodeName);
+      foreignDiv.on('blur', updateNodeName)
+        .on('keydown', divKeyDown);
       foreignDiv.each((d, i, n) => {
         const observer = new ResizeObserver((l) => {
           foreign.filter((d, index) => i === index)
@@ -448,7 +456,7 @@ export default {
         const foreign = node.selectAll('foreignObject')
           .filter((d, i, n) => n[i].parentNode === node.node())
           .attr('width', d.data.textWidth + 11);
-        node.select('div').text(d.data.name);
+        foreign.select('div').text(d.data.name);
         node.select('path')
           .attr('id', `path_${d.data.id}`)
           .attr('class', `depth_${d.depth}`)
@@ -511,20 +519,36 @@ export default {
           (exit) => exitNode(exit)
         );
     },
-    renewY(r, textWidth) {
+    renewY(r, textWidth) { // 增加相当于父母节点文本宽度的横轴平移量
       r.y += textWidth;
       if (r.children) {
         for (let index = 0; index < r.children.length; index += 1) {
           const rChild = r.children[index];
-          this.renewY(rChild, textWidth + r.data.textWidth);
+          this.renewY(
+            rChild, 
+            textWidth + r.data.textWidth,
+          );
+        }
+      }
+    },
+    renewX(r) { // 根据文本高度修改纵轴平移量
+      if (r.children) {
+        for (let index = r.children.length - 1; index > -1; index -= 1) {
+          const rChild = r.children[index];
+          this.renewX(rChild);
+          for (let i = 1; index >= i; i++) {
+            const rBrother = r.children[index - i];
+            rChild.x += rBrother.data.textHeight;
+          }
         }
       }
     },
     tree() { // 数据处理
-      const { mmdata, renewY } = this;
+      // x纵轴 y横轴
+      const { mmdata, renewY, renewX } = this;
 
       const r = d3.hierarchy(mmdata.data[0]);// 根据指定的分层数据构造根节点
-      r.nodeHeight = 35;
+      r.nodeHeight = 10;
       r.nodeWidth = 100;// r.height与叶子节点的最大距离
       // nodeSize设置了节点的大小（高宽)
       // 高指两个叶子节点的纵向距离，宽指两个节点的横向距离
@@ -533,6 +557,7 @@ export default {
       let x0 = Infinity;
       let x1 = -x0;
       renewY(this.root, 0);
+      renewX(this.root);
       this.root.each((a) => {
         if (a.x > x1) x1 = a.x;// 求得最大，即最低点
         if (a.x < x0) x0 = a.x;// 求得最小，即最高点
@@ -548,20 +573,34 @@ export default {
         if (!a.children) { a.children = [] }
       });
     },
-    getTextWidth(t) {
+    getTextSize(t) {
       const { dummy_g } = this;
       let textWidth = 0;
+      let textHeight = 0;
       dummy_g.selectAll('.dummyText')
         .data([t.name])
         .enter()
         .append("text")
-        .text((d) => d)
+        .text((d) => {
+          const array = d.split('\n');
+          let longestD = array[0];
+          for (let index = 0; index < array.length; index++) {
+            const element = array[index];
+            if (element.length > longestD.length) {
+              longestD = element;
+            }
+          }
+          return longestD;
+        })
         .each((d, i, n) => {
           textWidth = n[i].getComputedTextLength();
+          // eslint-disable-next-line 
+          textHeight = n[i].getBBox().height;
           n[i].remove() // remove them just after displaying them
         })
         
       t.textWidth = textWidth;
+      t.textHeight = textHeight;
     },
     makeDraggable() {
       const {
@@ -587,7 +626,7 @@ export default {
 
     this.dummy_g = d3.select('g#dummy');
 
-    this.mindmap_svg.on('keydown', this.listenKeyDown);
+    this.mindmap_svg.on('keydown', this.svgKeyDown);
   }
 }
 </script>
@@ -617,6 +656,7 @@ div#mindmap {
         text-align: left;
         border: 1px solid transparent;
         width: max-content;
+        white-space:pre-wrap;
         &:focus {
           border-color: rgb(154, 154, 154);
           outline: none;
