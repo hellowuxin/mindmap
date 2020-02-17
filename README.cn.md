@@ -2,6 +2,8 @@
 
 # 思维导图VUE组件
 
+![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
+
 目标是实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图组件
 
 [English Readme](./README.md)

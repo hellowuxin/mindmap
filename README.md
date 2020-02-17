@@ -2,6 +2,8 @@
 
 # Mindmap Vue Component
 
+![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
+
 Make a mindmap component similar to [MindNode](https://mindnode.com)
 
 [中文说明](./README.cn.md)
