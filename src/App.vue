@@ -1,17 +1,19 @@
 <template>
   <div id="app" style="height: 700px">
-    <mindmap 
+    <!-- <mindmap 
       v-model="data"
-    ></mindmap>
+    ></mindmap> -->
+    <test v-model="data"></test>
   </div>
 </template>
 
 <script>
 import dataLearn from '../public/learn.json'
-import mindmap from './index'
+// import mindmap from './index'
+import test from './components/Test'
 export default {
   components: {
-    mindmap
+    test
   },
   data: () => ({
     data: [dataLearn],

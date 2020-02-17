@@ -1,6 +1,7 @@
 {
   "name": "@hellowuxin/mindmap",
   "version": "0.3.7",
+  "type": "module",
   "main": "./dist/mindmap.umd.min.js",
   "files": [
     "dist"
@@ -12,7 +13,8 @@
     "build-lib": "vue-cli-service build --target lib --name mindmap ./src/index.js"
   },
   "dependencies": {
-    "d3": "^5.15.0"
+    "d3": "^5.15.0",
+    "d3-flextree": "^2.1.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.2.2",
