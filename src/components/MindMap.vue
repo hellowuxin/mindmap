@@ -55,7 +55,8 @@ export default {
     }
   },
   data: () => ({
-    xSpacing: 40,
+    xSpacing: 80,
+    ySpacing: 10,
     mmdata: Object,// 思维导图数据
     root: '',
     showMenu: false,
@@ -136,9 +137,9 @@ export default {
         })
       }
     },
-    showContextMenu(e) {
-      this.menuX = e.clientX;
-      this.menuY = e.clientY;
+    showContextMenu() {
+      this.menuX = d3.event.x;
+      this.menuY = d3.event.y;
       this.showMenu = true;
       this.clearSelection();
       setTimeout(function() { document.getElementById("menu").focus() }, 300);
@@ -162,11 +163,53 @@ export default {
         d.data.name = editText;
       });
     },
-    gBtnClick(d, i, n) { // 添加子节点
+    selectMindnode(clickedNode, sele) {
+      // 选中新的selectedMindnode
+      if (sele) { sele.removeAttribute('id') }
+      sele = d3.select(clickedNode);
+      sele.attr('id', 'selectedMindnode');
+    },
+    click(d, i, n) {
+      const { selectMindnode } = this;
+      d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
+      let sele = document.getElementById('selectedMindnode');
+      const edit = document.getElementById('editing');
+      const clickedNode = n[i].parentNode;
+      if (edit) { // 正在编辑
+      } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
+        sele.setAttribute('id', 'editing');
+
+        d3.select(clickedNode).selectAll('foreignObject')
+          .filter((a, b, c) => c[b].parentNode === clickedNode)
+          .select('div')
+          .attr('contenteditable', true);
+        document.querySelector('#editing > foreignObject > div').focus();
+      } else { // 选中
+        selectMindnode(clickedNode, sele);
+      }
+    },
+    rightClick(d, i, n) {
+      const { showContextMenu, selectMindnode } = this;
+      d3.event.preventDefault();
+      d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
+      let sele = document.getElementById('selectedMindnode');
+      const edit = document.getElementById('editing');
+      const clickedNode = n[i].parentNode;
+      if (clickedNode.isSameNode(edit)) { // 正在编辑
+        return;
+      }
+      if (!clickedNode.isSameNode(sele)) { // 选中
+        selectMindnode(clickedNode, sele);
+      }
+      showContextMenu();
+    },
+    gBtnClick(a, i, n) { // 添加子节点
+      const { mmdata } = this;
+      d3.event.preventDefault();
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
       d3.select(n[i].parentNode).each((d) => {
         const newJSON = { name: '新建节点', children: [] };
-        this.mmdata.add(d.data, newJSON);
+        mmdata.add(d.data, newJSON);
       })
     },
     rectTriggerOut(d, i, n) {
@@ -175,9 +218,9 @@ export default {
         gBtn = d3.select(n[i]);
         gBtn.style('opacity', 0);
       } else {
-        const collection = n[i].parentNode.children;
-        gBtn = d3.select(collection[collection.length - 2]);
-        gBtn.style('opacity', 0);
+        d3.selectAll('g.gButton')
+          .filter((a, b, c) => c[b].parentNode === n[i].parentNode)
+          .style('opacity', 0);
       }
     },
     rectTriggerOver(d, i, n) {
@@ -186,9 +229,9 @@ export default {
         gBtn = d3.select(n[i]);
         gBtn.style('opacity', 1);
       } else {
-        const collection = n[i].parentNode.children;
-        gBtn = d3.select(collection[collection.length - 2]);
-        gBtn.style('opacity', 0.5);
+        d3.selectAll('g.gButton')
+          .filter((a, b, c) => c[b].parentNode === n[i].parentNode)
+          .style('opacity', 0.5);
       }
     },
     draggedNodeRenew(draggedNode, targetX, targetY, dura) {
@@ -217,47 +260,8 @@ export default {
         }
       }
     },
-    selectMindnode(clickedNode, sele) {
-      // 选中新的selectedMindnode
-      if (sele) { sele.removeAttribute('id') }
-      sele = d3.select(clickedNode);
-      sele.attr('id', 'selectedMindnode');
-    },
-    click(d, i, n) {
-      const { selectMindnode } = this;
-      d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-      let sele = document.getElementById('selectedMindnode');
-      const edit = document.getElementById('editing');
-      const clickedNode = n[i].parentNode;
-      if (edit) { // 正在编辑
-      } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
-        sele.setAttribute('id', 'editing');
-        const collection = clickedNode.children;
-        d3.select(collection[collection.length - 1])
-          .select('div')
-          .attr('contenteditable', true);
-        document.querySelector('#editing > foreignObject > div').focus();
-      } else { // 选中
-        selectMindnode(clickedNode, sele);
-      }
-    },
-    rightClick(d, i, n) {
-      const { showContextMenu, selectMindnode } = this;
-      d3.event.preventDefault();
-      d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-      let sele = document.getElementById('selectedMindnode');
-      const edit = document.getElementById('editing');
-      const clickedNode = n[i].parentNode;
-      if (clickedNode.isSameNode(edit)) { // 正在编辑
-        return;
-      }
-      if (!clickedNode.isSameNode(sele)) { // 选中
-        selectMindnode(clickedNode, sele);
-      }
-      showContextMenu(d3.event);
-    },
     dragged(d, i, n) {
-      const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g } = this;
+      const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing, ySpacing } = this;
       const draggedNode = n[i];
       // 选中
       const sele = document.getElementById('selectedMindnode');
@@ -265,9 +269,9 @@ export default {
         sele.removeAttribute('id');
       }
       // 拖拽
-      // subject是被拖拽的点
+      // subject是被拖拽的点的数据
       const { subject } = d3.event;
-      // 鼠标相对subject原本位置的位移
+      // 鼠标相对subject原本位置的偏移
       const py = d3.event.x - subject.x;
       const px = d3.event.y - subject.y;
       draggedNodeChildrenRenew(subject, px, py);
@@ -275,7 +279,7 @@ export default {
       const targetY = subject.dy + py;
       const targetX = subject.dx + px;
       draggedNodeRenew(draggedNode, targetX, targetY, 0);
-      // 重叠触发矩形边框
+      // 计算gOthers相对subject.parent位置的坐标
       const gOthers = mindmap_g.selectAll('g.node')
         .filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
       gOthers.each((d, i, n) => {
@@ -284,9 +288,10 @@ export default {
         const rect = { // 其他gRect相对subject.parent的坐标，以及gRect的宽高
           y: parseInt(gRect.getAttribute('x'), 10) + d.y + (d.py ? d.py : 0) - (subject.parent ? subject.parent.y : 0),
           x: parseInt(gRect.getAttribute('y'), 10) + d.x + (d.px ? d.px : 0) - (subject.parent ? subject.parent.x : 0),
-          width: parseInt(gRect.getAttribute('width'), 10),
-          height: parseInt(gRect.getAttribute('height'), 10),
+          width: d.size[1] - xSpacing,
+          height: d.size[0] - ySpacing,
         };
+        // 重叠触发矩形边框
         if ((targetY > rect.y) && (targetY < rect.y + rect.width)
         && (targetX > rect.x) && (targetX < rect.x + rect.height)) {
           gNode.setAttribute('id', 'newParentNode');
@@ -364,28 +369,76 @@ export default {
         }
       });
     },
+    gClass(d) {
+      return `depth_${d.depth} node`
+    },
+    gTransform(d) {
+      return `translate(${d.dy},${d.dx})`
+    },
+    foreignY(d) {
+      return -d.data.size[0]/2 + this.ySpacing - 7;
+    },
+    gBtnTransform(d) {
+      return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2 - 12})`
+    },
+    pathId(d) {
+      return `path_${d.data.id}`
+    },
+    pathClass(d) {
+      return `depth_${d.depth}`
+    },
+    pathColor(d) {
+      return d.data.color
+    },
+    path(d) {
+      return `${
+        this.link({
+          source: [
+            (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - this.xSpacing,
+            (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
+          ],
+          target: [0, d.data.size[0]/2],
+          })
+        }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
+    },
+    nest(d, i, n) {
+      const dd = d.children;
+      if (dd) {
+        d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
+          .data(dd)
+          .join(
+            (enter) => this.appendNode(enter),
+            (update) => this.updateNode(update),
+            (exit) => this.exitNode(exit)
+          );
+      }
+    },
     appendNode(enter) {
       const { 
-        appendNode, 
-        updateNode, 
-        exitNode, 
+        gClass,
+        gTransform,
         updateNodeName,
         rectTriggerOut, 
         rectTriggerOver, 
         click, 
         rightClick, 
-        gBtnClick, 
-        link,
+        gBtnClick,
         divKeyDown,
-        xSpacing
+        foreignY,
+        gBtnTransform,
+        pathId,
+        pathClass,
+        pathColor,
+        path,
+        nest
       } = this;
 
       const gNode = enter.append('g');
-      gNode.attr('class', (d) => `depth_${d.depth} node`)
-        .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
+      gNode.attr('class', gClass)
+        .attr('transform', gTransform);
       const foreign = gNode.append('foreignObject')
         .attr('x', -5)
-        .attr('y', (d) => -d.data.size[0]/2)
+        .attr('y', foreignY)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', click)
@@ -405,7 +458,7 @@ export default {
       })
       
       const gBtn = gNode.append('g').attr('class', 'gButton')
-        .attr('transform', (d) => `translate(${d.data.size[1] + 8 - xSpacing},${d.data.size[0]/2 - 12})`)
+        .attr('transform', gBtnTransform)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', gBtnClick);
@@ -421,33 +474,16 @@ export default {
       if (enterData.length) {
         if (enterData[0].data.id !== '0') {
           gNode.append('path')
-            .attr('id', (d) => `path_${d.data.id}`)
-            .attr('class', (d) => `depth_${d.depth}`)
+            .attr('id', pathId)
+            .attr('class', pathClass)
             .lower()
-            .attr('stroke', (d) => d.data.color)
-            .attr('d', (d) => `${link({
-              source: [
-                (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - xSpacing,
-                (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
-              ],
-              target: [0, d.data.size[0]/2],
-            })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
+            .attr('stroke', pathColor)
+            .attr('d', path);
         } else if (enterData[0].data.id === '0') { // 根节点
           foreign.attr('x', -12).attr('y', -5);
         }
 
-        gNode.each((d, i, n) => {
-          const dd = d.children;
-          if (dd) {
-            d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
-              .data(dd)
-              .join(
-                (enter) => appendNode(enter),
-                (update) => updateNode(update),
-                (exit) => exitNode(exit)
-              );
-          }
-        });
+        gNode.each(nest);
       }
 
       gBtn.raise();
@@ -456,55 +492,42 @@ export default {
     },
     updateNode(update) {
       const { 
-        easePolyInOut, 
-        link, 
-        appendNode, 
-        updateNode, 
-        exitNode,
-        xSpacing
+        gClass,
+        gTransform,
+        easePolyInOut,
+        xSpacing,
+        foreignY,
+        gBtnTransform,
+        pathId,
+        pathClass,
+        pathColor,
+        path,
+        nest
       } = this;
 
-      update.attr('class', (d) => `depth_${d.depth} node`)
+      update.attr('class', gClass)
         .transition(easePolyInOut)
-        .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
+        .attr('transform', gTransform);
       update.each((d, i, n) => {
         const node = d3.select(n[i]);
         const foreign = node.selectAll('foreignObject')
           .filter((d, i, n) => (d.data.id !== '0') && (n[i].parentNode === node.node()))
-          .attr('y', (d) => -d.data.size[0]/2)
+          .attr('y', foreignY)
           .attr('width', d.data.size[1] + 11 - xSpacing);
         foreign.select('div').text(d.data.name);
         node.select('path')
-          .attr('id', `path_${d.data.id}`)
-          .attr('class', `depth_${d.depth}`)
-          .attr('stroke', d.data.color)
+          .attr('id', pathId(d))
+          .attr('class', pathClass(d))
+          .attr('stroke', pathColor(d))
           .transition(easePolyInOut)
-          .attr('d', `${link({
-            source: [
-              (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - xSpacing,
-              (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
-            ],
-            target: [0, d.data.size[0]/2],
-            })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
+          .attr('d', path(d));
         
-        node.each((d, i, n) => {
-          const dd = d.children;
-          if (dd) {
-            d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
-              .data(dd)
-              .join(
-                (enter) => appendNode(enter),
-                (update) => updateNode(update),
-                (exit) => exitNode(exit)
-              );
-          }
-        });
+        node.each(nest);
         
         node.selectAll('g.gButton')
           .filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('transform', `translate(${d.data.size[1] + 8 - xSpacing},${d.data.size[0]/2 - 12})`)
+          .attr('transform', gBtnTransform(d))
           .raise();
-        foreign.raise();
       });
       return update;
     },
@@ -563,7 +586,7 @@ export default {
       });
     },
     getTextSize(t) {
-      const { dummy_g, xSpacing } = this;
+      const { dummy_g, xSpacing, ySpacing } = this;
       let textWidth = 0;
       let textHeight = 0;
       dummy_g.selectAll('.dummyText')
@@ -576,7 +599,7 @@ export default {
           textHeight = n[i].offsetHeight;
           n[i].remove() // remove them just after displaying them
         })
-      t.size = [textHeight + 5, textWidth + xSpacing]
+      t.size = [textHeight + ySpacing, textWidth + xSpacing]
     },
     makeDraggable() {
       const {
