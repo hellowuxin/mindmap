@@ -1,6 +1,7 @@
 <template>
   <div id="mindmap" :style="mmStyle">
     <svg tabindex="0">
+      <g id="test"></g>
       <g id="content"></g>
     </svg>
     <div id="dummy"></div>
@@ -56,7 +57,7 @@ export default {
   },
   data: () => ({
     xSpacing: 80,
-    ySpacing: 10,
+    ySpacing: 20,
     mmdata: Object,// 思维导图数据
     root: '',
     showMenu: false,
@@ -77,6 +78,7 @@ export default {
       handler(newVal) {
         this.depthTraverse(newVal.data[0], this.getTextSize);
         this.draw();
+        this.test();
         if (this.draggble) { this.makeDraggable() }
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -261,7 +263,7 @@ export default {
       }
     },
     dragged(d, i, n) {
-      const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing, ySpacing } = this;
+      const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing } = this;
       const draggedNode = n[i];
       // 选中
       const sele = document.getElementById('selectedMindnode');
@@ -274,11 +276,14 @@ export default {
       // 鼠标相对subject原本位置的偏移
       const py = d3.event.x - subject.x;
       const px = d3.event.y - subject.y;
+      // // eslint-disable-next-line 
+      // console.log(d3.event);
       draggedNodeChildrenRenew(subject, px, py);
       // 鼠标相对subject.parent位置的坐标
       const targetY = subject.dy + py;
-      const targetX = subject.dx + px;
+      let targetX = subject.dx + px;
       draggedNodeRenew(draggedNode, targetX, targetY, 0);
+      targetX += subject.size[0]/2
       // 计算gOthers相对subject.parent位置的坐标
       const gOthers = mindmap_g.selectAll('g.node')
         .filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
@@ -289,11 +294,11 @@ export default {
           y: parseInt(gRect.getAttribute('x'), 10) + d.y + (d.py ? d.py : 0) - (subject.parent ? subject.parent.y : 0),
           x: parseInt(gRect.getAttribute('y'), 10) + d.x + (d.px ? d.px : 0) - (subject.parent ? subject.parent.x : 0),
           width: d.size[1] - xSpacing,
-          height: d.size[0] - ySpacing,
+          height: d.size[0],
         };
         // 重叠触发矩形边框
         if ((targetY > rect.y) && (targetY < rect.y + rect.width)
-        && (targetX > rect.x) && (targetX < rect.x + rect.height)) {
+        && (targetX > rect.x) && (targetX < rect.x + rect.height + 10)) {
           gNode.setAttribute('id', 'newParentNode');
         } else if (gNode.getAttribute('id') === 'newParentNode') {
           gNode.removeAttribute('id');
@@ -376,7 +381,7 @@ export default {
       return `translate(${d.dy},${d.dx})`
     },
     foreignY(d) {
-      return -d.data.size[0]/2 + this.ySpacing - 7;
+      return -d.data.size[0]/2 - 7;
     },
     gBtnTransform(d) {
       return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2 - 12})`
@@ -430,7 +435,7 @@ export default {
         pathClass,
         pathColor,
         path,
-        nest
+        nest,
       } = this;
 
       const gNode = enter.append('g');
@@ -480,7 +485,7 @@ export default {
             .attr('stroke', pathColor)
             .attr('d', path);
         } else if (enterData[0].data.id === '0') { // 根节点
-          foreign.attr('x', -12).attr('y', -5);
+          foreign.attr('x', -12).attr('y', (d) => foreignY(d)+d.size[0]/2);
         }
 
         gNode.each(nest);
@@ -561,8 +566,8 @@ export default {
     },
     tree() { // 数据处理
       // x纵轴 y横轴
-      const { mmdata } = this;
-      const layout = flextree({spacing: 10});
+      const { mmdata, ySpacing } = this;
+      const layout = flextree({spacing: ySpacing});
       const tree = layout.hierarchy(mmdata.data[0]);
       layout(tree);
 
@@ -585,8 +590,20 @@ export default {
         if (!a.children) { a.children = [] }
       });
     },
+    test() {
+      const node = d3.select('g#test')
+        .selectAll("g")
+        .data(this.root.descendants())
+        .join("g")
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      node.append("rect")
+        .attr("fill", "#999")
+        .attr("width", d => d.size[1])
+        .attr("height", d => d.size[0]);
+    },
     getTextSize(t) {
-      const { dummy_g, xSpacing, ySpacing } = this;
+      const { dummy_g, xSpacing } = this;
       let textWidth = 0;
       let textHeight = 0;
       dummy_g.selectAll('.dummyText')
@@ -599,7 +616,7 @@ export default {
           textHeight = n[i].offsetHeight;
           n[i].remove() // remove them just after displaying them
         })
-      t.size = [textHeight + ySpacing, textWidth + xSpacing]
+      t.size = [textHeight, textWidth + xSpacing]
     },
     makeDraggable() {
       const {
