@@ -2,8 +2,8 @@
   <div id="mindmap" :style="mmStyle">
     <svg tabindex="0">
       <g id="content"></g>
-      <g id="dummy"></g>
     </svg>
+    <div id="dummy"></div>
     <div 
       id="menu"
       tabindex="0"
@@ -25,6 +25,7 @@
 
 <script>
 import * as d3 from 'd3'
+const flextree = require('d3-flextree').flextree;
 import JSONData from '../JSONData'
 
 export default {
@@ -54,6 +55,7 @@ export default {
     }
   },
   data: () => ({
+    xSpacing: 40,
     mmdata: Object,// 思维导图数据
     root: '',
     showMenu: false,
@@ -81,6 +83,14 @@ export default {
     }
   },
   methods: {
+    clearSelection() {
+      if(document.selection && document.selection.empty) {
+          document.selection.empty();
+      } else if(window.getSelection) {
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+      }
+    },
     svgKeyDown() {
       const { mmdata } = this;
       const sele = d3.select('#selectedMindnode');
@@ -127,9 +137,10 @@ export default {
       }
     },
     showContextMenu(e) {
-      this.menuX = e.layerX;
-      this.menuY = e.layerY;
+      this.menuX = e.clientX;
+      this.menuY = e.clientY;
       this.showMenu = true;
+      this.clearSelection();
       setTimeout(function() { document.getElementById("menu").focus() }, 300);
     },
     depthTraverse(d, func) { // 深度遍历，func每个元素
@@ -181,15 +192,18 @@ export default {
       }
     },
     draggedNodeRenew(draggedNode, targetX, targetY, dura) {
-      const { link } = this;
+      const { link, xSpacing } = this;
       const tran = d3.transition().duration(dura).ease(d3.easePoly);
       d3.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`);
       // 更新draggedNode与父节点的path
       d3.select(draggedNode).each((d) => {
         d3.select(`path#path_${d.data.id}`).transition(tran).attr('d', `${link({
-          source: [-targetY + (d.parent ? d.parent.data.textWidth : 0), -targetX],
-          target: [0, 0],
-        })}L${d.data.textWidth},0`);
+          source: [
+            -targetY + (d.parent ? d.parent.data.size[1] : 0) - xSpacing, 
+            -targetX + (d.parent ? d.parent.data.size[0]/2 : 0)
+          ],
+          target: [0, d.data.size[0]/2],
+        })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
       });
     },
     draggedNodeChildrenRenew(d, px, py) {
@@ -362,7 +376,8 @@ export default {
         rightClick, 
         gBtnClick, 
         link,
-        divKeyDown
+        divKeyDown,
+        xSpacing
       } = this;
 
       const gNode = enter.append('g');
@@ -370,7 +385,7 @@ export default {
         .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
       const foreign = gNode.append('foreignObject')
         .attr('x', -5)
-        .attr('y', -27)
+        .attr('y', (d) => -d.data.size[0]/2)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', click)
@@ -390,7 +405,7 @@ export default {
       })
       
       const gBtn = gNode.append('g').attr('class', 'gButton')
-        .attr('transform', (d) => `translate(${d.data.textWidth + 8},${-12})`)
+        .attr('transform', (d) => `translate(${d.data.size[1] + 8 - xSpacing},${d.data.size[0]/2 - 12})`)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', gBtnClick);
@@ -412,13 +427,13 @@ export default {
             .attr('stroke', (d) => d.data.color)
             .attr('d', (d) => `${link({
               source: [
-                (d.parent ? d.parent.y + d.parent.data.textWidth : 0) - d.y,
-                (d.parent ? d.parent.x : 0) - d.x,
+                (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - xSpacing,
+                (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
               ],
-              target: [0, 0],
-            })}L${d.data.textWidth},0`);
+              target: [0, d.data.size[0]/2],
+            })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
         } else if (enterData[0].data.id === '0') { // 根节点
-          foreign.attr('x', -10).attr('y', -15);
+          foreign.attr('x', -12).attr('y', -5);
         }
 
         gNode.each((d, i, n) => {
@@ -445,7 +460,8 @@ export default {
         link, 
         appendNode, 
         updateNode, 
-        exitNode 
+        exitNode,
+        xSpacing
       } = this;
 
       update.attr('class', (d) => `depth_${d.depth} node`)
@@ -454,8 +470,9 @@ export default {
       update.each((d, i, n) => {
         const node = d3.select(n[i]);
         const foreign = node.selectAll('foreignObject')
-          .filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('width', d.data.textWidth + 11);
+          .filter((d, i, n) => (d.data.id !== '0') && (n[i].parentNode === node.node()))
+          .attr('y', (d) => -d.data.size[0]/2)
+          .attr('width', d.data.size[1] + 11 - xSpacing);
         foreign.select('div').text(d.data.name);
         node.select('path')
           .attr('id', `path_${d.data.id}`)
@@ -464,11 +481,11 @@ export default {
           .transition(easePolyInOut)
           .attr('d', `${link({
             source: [
-              (d.parent ? d.parent.y + d.parent.data.textWidth : 0) - d.y,
-              (d.parent ? d.parent.x : 0) - d.x,
+              (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - xSpacing,
+              (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
             ],
-            target: [0, 0],
-          })}L${d.data.textWidth},0`);
+            target: [0, d.data.size[0]/2],
+            })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
         
         node.each((d, i, n) => {
           const dd = d.children;
@@ -485,7 +502,7 @@ export default {
         
         node.selectAll('g.gButton')
           .filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('transform', `translate(${d.data.textWidth + 8},${-12})`)
+          .attr('transform', `translate(${d.data.size[1] + 8 - xSpacing},${d.data.size[0]/2 - 12})`)
           .raise();
         foreign.raise();
       });
@@ -519,45 +536,17 @@ export default {
           (exit) => exitNode(exit)
         );
     },
-    renewY(r, textWidth) { // 增加相当于父母节点文本宽度的横轴平移量
-      r.y += textWidth;
-      if (r.children) {
-        for (let index = 0; index < r.children.length; index += 1) {
-          const rChild = r.children[index];
-          this.renewY(
-            rChild, 
-            textWidth + r.data.textWidth,
-          );
-        }
-      }
-    },
-    renewX(r) { // 根据文本高度修改纵轴平移量
-      if (r.children) {
-        for (let index = r.children.length - 1; index > -1; index -= 1) {
-          const rChild = r.children[index];
-          this.renewX(rChild);
-          for (let i = 1; index >= i; i++) {
-            const rBrother = r.children[index - i];
-            rChild.x += rBrother.data.textHeight;
-          }
-        }
-      }
-    },
     tree() { // 数据处理
       // x纵轴 y横轴
-      const { mmdata, renewY, renewX } = this;
+      const { mmdata } = this;
+      const layout = flextree({spacing: 10});
+      const tree = layout.hierarchy(mmdata.data[0]);
+      layout(tree);
 
-      const r = d3.hierarchy(mmdata.data[0]);// 根据指定的分层数据构造根节点
-      r.nodeHeight = 10;
-      r.nodeWidth = 100;// r.height与叶子节点的最大距离
-      // nodeSize设置了节点的大小（高宽)
-      // 高指两个叶子节点的纵向距离，宽指两个节点的横向距离
-      this.root = d3.tree().nodeSize([r.nodeHeight, r.nodeWidth])(r);
+      this.root = tree;
 
       let x0 = Infinity;
       let x1 = -x0;
-      renewY(this.root, 0);
-      renewX(this.root);
       this.root.each((a) => {
         if (a.x > x1) x1 = a.x;// 求得最大，即最低点
         if (a.x < x0) x0 = a.x;// 求得最小，即最高点
@@ -574,33 +563,20 @@ export default {
       });
     },
     getTextSize(t) {
-      const { dummy_g } = this;
+      const { dummy_g, xSpacing } = this;
       let textWidth = 0;
       let textHeight = 0;
       dummy_g.selectAll('.dummyText')
         .data([t.name])
         .enter()
-        .append("text")
-        .text((d) => {
-          const array = d.split('\n');
-          let longestD = array[0];
-          for (let index = 0; index < array.length; index++) {
-            const element = array[index];
-            if (element.length > longestD.length) {
-              longestD = element;
-            }
-          }
-          return longestD;
-        })
+        .append("div")
+        .text((d) => d)
         .each((d, i, n) => {
-          textWidth = n[i].getComputedTextLength();
-          // eslint-disable-next-line 
-          textHeight = n[i].getBBox().height;
+          textWidth = n[i].offsetWidth;
+          textHeight = n[i].offsetHeight;
           n[i].remove() // remove them just after displaying them
         })
-        
-      t.textWidth = textWidth;
-      t.textHeight = textHeight;
+      t.size = [textHeight + 5, textWidth + xSpacing]
     },
     makeDraggable() {
       const {
@@ -624,7 +600,7 @@ export default {
     });
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
 
-    this.dummy_g = d3.select('g#dummy');
+    this.dummy_g = d3.select('div#dummy');
 
     this.mindmap_svg.on('keydown', this.svgKeyDown);
   }
@@ -643,11 +619,19 @@ div#mindmap {
     height: 100%
   }
 
+  div#dummy {
+    div {
+      white-space:pre-wrap;
+      width: max-content;
+    }
+  }
+
   svg {
     flex: auto;
     outline: none;
 
     foreignObject {
+      cursor: default;
       border-radius: 5px;
       border-width: 5px;
       border-color: transparent;

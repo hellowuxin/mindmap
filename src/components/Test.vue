@@ -83,6 +83,14 @@ export default {
     }
   },
   methods: {
+    clearSelection() {
+      if(document.selection && document.selection.empty) {
+          document.selection.empty();
+      } else if(window.getSelection) {
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+      }
+    },
     svgKeyDown() {
       const { mmdata } = this;
       const sele = d3.select('#selectedMindnode');
@@ -129,9 +137,10 @@ export default {
       }
     },
     showContextMenu(e) {
-      this.menuX = e.layerX;
-      this.menuY = e.layerY;
+      this.menuX = e.clientX;
+      this.menuY = e.clientY;
       this.showMenu = true;
+      this.clearSelection();
       setTimeout(function() { document.getElementById("menu").focus() }, 300);
     },
     depthTraverse(d, func) { // 深度遍历，func每个元素
@@ -189,9 +198,12 @@ export default {
       // 更新draggedNode与父节点的path
       d3.select(draggedNode).each((d) => {
         d3.select(`path#path_${d.data.id}`).transition(tran).attr('d', `${link({
-          source: [-targetY + (d.parent ? d.parent.data.size[1] : 0) - xSpacing, -targetX],
-          target: [0, 0],
-        })}L${d.data.size[1] - xSpacing},0`);
+          source: [
+            -targetY + (d.parent ? d.parent.data.size[1] : 0) - xSpacing, 
+            -targetX + (d.parent ? d.parent.data.size[0]/2 : 0)
+          ],
+          target: [0, d.data.size[0]/2],
+        })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
       });
     },
     draggedNodeChildrenRenew(d, px, py) {
@@ -373,7 +385,7 @@ export default {
         .attr('transform', (d) => `translate(${d.dy},${d.dx})`);
       const foreign = gNode.append('foreignObject')
         .attr('x', -5)
-        .attr('y', (d) => -d.data.size[0] - 2)
+        .attr('y', (d) => -d.data.size[0]/2)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', click)
@@ -393,7 +405,7 @@ export default {
       })
       
       const gBtn = gNode.append('g').attr('class', 'gButton')
-        .attr('transform', (d) => `translate(${d.data.size[1] + 8 - xSpacing},${-12})`)
+        .attr('transform', (d) => `translate(${d.data.size[1] + 8 - xSpacing},${d.data.size[0]/2 - 12})`)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
         .on('click', gBtnClick);
@@ -416,12 +428,12 @@ export default {
             .attr('d', (d) => `${link({
               source: [
                 (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - xSpacing,
-                (d.parent ? d.parent.x : 0) - d.x,
+                (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
               ],
-              target: [0, 0],
-            })}L${d.data.size[1] - xSpacing},0`);
+              target: [0, d.data.size[0]/2],
+            })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
         } else if (enterData[0].data.id === '0') { // 根节点
-          foreign.attr('x', -10).attr('y', -15);
+          foreign.attr('x', -12).attr('y', -5);
         }
 
         gNode.each((d, i, n) => {
@@ -458,8 +470,8 @@ export default {
       update.each((d, i, n) => {
         const node = d3.select(n[i]);
         const foreign = node.selectAll('foreignObject')
-          .filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('y', -d.data.size[0] - 2)
+          .filter((d, i, n) => (d.data.id !== '0') && (n[i].parentNode === node.node()))
+          .attr('y', (d) => -d.data.size[0]/2)
           .attr('width', d.data.size[1] + 11 - xSpacing);
         foreign.select('div').text(d.data.name);
         node.select('path')
@@ -470,10 +482,10 @@ export default {
           .attr('d', `${link({
             source: [
               (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - xSpacing,
-              (d.parent ? d.parent.x : 0) - d.x,
+              (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
             ],
-            target: [0, 0],
-          })}L${d.data.size[1] - xSpacing},0`);
+            target: [0, d.data.size[0]/2],
+            })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`);
         
         node.each((d, i, n) => {
           const dd = d.children;
@@ -490,7 +502,7 @@ export default {
         
         node.selectAll('g.gButton')
           .filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('transform', `translate(${d.data.size[1] + 8 - xSpacing},${-12})`)
+          .attr('transform', `translate(${d.data.size[1] + 8 - xSpacing},${d.data.size[0]/2 - 12})`)
           .raise();
         foreign.raise();
       });
@@ -619,6 +631,7 @@ div#mindmap {
     outline: none;
 
     foreignObject {
+      cursor: default;
       border-radius: 5px;
       border-width: 5px;
       border-color: transparent;
