@@ -84,7 +84,7 @@ export default {
       handler(newVal) {
         this.depthTraverse(newVal.data[0], this.getTextSize);
         this.draw();
-        this.test();
+        // this.test();
         if (this.draggble) { this.makeDraggable() }
         this.$emit('change', this.mmdata.getPuredata())
       },
