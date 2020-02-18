@@ -42,6 +42,14 @@ export default {
       type: Boolean,
       default: true
     },
+    xSpacing: {
+      type: Number,
+      default: 80,
+    },
+    ySpacing: {
+      type: Number, 
+      default: 20
+    },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -56,8 +64,6 @@ export default {
     }
   },
   data: () => ({
-    xSpacing: 80,
-    ySpacing: 20,
     mmdata: Object,// 思维导图数据
     root: '',
     showMenu: false,
