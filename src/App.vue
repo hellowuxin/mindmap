@@ -8,7 +8,7 @@
 
 <script>
 import dataLearn from '../public/learn.json'
-import mindmap from './index'
+import mindmap from './components/MindMap'
 export default {
   components: {
     mindmap
