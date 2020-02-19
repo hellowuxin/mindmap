@@ -245,7 +245,7 @@ export default {
       }
     },
     // 拖拽
-    draggedNodeRenew(draggedNode, targetX, targetY, dura) {
+    draggedNodeRenew(draggedNode, targetX, targetY, dura = 0) {
       const { link, xSpacing } = this;
       const tran = d3.transition().duration(dura).ease(d3.easePoly);
       d3.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`);
@@ -271,48 +271,50 @@ export default {
         }
       }
     },
-    dragged(d, i, n) {
+    dragged(a, i, n) { // 拖拽中【待完善】
       const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing } = this;
       const draggedNode = n[i];
+      const draggedNodeRect = draggedNode.getElementsByTagName('foreignObject')[0];
       // 选中
       const sele = document.getElementById('selectedMindnode');
       if (sele && !sele.isSameNode(draggedNode)) {
         sele.removeAttribute('id');
       }
       // 拖拽
-      // subject是被拖拽的点的数据
-      const { subject } = d3.event;
-      // 鼠标相对subject原本位置的偏移
-      const py = d3.event.x - subject.x;
-      const px = d3.event.y - subject.y;
-      // // eslint-disable-next-line 
-      // console.log(d3.event);
-      draggedNodeChildrenRenew(subject, px, py);
-      // 鼠标相对subject.parent位置的坐标
-      const targetY = subject.dy + py;
-      let targetX = subject.dx + px;
-      draggedNodeRenew(draggedNode, targetX, targetY, 0);
-      targetX += subject.size[0]/2
-      // 计算gOthers相对subject.parent位置的坐标
-      const gOthers = mindmap_g.selectAll('g.node')
-        .filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]));
-      gOthers.each((d, i, n) => {
-        const gNode = n[i];
-        const gRect = gNode.getElementsByTagName('foreignObject')[0];
-        const rect = { // 其他gRect相对subject.parent的坐标，以及gRect的宽高
-          y: parseInt(gRect.getAttribute('x'), 10) + d.y + (d.py ? d.py : 0) - (subject.parent ? subject.parent.y : 0),
-          x: parseInt(gRect.getAttribute('y'), 10) + d.x + (d.px ? d.px : 0) - (subject.parent ? subject.parent.x : 0),
-          width: d.size[1] - xSpacing,
-          height: d.size[0],
-        };
-        // 重叠触发矩形边框
-        if ((targetY > rect.y) && (targetY < rect.y + rect.width)
-        && (targetX > rect.x) && (targetX < rect.x + rect.height + 10)) {
-          gNode.setAttribute('id', 'newParentNode');
-        } else if (gNode.getAttribute('id') === 'newParentNode') {
-          gNode.removeAttribute('id');
-        }
-      });
+      // 相对a原本位置的偏移
+      const py = d3.event.x - a.x;// x轴偏移的量
+      const px = d3.event.y - a.y;// y轴偏移的量
+      draggedNodeChildrenRenew(a, px, py);
+      // 相对a.parent位置的坐标
+      let targetY = a.dy + py;// x轴坐标
+      let targetX = a.dx + px;// y轴坐标
+      draggedNodeRenew(draggedNode, targetX, targetY);
+      // foreignObject偏移
+      targetY += parseInt(draggedNodeRect.getAttribute('x'), 10);
+      targetX += parseInt(draggedNodeRect.getAttribute('y'), 10);
+
+      // 计算others相对a.parent位置的坐标
+      mindmap_g.selectAll('g.node')
+        .filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]))
+        .each((d, i, n) => {
+          const gNode = n[i];
+          const gRect = gNode.getElementsByTagName('foreignObject')[0];
+          const rect = { // 其他gRect相对a.parent的坐标，以及gRect的宽高
+            y: parseInt(gRect.getAttribute('x'), 10) // foreignObject的x轴偏移
+              + d.y + (d.py ? d.py : 0) - (a.parent ? a.parent.y : 0),
+            x: parseInt(gRect.getAttribute('y'), 10) // foreignObject的y轴偏移
+              + d.x + (d.px ? d.px : 0) - (a.parent ? a.parent.x : 0),
+            width: d.size[1] - xSpacing,
+            height: d.size[0],
+          };
+          // 重叠触发矩形边框
+          if ((targetY > rect.y) && (targetY < rect.y + rect.width)
+          && (targetX > rect.x) && (targetX < rect.x + rect.height)) {
+            gNode.setAttribute('id', 'newParentNode');
+          } else if (gNode.getAttribute('id') === 'newParentNode') {
+            gNode.removeAttribute('id');
+          }
+        });
     },
     dragback(subject, draggedNode) {
       const { draggedNodeChildrenRenew, draggedNodeRenew } = this;
