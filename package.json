@@ -2,7 +2,7 @@
   "name": "@hellowuxin/mindmap",
   "version": "1.1.0",
   "type": "module",
-  "main": "./dist/mindmap.umd.min.js",
+  "main": "./dist/v-mindmap.min.js",
   "files": [
     "dist"
   ],
@@ -10,7 +10,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "build-lib": "vue-cli-service build --target lib --name mindmap ./src/components/MindMap.vue"
+    "build-lib": "vue-cli-service build --target lib --name mindmap ./src/components/MindMap.vue",
+    "build-wc": "vue-cli-service build --target wc --name v-mindmap './src/components/MindMap.vue'"
   },
   "dependencies": {
     "d3": "^5.15.0",
