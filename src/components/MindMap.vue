@@ -136,15 +136,6 @@ export default {
         // document.execCommand('insertHTML', false, '<br>');
       }   
     },
-    clickMenu(item) {
-      this.showMenu = false;
-      if (item.command === 0) { // 删除节点
-        const sele = d3.select('g#selectedMindnode');
-        sele.each((d) => {
-          this.mmdata.del(d.data);
-        })
-      }
-    },
     showContextMenu() {
       this.menuX = d3.event.x;
       this.menuY = d3.event.y;
@@ -177,6 +168,7 @@ export default {
       sele = d3.select(clickedNode);
       sele.attr('id', 'selectedMindnode');
     },
+    // 点击
     click(d, i, n) {
       const { selectMindnode } = this;
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
@@ -220,6 +212,16 @@ export default {
         mmdata.add(d.data, newJSON);
       })
     },
+    clickMenu(item) {
+      this.showMenu = false;
+      if (item.command === 0) { // 删除节点
+        const sele = d3.select('g#selectedMindnode');
+        sele.each((d) => {
+          this.mmdata.del(d.data);
+        })
+      }
+    },
+    // 悬浮
     rectTriggerOut(d, i, n) {
       let gBtn = null;
       if (n[i].className.baseVal.includes('gButton')) {
@@ -242,6 +244,7 @@ export default {
           .style('opacity', 0.5);
       }
     },
+    // 拖拽
     draggedNodeRenew(draggedNode, targetX, targetY, dura) {
       const { link, xSpacing } = this;
       const tran = d3.transition().duration(dura).ease(d3.easePoly);
@@ -380,6 +383,7 @@ export default {
         }
       });
     },
+    // 绘制
     gClass(d) {
       return `depth_${d.depth} node`
     },
