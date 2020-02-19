@@ -1,5 +1,5 @@
 <template>
-  <div id="app" style="height: 700px; display: flex; align-items: center;">
+  <div id="app" style="height: 1000px; display: flex; align-items: center; justify-content: center">
     <div>
       <mindmap 
         v-model="data"
@@ -26,14 +26,5 @@ export default {
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  display: flex;
-  align-content: center;
-  justify-content: center;
-}
+
 </style>
