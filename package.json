@@ -10,8 +10,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "build-lib": "vue-cli-service build --target lib --name mindmap ./src/components/MindMap.vue",
-    "build-wc": "vue-cli-service build --target wc --name v-mindmap './src/components/MindMap.vue'"
+    "build-lib": "vue-cli-service build --target lib --name mindmap ./src/components/MindMap.vue"
   },
   "dependencies": {
     "d3": "^5.15.0",
