@@ -138,8 +138,8 @@ export default {
     },
     showContextMenu() {
       const svgPosition = this.mindmap_svg.node().getBoundingClientRect();
-      this.menuX = d3.event.pageX - svgPosition.x;
-      this.menuY = d3.event.pageY - svgPosition.y;
+      this.menuX = d3.event.pageX - svgPosition.x - window.scrollX;
+      this.menuY = d3.event.pageY - svgPosition.y - window.scrollY;
       this.showMenu = true;
       this.clearSelection();
       setTimeout(function() { document.getElementById("menu").focus() }, 300);

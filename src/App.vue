@@ -1,5 +1,5 @@
 <template>
-  <div id="app" style="height: 1000px; display: flex; align-items: center; justify-content: center">
+  <div id="app" style="width: 1000px; height: 1000px; display: flex; align-items: center; justify-content: center">
     <div>
       <mindmap 
         v-model="data"
