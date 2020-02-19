@@ -137,8 +137,9 @@ export default {
       }   
     },
     showContextMenu() {
-      this.menuX = d3.event.x;
-      this.menuY = d3.event.y;
+      const svgPosition = this.mindmap_svg.node().getBoundingClientRect();
+      this.menuX = d3.event.pageX - svgPosition.x;
+      this.menuY = d3.event.pageY - svgPosition.y;
       this.showMenu = true;
       this.clearSelection();
       setTimeout(function() { document.getElementById("menu").focus() }, 300);

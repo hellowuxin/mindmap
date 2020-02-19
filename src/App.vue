@@ -1,8 +1,12 @@
 <template>
-  <div id="app" style="height: 700px">
-    <mindmap 
-      v-model="data"
-    ></mindmap>
+  <div id="app" style="height: 700px; display: flex; align-items: center;">
+    <div>
+      <mindmap 
+        v-model="data"
+        :height="700"
+        :width="700"
+      ></mindmap>
+    </div>
   </div>
 </template>
 
