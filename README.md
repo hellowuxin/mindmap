@@ -1,4 +1,4 @@
-<img src="./public/mindmap.png" width="300"/>
+<img src="./public/mindmap.jpg" width="300"/>
 
 # Mindmap Vue Component
 
