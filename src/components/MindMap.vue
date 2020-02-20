@@ -83,6 +83,9 @@ export default {
     mmdata: {
       handler(newVal) {
         this.updateMindmap(newVal.data[0]);
+        
+        this.scale();
+
         // this.test();
         if (this.draggable) { this.makeDrag() }
         this.$emit('change', this.mmdata.getPuredata())
@@ -101,6 +104,16 @@ export default {
     }
   },
   methods: {
+    scale() { // 适应窗口
+      const { mindmap_g } = this;
+      d3.transition().end().then(() => {
+        const rect = mindmap_g.node().getBBox();
+        const multipleX = this.width / (rect.width + rect.x);
+        const multipleY = this.height / (rect.height + rect.y);
+        const multiple = Math.min(multipleX, multipleY);
+        mindmap_g.transition(this.easePolyInOut).attr('transform', `scale(${multiple})`)
+      });
+    },
     updateMindmap(d = this.mmdata.data[0]) {
       this.depthTraverse(d, this.getTextSize);
       this.draw();
@@ -664,15 +677,16 @@ export default {
     this.mmdata = new JSONData(this.value);
     this.mindmap_svg = d3.select('div#mindmap svg');
     this.mindmap_g = d3.select('g#content');
-    this.mindmapSvgZoom = d3.zoom().scaleExtent([0.1, 8]).on('zoom', () => {
-      const { transform } = d3.event;
-      this.mindmap_g.attr('transform', transform);
-    });
-    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
-
     this.dummy_g = d3.select('div#dummy');
 
     this.mindmap_svg.on('keydown', this.svgKeyDown);
+    // zoom
+    this.mindmapSvgZoom = d3.zoom()
+      .scaleExtent([0.1, 8])
+      .on('zoom', () => {
+        this.mindmap_g.attr('transform', d3.event.transform);
+      });
+    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
   }
 }
 </script>

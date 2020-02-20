@@ -1,5 +1,5 @@
 <template>
-  <div id="app" style="width: 1000px; height: 1000px; display: flex; align-items: center; justify-content: center">
+  <div id="app" style="display: flex; align-items: center; justify-content: center">
     <div>
       <mindmap 
         v-model="data"
@@ -27,15 +27,7 @@ export default {
     ySpacing: 20,
   }),
   mounted() {
-    window.setTimeout(() => {
-      this.xSpacing = 10
-    }, 1000)
-    window.setTimeout(() => {
-      this.xSpacing = 40
-    }, 1020)
-    window.setTimeout(() => {
-      this.xSpacing = 90
-    }, 1040)
+    
   }
 }
 </script>
