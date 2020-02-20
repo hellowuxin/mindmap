@@ -1,5 +1,5 @@
 <template>
-  <div id="mindmap" :style="mmStyle">
+  <div ref="mindmap" id="mindmap" :style="mmStyle">
     <svg tabindex="0">
       <g id="test"></g>
       <g id="content"></g>
@@ -74,7 +74,7 @@ export default {
     ],
     mindmap_svg: Object,
     mindmap_g: Object,
-    dummy_g: Object,
+    dummy: Object,
     mindmapSvgZoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
     link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
@@ -107,7 +107,7 @@ export default {
       const { mindmap_g } = this;
       d3.transition().end().then(() => {
         const rect = mindmap_g.node().getBBox();
-        const div = document.getElementById("mindmap");
+        const div = this.$refs.mindmap;
         
         const multipleX = div.offsetWidth / (rect.width + rect.x);
         const multipleY = div.offsetHeight / (rect.height + rect.y);
@@ -648,10 +648,10 @@ export default {
       });
     },
     getTextSize(t) {
-      const { dummy_g, xSpacing } = this;
+      const { dummy, xSpacing } = this;
       let textWidth = 0;
       let textHeight = 0;
-      dummy_g.selectAll('.dummyText')
+      dummy.selectAll('.dummyText')
         .data([t.name])
         .enter()
         .append("div")
@@ -680,7 +680,7 @@ export default {
     this.mmdata = new JSONData(this.value);
     this.mindmap_svg = d3.select('div#mindmap svg');
     this.mindmap_g = d3.select('g#content');
-    this.dummy_g = d3.select('div#dummy');
+    this.dummy = d3.select('div#dummy');
 
     this.mindmap_svg.on('keydown', this.svgKeyDown);
     // zoom
