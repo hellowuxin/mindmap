@@ -6,6 +6,8 @@
         :height="700"
         :width="700"
         :draggable="draggable"
+        :xSpacing="xSpacing"
+        :ySpacing="ySpacing"
       ></mindmap>
     </div>
   </div>
@@ -21,8 +23,13 @@ export default {
   data: () => ({
     data: [dataLearn],
     draggable: true,
+    xSpacing: 80,
+    ySpacing: 20,
   }),
   mounted() {
+    window.setTimeout(() => {
+      this.ySpacing = 80
+    }, 2000)
   }
 }
 </script>

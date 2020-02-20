@@ -82,8 +82,7 @@ export default {
   watch: {
     mmdata: {
       handler(newVal) {
-        this.depthTraverse(newVal.data[0], this.getTextSize);
-        this.draw();
+        this.updateMindmap(newVal.data[0]);
         // this.test();
         if (this.draggable) { this.makeDrag() }
         this.$emit('change', this.mmdata.getPuredata())
@@ -91,14 +90,21 @@ export default {
       deep: true,// watch for nested data
     },
     draggable: function(val) {
-      if (!val) {
-        this.cancelDrag();
-      } else {
-        this.makeDrag();
-      }
+      if (!val) { this.cancelDrag() } 
+      else { this.makeDrag(); }
+    },
+    xSpacing: function() {
+      this.updateMindmap();
+    },
+    ySpacing: function() {
+      this.updateMindmap();
     }
   },
   methods: {
+    updateMindmap(d = this.mmdata.data[0]) {
+      this.depthTraverse(d, this.getTextSize);
+      this.draw();
+    },
     clearSelection() {
       if(document.selection && document.selection.empty) {
           document.selection.empty();
