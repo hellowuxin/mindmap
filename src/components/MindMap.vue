@@ -38,7 +38,7 @@ export default {
     },
     width: Number,
     height: Number,
-    draggble: { // 是否可拖拽
+    draggable: { // 是否可拖拽
       type: Boolean,
       default: true
     },
@@ -85,10 +85,17 @@ export default {
         this.depthTraverse(newVal.data[0], this.getTextSize);
         this.draw();
         // this.test();
-        if (this.draggble) { this.makeDraggable() }
+        if (this.draggable) { this.makeDrag() }
         this.$emit('change', this.mmdata.getPuredata())
       },
       deep: true,// watch for nested data
+    },
+    draggable: function(val) {
+      if (!val) {
+        this.cancelDrag();
+      } else {
+        this.makeDrag();
+      }
     }
   },
   methods: {
@@ -631,7 +638,7 @@ export default {
         })
       t.size = [textHeight, textWidth + xSpacing]
     },
-    makeDraggable() {
+    makeDrag() {
       const {
         mindmap_g,
         dragged,
@@ -641,6 +648,9 @@ export default {
       mindmap_g.selectAll('g.node')
         .filter((d) => { return d.depth !== 0 })// 非根节点才可以拖拽
         .call(d3.drag().on('drag', dragged).on('end', dragended));
+    },
+    cancelDrag() {
+      this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null));
     }
   },
   mounted() {

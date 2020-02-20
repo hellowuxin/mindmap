@@ -5,6 +5,7 @@
         v-model="data"
         :height="700"
         :width="700"
+        :draggable="draggable"
       ></mindmap>
     </div>
   </div>
@@ -19,8 +20,9 @@ export default {
   },
   data: () => ({
     data: [dataLearn],
+    draggable: true,
   }),
-  methods: {
+  mounted() {
   }
 }
 </script>
