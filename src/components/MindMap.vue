@@ -536,6 +536,7 @@ export default {
         nest
       } = this;
 
+      update.interrupt().selectAll('*').interrupt();
       update.attr('class', gClass)
         .transition(easePolyInOut)
         .attr('transform', gTransform);

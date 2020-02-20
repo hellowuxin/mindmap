@@ -28,8 +28,14 @@ export default {
   }),
   mounted() {
     window.setTimeout(() => {
-      this.ySpacing = 80
-    }, 2000)
+      this.xSpacing = 10
+    }, 1000)
+    window.setTimeout(() => {
+      this.xSpacing = 40
+    }, 1020)
+    window.setTimeout(() => {
+      this.xSpacing = 90
+    }, 1040)
   }
 }
 </script>
