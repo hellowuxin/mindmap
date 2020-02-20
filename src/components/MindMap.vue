@@ -84,9 +84,7 @@ export default {
     mmdata: {
       handler(newVal) {
         this.updateMindmap(newVal.data[0]);
-        
         this.scale();
-
         // this.test();
         if (this.draggable) { this.makeDrag() }
         this.$emit('change', this.mmdata.getPuredata())
@@ -109,9 +107,12 @@ export default {
       const { mindmap_g } = this;
       d3.transition().end().then(() => {
         const rect = mindmap_g.node().getBBox();
-        const multipleX = this.width / (rect.width + rect.x);
-        const multipleY = this.height / (rect.height + rect.y);
+        const div = document.getElementById("mindmap");
+        
+        const multipleX = div.offsetWidth / (rect.width + rect.x);
+        const multipleY = div.offsetHeight / (rect.height + rect.y);
         const multiple = Math.min(multipleX, multipleY);
+        
         this.mindmap_svg.transition(this.easePolyInOut)
           .call(this.zoom.scaleBy, multiple, [0, 0]);
       });
