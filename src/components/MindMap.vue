@@ -77,7 +77,8 @@ export default {
     dummy_g: Object,
     mindmapSvgZoom: Function,
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
-    link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1])
+    link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
+    zoom: d3.zoom(),
   }),
   watch: {
     mmdata: {
@@ -111,7 +112,8 @@ export default {
         const multipleX = this.width / (rect.width + rect.x);
         const multipleY = this.height / (rect.height + rect.y);
         const multiple = Math.min(multipleX, multipleY);
-        mindmap_g.transition(this.easePolyInOut).attr('transform', `scale(${multiple})`)
+        this.mindmap_svg.transition(this.easePolyInOut)
+          .call(this.zoom.scaleBy, multiple, [0, 0]);
       });
     },
     updateMindmap(d = this.mmdata.data[0]) {
@@ -272,6 +274,20 @@ export default {
       }
     },
     // 拖拽
+    makeDrag() {
+      const {
+        mindmap_g,
+        dragged,
+        dragended,
+      } = this;
+
+      mindmap_g.selectAll('g.node')
+        .filter((d) => { return d.depth !== 0 })// 非根节点才可以拖拽
+        .call(d3.drag().on('drag', dragged).on('end', dragended));
+    },
+    cancelDrag() {
+      this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null));
+    },
     draggedNodeRenew(draggedNode, targetX, targetY, dura = 0) {
       const { link, xSpacing } = this;
       const tran = d3.transition().duration(dura).ease(d3.easePoly);
@@ -630,18 +646,6 @@ export default {
         if (!a.children) { a.children = [] }
       });
     },
-    test() {
-      const node = d3.select('g#test')
-        .selectAll("g")
-        .data(this.root.descendants())
-        .join("g")
-        .attr("transform", d => `translate(${d.y},${d.x})`);
-
-      node.append("rect")
-        .attr("fill", "#999")
-        .attr("width", d => d.size[1])
-        .attr("height", d => d.size[0]);
-    },
     getTextSize(t) {
       const { dummy_g, xSpacing } = this;
       let textWidth = 0;
@@ -658,20 +662,18 @@ export default {
         })
       t.size = [textHeight, textWidth + xSpacing]
     },
-    makeDrag() {
-      const {
-        mindmap_g,
-        dragged,
-        dragended,
-      } = this;
+    test() {
+      const node = d3.select('g#test')
+        .selectAll("g")
+        .data(this.root.descendants())
+        .join("g")
+        .attr("transform", d => `translate(${d.y},${d.x})`);
 
-      mindmap_g.selectAll('g.node')
-        .filter((d) => { return d.depth !== 0 })// 非根节点才可以拖拽
-        .call(d3.drag().on('drag', dragged).on('end', dragended));
+      node.append("rect")
+        .attr("fill", "#999")
+        .attr("width", d => d.size[1])
+        .attr("height", d => d.size[0]);
     },
-    cancelDrag() {
-      this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null));
-    }
   },
   mounted() {
     this.mmdata = new JSONData(this.value);
@@ -681,7 +683,7 @@ export default {
 
     this.mindmap_svg.on('keydown', this.svgKeyDown);
     // zoom
-    this.mindmapSvgZoom = d3.zoom()
+    this.mindmapSvgZoom = this.zoom
       .scaleExtent([0.1, 8])
       .on('zoom', () => {
         this.mindmap_g.attr('transform', d3.event.transform);
