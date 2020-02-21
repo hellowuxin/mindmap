@@ -21,7 +21,7 @@
         <div>{{ item.title }}</div>
       </div>
     </div>
-    <div ref="button" class="button">
+    <div ref="button" class="button" @click="gps()">
       <button class="icon" ref="locate" type="button">
         <i style="
           background-image: url(./icons/crosshairs-gps.png);
@@ -111,10 +111,14 @@ export default {
     }
   },
   methods: {
+    gps() {
+      this.scale();
+      this.mindmap_svg
+        .call(this.zoom.translateTo, 0, 0, [0, 0]);
+    },
     scale() { // 适应窗口
-      const { mindmap_g } = this;
       d3.transition().end().then(() => {
-        const rect = mindmap_g.node().getBBox();
+        const rect = this.mindmap_g.node().getBBox();
         const div = this.$refs.mindmap;
         
         const multipleX = div.offsetWidth / (rect.width + rect.x);
@@ -122,7 +126,7 @@ export default {
         const multiple = Math.min(multipleX, multipleY);
         
         this.mindmap_svg.transition(this.easePolyInOut)
-          .call(this.zoom.scaleBy, multiple, [0, 0]);
+          .call(this.zoom.scaleTo, multiple, [0, 0]);
       });
     },
     updateMindmap(d = this.mmdata.data[0]) {
@@ -852,7 +856,7 @@ div#mindmap {
       }
 
       &:hover::before {
-        opacity: 0.04;
+        opacity: 0.1;
       }
 
       i {
