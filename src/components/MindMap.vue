@@ -23,10 +23,7 @@
     </div>
     <div ref="button" class="button" @click="gps()">
       <button class="icon" ref="locate" type="button">
-        <i style="
-          background-image: url(./icons/crosshairs-gps.png);
-          filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%);
-        "></i>
+        <i></i>
       </button>
     </div>
   </div>
@@ -862,6 +859,8 @@ div#mindmap {
       i {
         width: 24px;
         height: 24px;
+        background-image: url(../../public/icons/crosshairs-gps.png);
+        filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%);
       }
     }
   }
