@@ -1,11 +1,11 @@
 <template>
   <div ref="mindmap" id="mindmap" :style="mmStyle">
-    <svg tabindex="0">
+    <svg ref="svg" tabindex="0">
       <g id="test"></g>
-      <g id="content"></g>
+      <g ref="content" id="content"></g>
     </svg>
-    <div id="dummy"></div>
-    <div 
+    <div ref="dummy" id="dummy"></div>
+    <div ref="menu"
       id="menu"
       tabindex="0"
       v-show="showMenu"
@@ -171,7 +171,7 @@ export default {
       this.menuY = d3.event.pageY - svgPosition.y - window.scrollY;
       this.showMenu = true;
       this.clearSelection();
-      setTimeout(function() { document.getElementById("menu").focus() }, 300);
+      setTimeout(() => { this.$refs.menu.focus() }, 300);
     },
     depthTraverse(d, func) { // 深度遍历，func每个元素
       func(d);
@@ -678,9 +678,9 @@ export default {
   },
   mounted() {
     this.mmdata = new JSONData(this.value);
-    this.mindmap_svg = d3.select('div#mindmap svg');
-    this.mindmap_g = d3.select('g#content');
-    this.dummy = d3.select('div#dummy');
+    this.mindmap_svg = d3.select(this.$refs.svg);
+    this.mindmap_g = d3.select(this.$refs.content);
+    this.dummy = d3.select(this.$refs.dummy);
 
     this.mindmap_svg.on('keydown', this.svgKeyDown);
     // zoom

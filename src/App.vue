@@ -3,7 +3,7 @@
     <div>
       <mindmap 
         v-model="data"
-        :height="300"
+        :height="700"
         :width="700"
         :draggable="draggable"
         :xSpacing="xSpacing"
