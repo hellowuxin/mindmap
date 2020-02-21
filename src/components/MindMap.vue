@@ -21,6 +21,14 @@
         <div>{{ item.title }}</div>
       </div>
     </div>
+    <div ref="button" class="button">
+      <button class="icon" ref="locate" type="button">
+        <i style="
+          background-image: url(./icons/crosshairs-gps.png);
+          filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%);
+        "></i>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -801,6 +809,55 @@ div#mindmap {
 
       &:hover::before {
         opacity: 0.09;
+      }
+    }
+  }
+  
+  div.button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    button.icon {
+      position: relative;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      color: #3f51b5;
+
+      &::before {
+        background-color: currentColor;
+        border-radius: inherit;
+        bottom: 0;
+        color: inherit;
+        content: "";
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: opacity 0.2s cubic-bezier(0.4, 0, 0.6, 1);
+      }
+
+      &:focus {
+        outline: none;
+      }
+
+      &:hover::before {
+        opacity: 0.04;
+      }
+
+      i {
+        width: 24px;
+        height: 24px;
       }
     }
   }
