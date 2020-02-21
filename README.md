@@ -26,7 +26,7 @@ Support keyboard and mouse
 - click twice - Edit node content
 - ...
 
-Online demo：<https://mindnode.5xin.xyz>
+Online demo：<https://blog.5xin.xyz/mycomponents/mindmap>
 
 ## Install
 

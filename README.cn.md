@@ -26,7 +26,7 @@
 - 单击两次 - 编辑节点内容
 - ...
 
-在线演示：<https://mindnode.5xin.xyz>
+在线演示：<https://blog.5xin.xyz/mycomponents/mindmap>
 
 ## 安装
 
