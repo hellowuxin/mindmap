@@ -21,8 +21,8 @@
         <div>{{ item.title }}</div>
       </div>
     </div>
-    <div ref="button" class="button" @click="gps()">
-      <button class="icon" ref="locate" type="button">
+    <div v-show="gps" ref="button" class="button" @click="getBack()">
+      <button  class="icon" ref="locate" type="button">
         <i></i>
       </button>
     </div>
@@ -43,10 +43,6 @@ export default {
     },
     width: Number,
     height: Number,
-    draggable: { // 是否可拖拽
-      type: Boolean,
-      default: true
-    },
     xSpacing: {
       type: Number,
       default: 80,
@@ -55,6 +51,14 @@ export default {
       type: Number, 
       default: 20
     },
+    draggable: { // 是否可拖拽
+      type: Boolean,
+      default: true
+    },
+    gps: { // 是否显示找回按钮
+      type: Boolean,
+      default: true
+    }
   },
   model: { // 双向绑定
     prop: 'value',
@@ -89,7 +93,6 @@ export default {
     mmdata: {
       handler(newVal) {
         this.updateMindmap(newVal.data[0]);
-        this.scale();
         // this.test();
         if (this.draggable) { this.makeDrag() }
         this.$emit('change', this.mmdata.getPuredata())
@@ -108,7 +111,7 @@ export default {
     }
   },
   methods: {
-    gps() {
+    getBack() { // 找回
       this.scale();
       this.mindmap_svg
         .call(this.zoom.translateTo, 0, 0, [0, 0]);
@@ -699,6 +702,8 @@ export default {
         this.mindmap_g.attr('transform', d3.event.transform);
       });
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
+
+    this.scale();
   }
 }
 </script>

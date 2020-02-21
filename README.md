@@ -41,14 +41,15 @@ import mindmap from '@hellowuxin/mindmap'
 
 ## API
 
-| Name      | Type   | Default   | Description                        |
-| ---       | ---    | ---       | ---                                |
-| v-model   | Array  | undefined | Set up mindmap data                |
-| draggable | Boolean| true      | Set whether the node is draggable  |
-| width     | Number | 100%      | Set component width                |
-| height    | Number | 100%      | Set component height               |
-| xSpacing  | Number | 80        | Set node horizontal spacing        |
-| ySpacing  | Number | 20        | Set node vertical spacing          |
+| Name      | Type   | Default   | Description                         |
+| ---       | ---    | ---       | ---                                 |
+| v-model   | Array  | undefined | Set up mindmap data                 |
+| width     | Number | 100%      | Set component width                 |
+| height    | Number | 100%      | Set component height                |
+| xSpacing  | Number | 80        | Set node horizontal spacing         |
+| ySpacing  | Number | 20        | Set node vertical spacing           |
+| draggable | Boolean| true      | Set whether the node is draggable   |
+| gps       | Boolean| true      | Whether to show the retrieve button |
 
 ## Example
 

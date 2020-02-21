@@ -44,11 +44,12 @@ import mindmap from '@hellowuxin/mindmap'
 | Name      | Type   | Default   | Description      |
 | ---       | ---    | ---       | ---              |
 | v-model   | Array  | undefined | 设置思维导图数据    |
-| draggable | Boolean| true      | 设置节点是否可拖拽  |
 | width     | Number | 100%      | 设置组件宽度       |
 | height    | Number | 100%      | 设置组件高度       |
 | xSpacing  | Number | 80        | 设置节点横向间隔    |
 | ySpacing  | Number | 20        | 设置节点纵向间隔    |
+| draggable | Boolean| true      | 设置节点是否可拖拽  |
+| gps       | Boolean| true      | 是否显示找回按钮    |
 
 ## 样例
 

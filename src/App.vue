@@ -8,6 +8,7 @@
         :draggable="draggable"
         :xSpacing="xSpacing"
         :ySpacing="ySpacing"
+        :gps="gps"
       ></mindmap>
     </div>
   </div>
@@ -25,9 +26,15 @@ export default {
     draggable: true,
     xSpacing: 80,
     ySpacing: 20,
+    gps: true,
   }),
   mounted() {
-    
+    setTimeout(() => {
+      this.gps = false;
+    }, 1000)
+    setTimeout(() => {
+      this.gps = true;
+    }, 3000)
   }
 }
 </script>
