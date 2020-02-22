@@ -98,4 +98,5 @@ export default {
 
 - [ ] Set node width and height
 - [ ] Multiple root nodes
+- [ ] Collapse node
 - [ ] ...
