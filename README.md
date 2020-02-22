@@ -4,7 +4,7 @@
 
 ![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
 
-Make a mindmap component similar to [MindNode](https://mindnode.com)
+Based on d3.js
 
 [中文说明](./README.cn.md)
 

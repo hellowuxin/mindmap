@@ -4,7 +4,7 @@
 
 ![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
 
-目标是实现一个跟[MindNode](https://mindnode.com)近似的网页思维导图组件
+基于d3.js实现
 
 [English Readme](./README.md)
 
