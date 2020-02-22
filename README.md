@@ -96,6 +96,7 @@ export default {
 
 ## Todo
 
+- [ ] Export multiple formats
 - [ ] Set node width and height
 - [ ] Multiple root nodes
 - [ ] Collapse node
