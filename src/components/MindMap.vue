@@ -31,7 +31,7 @@
 
 <script>
 import * as d3 from 'd3'
-const flextree = require('d3-flextree').flextree;
+const flextree = require('d3-flextree').flextree
 import JSONData from '../JSONData'
 
 export default {
@@ -111,6 +111,8 @@ export default {
     }
   },
   methods: {
+    exportImage() { // 导出png
+    },
     getBack() { // 找回
       this.scale();
       this.mindmap_svg
@@ -449,7 +451,7 @@ export default {
       return `translate(${d.dy},${d.dx})`
     },
     foreignY(d) {
-      return -d.data.size[0]/2 - 7;
+      return -d.data.size[0]/2 - 5;
     },
     gBtnTransform(d) {
       return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2 - 12})`
@@ -523,9 +525,14 @@ export default {
         .on('keydown', divKeyDown);
       foreignDiv.each((d, i, n) => {
         const observer = new ResizeObserver((l) => {
+          const t = l[0].target;
+          const b1 = getComputedStyle(t).borderTopWidth;
+          const b2 = getComputedStyle(t.parentNode).borderTopWidth
+          const spacing = parseInt(b1, 10) + parseInt(b2, 10);
+
           foreign.filter((d, index) => i === index)
-            .attr('width', l[0].contentRect.width + 12)
-            .attr('height', l[0].contentRect.height + 12);
+            .attr('width', l[0].contentRect.width + spacing*2)// div和foreign border
+            .attr('height', l[0].contentRect.height + spacing*2);
         });
         observer.observe(n[i]);
       })
@@ -590,6 +597,7 @@ export default {
           .attr('width', d.data.size[1] + 11 - xSpacing);
         foreign.select('div').text(d.data.name);
         node.select('path')
+          .filter((d, i, n) => n[i].parentNode === node.node())
           .attr('id', pathId(d))
           .attr('class', pathClass(d))
           .attr('stroke', pathColor(d))
@@ -651,7 +659,7 @@ export default {
       this.root.each((a) => {
         // 处理偏移量确保图像完全显示
         a.x -= (x0 - 30);
-        a.y += 15;
+        a.y += 20;
         // 相对偏移
         a.dx = a.x - (a.parent ? a.parent.x : 0);
         a.dy = a.y - (a.parent ? a.parent.y : 0);
@@ -709,6 +717,8 @@ export default {
 </script>
 
 <style lang="scss">
+$seleColor: rgba($color: blue, $alpha: 0.15);
+
 div#mindmap {
   font-size: 14px;
   position: relative;
@@ -730,24 +740,37 @@ div#mindmap {
   svg {
     flex: auto;
     outline: none;
+    background-color: rgb(238, 238, 243);
 
     foreignObject {
       cursor: default;
-      border-radius: 5px;
-      border-width: 5px;
+      border-radius: 3px;
+      border-width: 3px;
       border-color: transparent;
       border-style: solid;
+
       div {
         text-align: left;
         border: 1px solid transparent;
         width: max-content;
         white-space:pre-wrap;
+        color: rgb(109, 109, 109);
+
         &:focus {
           border-color: rgb(154, 154, 154);
           outline: none;
         }
       }
     }
+
+    g.depth_0.node > foreignObject { 
+      background-color: white;
+      border-radius: 5px;
+
+      div {
+        color: rgb(75, 75, 75);
+      }
+    } 
 
     g.gButton {
       opacity: 0;
@@ -769,12 +792,17 @@ div#mindmap {
       stroke-width: 4;
     }
 
-    #selectedMindnode > foreignObject {
-      background-color: rgba($color: blue, $alpha: 0.2);
+    #selectedMindnode:not(.depth_0) > foreignObject {
+      background-color: $seleColor;
+    }
+
+    #selectedMindnode.depth_0 > foreignObject {
+      outline: 3px solid;
+      outline-color: $seleColor;
     }
 
     #newParentNode > foreignObject {
-      border-color: rgba($color: blue, $alpha: 0.2);
+      border-color: $seleColor;
     }
 
     #editing > foreignObject > div {

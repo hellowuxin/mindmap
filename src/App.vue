@@ -15,14 +15,14 @@
 </template>
 
 <script>
-import dataLearn from '../public/learn.json'
+// import dataLearn from '../public/learn.json'
 import mindmap from './components/MindMap'
 export default {
   components: {
     mindmap
   },
   data: () => ({
-    data: [dataLearn],
+    data: [{ name: 's', children: [] }],
     draggable: true,
     xSpacing: 80,
     ySpacing: 20,
@@ -30,11 +30,8 @@ export default {
   }),
   mounted() {
     setTimeout(() => {
-      this.gps = false;
-    }, 1000)
-    setTimeout(() => {
-      this.gps = true;
-    }, 3000)
+      
+    }, 2000)
   }
 }
 </script>
