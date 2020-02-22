@@ -8,6 +8,8 @@
 
 [English Readme](./README.md)
 
+在线演示：<https://blog.5xin.xyz/mycomponents/mindmap>
+
 ## 功能
 
 支持键盘和鼠标
@@ -25,8 +27,6 @@
 - 右键 - 菜单
 - 单击两次 - 编辑节点内容
 - ...
-
-在线演示：<https://blog.5xin.xyz/mycomponents/mindmap>
 
 ## 安装
 

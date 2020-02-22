@@ -8,6 +8,8 @@ Make a mindmap component similar to [MindNode](https://mindnode.com)
 
 [中文说明](./README.cn.md)
 
+Online demo：<https://blog.5xin.xyz/mycomponents/mindmap>
+
 ## Function
 
 Support keyboard and mouse
@@ -25,8 +27,6 @@ Support keyboard and mouse
 - right click - Open contextMenu
 - click twice - Edit node content
 - ...
-
-Online demo：<https://blog.5xin.xyz/mycomponents/mindmap>
 
 ## Install
 
