@@ -528,8 +528,8 @@ export default {
           const t = l[0].target;
           const b1 = getComputedStyle(t).borderTopWidth;
           const b2 = getComputedStyle(t.parentNode).borderTopWidth
-          const spacing = parseInt(b1, 10) + parseInt(b2, 10);
-
+          let spacing = parseInt(b1, 10) + parseInt(b2, 10);
+          spacing = spacing ? spacing : 0;
           foreign.filter((d, index) => i === index)
             .attr('width', l[0].contentRect.width + spacing*2)// div和foreign border
             .attr('height', l[0].contentRect.height + spacing*2);
