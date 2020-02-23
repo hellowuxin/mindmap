@@ -37,28 +37,13 @@ import JSONData from '../JSONData'
 export default {
   name: 'mindmap',
   props: {
-    value: { // 源数据
-      type: Array,
-      required: true
-    },
+    value: { type: Array, required: true },
     width: Number,
     height: Number,
-    xSpacing: {
-      type: Number,
-      default: 80,
-    },
-    ySpacing: {
-      type: Number, 
-      default: 20
-    },
-    draggable: { // 是否可拖拽
-      type: Boolean,
-      default: true
-    },
-    gps: { // 是否显示找回按钮
-      type: Boolean,
-      default: true
-    }
+    xSpacing: { type: Number, default: 80 },
+    ySpacing: { type: Number, default: 20 },
+    draggable: { type: Boolean, default: true },
+    gps: { type: Boolean, default: true }
   },
   model: { // 双向绑定
     prop: 'value',
@@ -710,8 +695,6 @@ export default {
         this.mindmap_g.attr('transform', d3.event.transform);
       });
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
-
-    this.scale();
   }
 }
 </script>

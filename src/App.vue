@@ -22,7 +22,7 @@ export default {
     mindmap
   },
   data: () => ({
-    data: [{ name: 's', children: [] }],
+    data: [{ name: '空白节点', children: [] }],
     draggable: true,
     xSpacing: 80,
     ySpacing: 20,
