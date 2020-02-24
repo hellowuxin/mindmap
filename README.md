@@ -49,7 +49,8 @@ import mindmap from '@hellowuxin/mindmap'
 | xSpacing  | Number | 80        | Set node horizontal spacing         |
 | ySpacing  | Number | 20        | Set node vertical spacing           |
 | draggable | Boolean| true      | Set whether the node is draggable   |
-| gps       | Boolean| true      | Whether to show the retrieve button |
+| gps       | Boolean| true      | Whether to show the center button   |
+| fitView   | Boolean| true      | Whether to show the zoom button     |
 
 ## Example
 

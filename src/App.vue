@@ -15,14 +15,15 @@
 </template>
 
 <script>
-// import dataLearn from '../public/learn.json'
+import dataLearn from '../public/learn.json'
 import mindmap from './components/MindMap'
 export default {
   components: {
     mindmap
   },
   data: () => ({
-    data: [{ name: '空白节点', children: [] }],
+    tdata: [{ name: '空白节点', children: [] }],
+    data: [dataLearn],
     draggable: true,
     xSpacing: 80,
     ySpacing: 20,

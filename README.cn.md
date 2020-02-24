@@ -49,7 +49,8 @@ import mindmap from '@hellowuxin/mindmap'
 | xSpacing  | Number | 80        | 设置节点横向间隔    |
 | ySpacing  | Number | 20        | 设置节点纵向间隔    |
 | draggable | Boolean| true      | 设置节点是否可拖拽  |
-| gps       | Boolean| true      | 是否显示找回按钮    |
+| gps       | Boolean| true      | 是否显示居中按钮    |
+| fitView   | Boolean| true      | 是否显示缩放按钮    |
 
 ## 样例
 

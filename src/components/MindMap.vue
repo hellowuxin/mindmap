@@ -1,8 +1,7 @@
 <template>
   <div ref="mindmap" id="mindmap" :style="mmStyle">
     <svg ref="svg" tabindex="0">
-      <g id="test"></g>
-      <g ref="content" id="content"></g>
+      <g ref="content" id="content" ></g>
     </svg>
     <div ref="dummy" id="dummy"></div>
     <div ref="menu"
@@ -21,9 +20,12 @@
         <div>{{ item.title }}</div>
       </div>
     </div>
-    <div v-show="gps" ref="button" class="button" @click="getBack()">
-      <button  class="icon" ref="locate" type="button">
-        <i></i>
+    <div ref="button" class="button">
+      <button v-show="gps" class="icon" ref="gps" type="button" @click="makeCenter()">
+        <i class="gps"></i>
+      </button>
+      <button v-show="fitView" class="icon" ref="fitView" type="button" @click="fitContent()">
+        <i class="fitView"></i>
       </button>
     </div>
   </div>
@@ -43,7 +45,8 @@ export default {
     xSpacing: { type: Number, default: 80 },
     ySpacing: { type: Number, default: 20 },
     draggable: { type: Boolean, default: true },
-    gps: { type: Boolean, default: true }
+    gps: { type: Boolean, default: true },
+    fitView: { type: Boolean, default: true }
   },
   model: { // 双向绑定
     prop: 'value',
@@ -58,6 +61,7 @@ export default {
     }
   },
   data: () => ({
+    dTop: null,
     mmdata: Object,// 思维导图数据
     root: '',
     showMenu: false,
@@ -78,7 +82,6 @@ export default {
     mmdata: {
       handler(newVal) {
         this.updateMindmap(newVal.data[0]);
-        // this.test();
         if (this.draggable) { this.makeDrag() }
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -98,27 +101,37 @@ export default {
   methods: {
     exportImage() { // 导出png
     },
-    getBack() { // 找回
-      this.scale();
-      this.mindmap_svg
-        .call(this.zoom.translateTo, 0, 0, [0, 0]);
+    async makeCenter() { // 居中
+      await d3.transition().end().then(() => {
+        const div = this.$refs.mindmap;
+        const content = this.$refs.content.getBBox();
+        const { k } = d3.zoomTransform(this.$refs.svg);
+
+        const x = (
+          -(div.offsetWidth - k*content.width)/(2*k) 
+          - 5
+        );
+        const y = (
+          -(div.offsetHeight - k*content.height)/(2*k) 
+          - (-this.dTop.x - this.foreignY(this.dTop))
+        );
+
+        this.mindmap_svg.call(this.zoom.translateTo, x, y, [0, 0]);
+      });
+      // eslint-disable-next-line 
+      console.log(1);
     },
-    scale() { // 适应窗口
+    fitContent() { // 适应窗口大小
       d3.transition().end().then(() => {
-        const rect = this.mindmap_g.node().getBBox();
+        const rect = this.$refs.content.getBBox();
         const div = this.$refs.mindmap;
         
-        const multipleX = div.offsetWidth / (rect.width + rect.x);
-        const multipleY = div.offsetHeight / (rect.height + rect.y);
+        const multipleX = div.offsetWidth / rect.width;
+        const multipleY = div.offsetHeight / rect.height;
         const multiple = Math.min(multipleX, multipleY);
         
-        this.mindmap_svg.transition(this.easePolyInOut)
-          .call(this.zoom.scaleTo, multiple, [0, 0]);
+        this.mindmap_svg.transition(this.easePolyInOut).call(this.zoom.scaleTo, multiple);
       });
-    },
-    updateMindmap(d = this.mmdata.data[0]) {
-      this.depthTraverse(d, this.getTextSize);
-      this.draw();
     },
     clearSelection() {
       if(document.selection && document.selection.empty) {
@@ -144,8 +157,7 @@ export default {
       } else if (keyName === 'Enter') { // 添加弟弟节点
         d3.event.preventDefault();
         sele.each((d, i, n) => {
-          const mindmap_g = d3.select('g#content');
-          if (n[i].parentNode.isSameNode(mindmap_g.nodes()[0])) { // 根节点enter时，等效tab
+          if (n[i].parentNode.isSameNode(this.$refs.content)) { // 根节点enter时，等效tab
             mmdata.add(d.data, newJSON);
           } else {
             mmdata.insert(d.data, newJSON, 1);
@@ -365,11 +377,11 @@ export default {
       draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000);
     },
     dragended(d, i, n) {
-      const { mindmap_g, dragback, mmdata, draw, root } = this;
+      const { dragback, mmdata, draw, root } = this;
       const { subject } = d3.event;
       const draggedNode = n[i];
       let draggedParentNode = draggedNode.parentNode;
-      if (draggedParentNode.isEqualNode(mindmap_g.nodes()[0])) { // 拖拽的是根节点时复原
+      if (draggedParentNode.isEqualNode(this.$refs.content)) { // 拖拽的是根节点时复原
         dragback(subject, draggedNode);
         return;
       }
@@ -429,6 +441,12 @@ export default {
       });
     },
     // 绘制
+    updateMindmap(d = this.mmdata.data[0]) {
+      this.depthTraverse(d, this.getTextSize);
+      this.tree();
+      this.getDTop();
+      this.draw();
+    },
     gClass(d) {
       return `depth_${d.depth} node`
     },
@@ -545,7 +563,7 @@ export default {
             .attr('stroke', pathColor)
             .attr('d', path);
         } else if (enterData[0].data.id === '0') { // 根节点
-          foreign.attr('x', -12).attr('y', (d) => foreignY(d)+d.size[0]/2);
+          foreign.attr('y', (d) => foreignY(d)+d.size[0]/2);
         }
 
         gNode.each(nest);
@@ -574,6 +592,7 @@ export default {
       update.attr('class', gClass)
         .transition(easePolyInOut)
         .attr('transform', gTransform);
+
       update.each((d, i, n) => {
         const node = d3.select(n[i]);
         const foreign = node.selectAll('foreignObject')
@@ -607,15 +626,7 @@ export default {
       }).remove();
     },
     draw() { // 生成svg
-      const { 
-        mindmap_g, 
-        appendNode, 
-        updateNode, 
-        exitNode,
-        tree
-      } = this;
-
-      tree();
+      const { mindmap_g, appendNode, updateNode, exitNode} = this;
       const d = [ this.root ];
 
       mindmap_g.selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ''}`)
@@ -630,27 +641,22 @@ export default {
       // x纵轴 y横轴
       const { mmdata, ySpacing } = this;
       const layout = flextree({spacing: ySpacing});
-      const tree = layout.hierarchy(mmdata.data[0]);
-      layout(tree);
+      const t = layout.hierarchy(mmdata.data[0]);
+      layout(t);
 
-      this.root = tree;
-
-      let x0 = Infinity;
-      let x1 = -x0;
+      this.root = t;
       this.root.each((a) => {
-        if (a.x > x1) x1 = a.x;// 求得最大，即最低点
-        if (a.x < x0) x0 = a.x;// 求得最小，即最高点
-      });
-      this.root.each((a) => {
-        // 处理偏移量确保图像完全显示
-        a.x -= (x0 - 30);
-        a.y += 20;
         // 相对偏移
         a.dx = a.x - (a.parent ? a.parent.x : 0);
         a.dy = a.y - (a.parent ? a.parent.y : 0);
 
         if (!a.children) { a.children = [] }
       });
+    },
+    getDTop() {
+      let t = this.root;
+      while (t.children[0]) { t = t.children[0] }
+      this.dTop = t;
     },
     getTextSize(t) {
       const { dummy, xSpacing } = this;
@@ -668,34 +674,25 @@ export default {
         })
       t.size = [textHeight, textWidth + xSpacing]
     },
-    test() {
-      const node = d3.select('g#test')
-        .selectAll("g")
-        .data(this.root.descendants())
-        .join("g")
-        .attr("transform", d => `translate(${d.y},${d.x})`);
-
-      node.append("rect")
-        .attr("fill", "#999")
-        .attr("width", d => d.size[1])
-        .attr("height", d => d.size[0]);
-    },
   },
-  mounted() {
+  created() {
     this.mmdata = new JSONData(this.value);
+  },
+  async mounted() {
+    // 绑定元素
     this.mindmap_svg = d3.select(this.$refs.svg);
-    this.mindmap_g = d3.select(this.$refs.content);
+    this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0);
     this.dummy = d3.select(this.$refs.dummy);
-
+    // 绑定事件
     this.mindmap_svg.on('keydown', this.svgKeyDown);
-    // zoom
-    this.mindmapSvgZoom = this.zoom
-      .scaleExtent([0.1, 8])
-      .on('zoom', () => {
-        this.mindmap_g.attr('transform', d3.event.transform);
-      });
+    this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
+      this.mindmap_g.attr('transform', d3.event.transform);
+    });
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
-  }
+
+    await this.makeCenter();
+    this.mindmap_g.style('opacity', 1);
+  },
 }
 </script>
 
@@ -875,8 +872,15 @@ div#mindmap {
       i {
         width: 24px;
         height: 24px;
-        background-image: url(../../public/icons/crosshairs-gps.png);
         filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%);
+
+        &.gps {
+          background-image: url(../../public/icons/crosshairs-gps.png);
+        }
+
+        &.fitView {
+          background-image: url(../../public/icons/fit-to-page-outline.png);
+        }
       }
     }
   }
