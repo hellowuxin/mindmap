@@ -118,8 +118,6 @@ export default {
 
         this.mindmap_svg.call(this.zoom.translateTo, x, y, [0, 0]);
       });
-      // eslint-disable-next-line 
-      console.log(1);
     },
     fitContent() { // 适应窗口大小
       d3.transition().end().then(() => {
@@ -137,13 +135,13 @@ export default {
       if(document.selection && document.selection.empty) {
           document.selection.empty();
       } else if(window.getSelection) {
-          var sel = window.getSelection();
+          const sel = window.getSelection();
           sel.removeAllRanges();
       }
     },
     svgKeyDown() {
       const { mmdata } = this;
-      const sele = d3.select('#selectedMindnode');
+      const sele = d3.select('#selectedNode');
       if (!sele.nodes()[0]) {
         return;
       }
@@ -203,60 +201,69 @@ export default {
         d.data.name = editText;
       });
     },
-    selectMindnode(clickedNode, sele) {
-      // 选中新的selectedMindnode
+    selectNode(n) { // 选中节点
+      const sele = document.getElementById('selectedNode');
       if (sele) { sele.removeAttribute('id') }
-      sele = d3.select(clickedNode);
-      sele.attr('id', 'selectedMindnode');
+      d3.select(n).attr('id', 'selectedNode');
+    },
+    editNode(n) { // 编辑节点
+      n.setAttribute('id', 'editing');
+      d3.select(n).selectAll('foreignObject')
+        .filter((a, b, c) => c[b].parentNode === n)
+        .select('div')
+        .attr('contenteditable', true);
+      document.querySelector('#editing > foreignObject > div').focus();
     },
     // 点击
     click(d, i, n) {
-      const { selectMindnode } = this;
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-      let sele = document.getElementById('selectedMindnode');
+      const sele = document.getElementById('selectedNode');
       const edit = document.getElementById('editing');
       const clickedNode = n[i].parentNode;
       if (edit) { // 正在编辑
       } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
-        sele.setAttribute('id', 'editing');
-
-        d3.select(clickedNode).selectAll('foreignObject')
-          .filter((a, b, c) => c[b].parentNode === clickedNode)
-          .select('div')
-          .attr('contenteditable', true);
-        document.querySelector('#editing > foreignObject > div').focus();
+        this.editNode(clickedNode);
       } else { // 选中
-        selectMindnode(clickedNode, sele);
+        this.selectNode(clickedNode);
       }
     },
     rightClick(d, i, n) {
-      const { showContextMenu, selectMindnode } = this;
       d3.event.preventDefault();
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-      let sele = document.getElementById('selectedMindnode');
+
+      const sele = document.getElementById('selectedNode');
       const edit = document.getElementById('editing');
       const clickedNode = n[i].parentNode;
       if (clickedNode.isSameNode(edit)) { // 正在编辑
         return;
       }
       if (!clickedNode.isSameNode(sele)) { // 选中
-        selectMindnode(clickedNode, sele);
+        this.selectNode(clickedNode);
       }
-      showContextMenu();
+      this.showContextMenu();
     },
     gBtnClick(a, i, n) { // 添加子节点
-      const { mmdata } = this;
       d3.event.preventDefault();
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-      d3.select(n[i].parentNode).each((d) => {
-        const newJSON = { name: '新建节点', children: [] };
-        mmdata.add(d.data, newJSON);
+
+      const newJSON = { name: '新建节点', children: [] };
+      const d = d3.select(n[i].parentNode).data()[0]
+      this.mmdata.add(d.data, newJSON);
+      this.rectTriggerOut(null, i, n);
+
+      d3.transition().end().then(() => {
+        // 聚焦于新节点
+        const clickedNode = d3.select(n[i].parentNode)
+          .selectAll(`g.node.depth_${d.depth+1}`)
+          .filter((b) => b.data === newJSON)
+          .node();
+        this.editNode(clickedNode);
       })
     },
     clickMenu(item) {
       this.showMenu = false;
       if (item.command === 0) { // 删除节点
-        const sele = d3.select('g#selectedMindnode');
+        const sele = d3.select('g#selectedNode');
         sele.each((d) => {
           this.mmdata.del(d.data);
         })
@@ -331,7 +338,7 @@ export default {
       const draggedNode = n[i];
       const draggedNodeRect = draggedNode.getElementsByTagName('foreignObject')[0];
       // 选中
-      const sele = document.getElementById('selectedMindnode');
+      const sele = document.getElementById('selectedNode');
       if (sele && !sele.isSameNode(draggedNode)) {
         sele.removeAttribute('id');
       }
@@ -772,11 +779,11 @@ div#mindmap {
       stroke-width: 4;
     }
 
-    #selectedMindnode:not(.depth_0) > foreignObject {
+    #selectedNode:not(.depth_0) > foreignObject {
       background-color: $seleColor;
     }
 
-    #selectedMindnode.depth_0 > foreignObject {
+    #selectedNode.depth_0 > foreignObject {
       outline: 3px solid;
       outline-color: $seleColor;
     }

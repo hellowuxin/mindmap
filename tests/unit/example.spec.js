@@ -1,3 +1,4 @@
+// 尝试单元测试
 import { expect } from 'chai'
 import { mount } from '@vue/test-utils'
 import mindmap from '@/components/MindMap.vue'
