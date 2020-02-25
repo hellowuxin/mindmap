@@ -140,32 +140,32 @@ export default {
       }
     },
     svgKeyDown() {
-      const { mmdata } = this;
       const sele = d3.select('#selectedNode');
-      if (!sele.nodes()[0]) {
-        return;
-      }
+      if (!sele.node()) { return }
+
+      const { mmdata } = this;
+      const seleData = sele.data()[0];
+      const seleRawData = sele.data()[0].data;
+      const pNode = sele.node().parentNode;
       const newJSON = { name: '新建节点', children: [] };
       const keyName = d3.event.key;
+
       if (keyName === 'Tab') { // 添加子节点
         d3.event.preventDefault();
-        sele.each((d) => {
-          mmdata.add(d.data, newJSON);
-        });
+        mmdata.add(seleRawData, newJSON);
+        this.editNew(newJSON, seleData.depth+1, pNode);
       } else if (keyName === 'Enter') { // 添加弟弟节点
         d3.event.preventDefault();
-        sele.each((d, i, n) => {
-          if (n[i].parentNode.isSameNode(this.$refs.content)) { // 根节点enter时，等效tab
-            mmdata.add(d.data, newJSON);
-          } else {
-            mmdata.insert(d.data, newJSON, 1);
-          }
-        });
+        if (pNode.isSameNode(this.$refs.content)) {
+          mmdata.add(seleRawData, newJSON);// 根节点enter时，等效tab
+          this.editNew(newJSON, seleData.depth+1, pNode);
+        } else {
+          mmdata.insert(seleRawData, newJSON, 1);
+          this.editNew(newJSON, seleData.depth, pNode);
+        }
       } else if (keyName === 'Backspace') { // 删除节点
         d3.event.preventDefault();
-        sele.each((d) => {
-          mmdata.del(d.data);
-        });
+        mmdata.del(seleRawData);
       }
     },
     divKeyDown() {
@@ -191,6 +191,7 @@ export default {
         }
       }
     },
+    // 节点操作
     updateNodeName() { // 文本编辑完成时
       const editP = document.querySelector('#editing > foreignObject > div');
       window.getSelection().removeAllRanges();// 清除选中
@@ -201,18 +202,32 @@ export default {
         d.data.name = editText;
       });
     },
-    selectNode(n) { // 选中节点
+    removeSelectedNode() {
       const sele = document.getElementById('selectedNode');
       if (sele) { sele.removeAttribute('id') }
+    },
+    selectNode(n) { // 选中节点
+      this.removeSelectedNode();
       d3.select(n).attr('id', 'selectedNode');
     },
     editNode(n) { // 编辑节点
+      this.removeSelectedNode();
       n.setAttribute('id', 'editing');
       d3.select(n).selectAll('foreignObject')
         .filter((a, b, c) => c[b].parentNode === n)
         .select('div')
         .attr('contenteditable', true);
       document.querySelector('#editing > foreignObject > div').focus();
+    },
+    editNew(newJSON, depth, pNode) { // 聚焦新节点
+      d3.transition().end().then(() => {
+        const clickedNode = d3.select(pNode)
+          .selectAll(`g.node.depth_${depth}`)
+          .filter((b) => b.data === newJSON)
+          .node();
+
+        this.editNode(clickedNode);
+      })
     },
     // 点击
     click(d, i, n) {
@@ -250,15 +265,7 @@ export default {
       const d = d3.select(n[i].parentNode).data()[0]
       this.mmdata.add(d.data, newJSON);
       this.rectTriggerOut(null, i, n);
-
-      d3.transition().end().then(() => {
-        // 聚焦于新节点
-        const clickedNode = d3.select(n[i].parentNode)
-          .selectAll(`g.node.depth_${d.depth+1}`)
-          .filter((b) => b.data === newJSON)
-          .node();
-        this.editNode(clickedNode);
-      })
+      this.editNew(newJSON, d.depth+1, n[i].parentNode);
     },
     clickMenu(item) {
       this.showMenu = false;
