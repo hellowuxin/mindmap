@@ -1,4 +1,5 @@
 <template>
+<div>
   <div ref="mindmap" id="mindmap" :style="mmStyle">
     <svg ref="svg" tabindex="0">
       <g ref="content" id="content" ></g>
@@ -27,8 +28,18 @@
       <button v-show="fitView" class="icon" ref="fitView" type="button" @click="fitContent()">
         <i class="fitView"></i>
       </button>
+      <button v-show="download" class="icon" ref="download" type="button" @click="exportImage()">
+        <i class="download"></i>
+      </button>
     </div>
   </div>
+  <canvas
+    ref="canvas"
+    :width="width"
+    :height="height"
+  ></canvas>
+</div>
+  
 </template>
 
 <script>
@@ -46,7 +57,8 @@ export default {
     ySpacing: { type: Number, default: 20 },
     draggable: { type: Boolean, default: true },
     gps: { type: Boolean, default: true },
-    fitView: { type: Boolean, default: true }
+    fitView: { type: Boolean, default: true },
+    download: { type: Boolean, default: true }
   },
   model: { // 双向绑定
     prop: 'value',
@@ -100,6 +112,12 @@ export default {
   },
   methods: {
     exportImage() { // 导出png
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext("2d");
+      // eslint-disable-next-line 
+      console.log(this.path(this.root.children[1]));
+      const p = new Path2D(this.path(this.root.children[1]));
+      ctx.stroke(p);
     },
     async makeCenter() { // 居中
       await d3.transition().end().then(() => {
@@ -894,6 +912,10 @@ div#mindmap {
 
         &.fitView {
           background-image: url(../../public/icons/fit-to-page-outline.png);
+        }
+
+        &.download {
+          background-image: url(../../public/icons/download.png);
         }
       }
     }
