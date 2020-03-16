@@ -15,7 +15,6 @@
     "dist"
   ],
   "dependencies": {
-    "core-js": "^3.6.4",
     "d3": "^5.15.0",
     "d3-flextree": "^2.1.1"
   },
