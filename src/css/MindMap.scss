@@ -1,0 +1,192 @@
+$seleColor: rgba($color: blue, $alpha: 0.15);
+
+div#mindmap {
+  font-size: 14px;
+  position: relative;
+  display: flex;
+
+  div.rightClickTrigger {
+    position: absolute; 
+    width: 100%; 
+    height: 100%
+  }
+
+  div#dummy {
+    div {
+      white-space:pre-wrap;
+      width: max-content;
+    }
+  }
+
+  svg {
+    flex: auto;
+    outline: none;
+    background-color: rgb(238, 238, 243);
+
+    foreignObject {
+      cursor: default;
+      border-radius: 3px;
+      border-width: 3px;
+      border-color: transparent;
+      border-style: solid;
+
+      div {
+        text-align: left;
+        border: 1px solid transparent;
+        width: max-content;
+        white-space:pre-wrap;
+        color: rgb(109, 109, 109);
+
+        &:focus {
+          border-color: rgb(154, 154, 154);
+          outline: none;
+        }
+      }
+    }
+
+    g.depth_0.node > foreignObject { 
+      background-color: white;
+      border-radius: 5px;
+
+      div {
+        color: rgb(75, 75, 75);
+      }
+    } 
+
+    g.gButton {
+      opacity: 0;
+      > {
+        path {
+          fill: blue;
+        }
+        rect {
+          fill: white;
+          stroke: grey;
+          stroke-width: 0.5;
+        }
+      }
+    }
+
+    path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-width: 4;
+    }
+
+    #selectedNode:not(.depth_0) > foreignObject {
+      background-color: $seleColor;
+    }
+
+    #selectedNode.depth_0 > foreignObject {
+      outline: 3px solid;
+      outline-color: $seleColor;
+    }
+
+    #newParentNode > foreignObject {
+      border-color: $seleColor;
+    }
+
+    #editing > foreignObject > div {
+      background-color: white;
+    }
+  }
+
+  #menu {
+    position: absolute;
+    border-radius: 4px;
+    box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 
+      0px 8px 10px 1px rgba(0, 0, 0, 0.14),
+      0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+    background-color: #FAFAFA;
+    padding: 4px 0;
+
+    &:focus {
+      outline: none;
+    }
+
+    .menu-item {
+      position: relative;
+      padding: 4px 8px;
+      cursor: pointer;
+
+      &::before {
+        background-color: black;
+        bottom: 0;
+        content: "";
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+      }
+
+      &:hover::before {
+        opacity: 0.09;
+      }
+    }
+  }
+  
+  div.button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    button.icon {
+      position: relative;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      color: #3f51b5;
+
+      &::before {
+        background-color: currentColor;
+        border-radius: inherit;
+        bottom: 0;
+        color: inherit;
+        content: "";
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: opacity 0.2s cubic-bezier(0.4, 0, 0.6, 1);
+      }
+
+      &:focus {
+        outline: none;
+      }
+
+      &:hover::before {
+        opacity: 0.1;
+      }
+
+      i {
+        width: 24px;
+        height: 24px;
+        filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%);
+
+        &.gps {
+          background-image: url(../../public/icons/crosshairs-gps.png);
+        }
+
+        &.fitView {
+          background-image: url(../../public/icons/fit-to-page-outline.png);
+        }
+
+        &.download {
+          background-image: url(../../public/icons/download.png);
+        }
+      }
+    }
+  }
+}
