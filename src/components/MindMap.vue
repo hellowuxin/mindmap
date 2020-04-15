@@ -157,6 +157,10 @@ export default {
           sel.removeAllRanges();
       }
     },
+    svgMouseDown() {
+      // eslint-disable-next-line 
+      console.log(d3.event);
+    },
     svgKeyDown() {
       const sele = d3.select('#selectedNode');
       if (!sele.node()) { return }
@@ -247,8 +251,8 @@ export default {
         this.editNode(clickedNode);
       })
     },
-    // 点击
-    click(d, i, n) {
+    // 节点点击
+    gClick(d, i, n) {
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
       const sele = document.getElementById('selectedNode');
       const edit = document.getElementById('editing');
@@ -260,7 +264,7 @@ export default {
         this.selectNode(clickedNode);
       }
     },
-    rightClick(d, i, n) {
+    gRightClick(d, i, n) {
       d3.event.preventDefault();
       d3.event.stopPropagation();// 阻止捕获和冒泡阶段中当前事件的进一步传播。
 
@@ -479,27 +483,13 @@ export default {
       this.getDTop();
       this.draw();
     },
-    gClass(d) {
-      return `depth_${d.depth} node`
-    },
-    gTransform(d) {
-      return `translate(${d.dy},${d.dx})`
-    },
-    foreignY(d) {
-      return -d.data.size[0]/2 - 5;
-    },
-    gBtnTransform(d) {
-      return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2 - 12})`
-    },
-    pathId(d) {
-      return `path_${d.data.id}`
-    },
-    pathClass(d) {
-      return `depth_${d.depth}`
-    },
-    pathColor(d) {
-      return d.data.color
-    },
+    gClass(d) { return `depth_${d.depth} node` },
+    gTransform(d) { return `translate(${d.dy},${d.dx})` },
+    foreignY(d) { return -d.data.size[0]/2 - 5 },
+    gBtnTransform(d) { return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2 - 12})` },
+    pathId(d) { return `path_${d.data.id}` },
+    pathClass(d) { return `depth_${d.depth}` },
+    pathColor(d) { return d.data.color },
     path(d) {
       return `${
         this.link({
@@ -530,8 +520,8 @@ export default {
         updateNodeName,
         rectTriggerOut, 
         rectTriggerOver, 
-        click, 
-        rightClick, 
+        gClick, 
+        gRightClick, 
         gBtnClick,
         divKeyDown,
         foreignY,
@@ -551,8 +541,8 @@ export default {
         .attr('y', foreignY)
         .on('mouseover', rectTriggerOver)
         .on('mouseout', rectTriggerOut)
-        .on('click', click)
-        .on('contextmenu', rightClick);
+        .on('click', gClick)
+        .on('contextmenu', gRightClick);
       const foreignDiv = foreign.append('xhtml:div')
         .attr('contenteditable', false)
         .text((d) => d.data.name);
@@ -708,22 +698,23 @@ export default {
     },
   },
   created() {
-    this.mmdata = new JSONData(this.value);
+    this.mmdata = new JSONData(this.value)
   },
   async mounted() {
     // 绑定元素
-    this.mindmap_svg = d3.select(this.$refs.svg);
-    this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0);
-    this.dummy = d3.select(this.$refs.dummy);
+    this.mindmap_svg = d3.select(this.$refs.svg)
+    this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
+    this.dummy = d3.select(this.$refs.dummy)
     // 绑定事件
-    this.mindmap_svg.on('keydown', this.svgKeyDown);
+    this.mindmap_svg.on('mousedown', this.svgMouseDown)
+    this.mindmap_svg.on('keydown', this.svgKeyDown)
     this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
-      this.mindmap_g.attr('transform', d3.event.transform);
-    });
-    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null);
+      this.mindmap_g.attr('transform', d3.event.transform)
+    })
+    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
 
-    await this.makeCenter();
-    this.mindmap_g.style('opacity', 1);
+    await this.makeCenter()
+    this.mindmap_g.style('opacity', 1)
   },
 }
 </script>
