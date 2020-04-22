@@ -33,18 +33,13 @@
       </button>
     </div>
   </div>
-  <canvas
-    ref="canvas"
-    :width="width"
-    :height="height"
-  ></canvas>
 </div>
   
 </template>
 
 <script>
 import * as d3 from 'd3'
-const flextree = require('d3-flextree').flextree
+import { flextree } from 'd3-flextree'
 import JSONData from '../JSONData'
 
 export default {
@@ -112,12 +107,6 @@ export default {
   },
   methods: {
     exportImage() { // 导出png
-      const canvas = this.$refs.canvas
-      const ctx = canvas.getContext("2d")
-      // eslint-disable-next-line 
-      console.log(this.path(this.root.children[1]))
-      const p = new Path2D(this.path(this.root.children[1]))
-      ctx.stroke(p)
     },
     async makeCenter() { // 居中
       await d3.transition().end().then(() => {
@@ -157,9 +146,18 @@ export default {
           sel.removeAllRanges()
       }
     },
-    svgMouseDown() {
+    // 右键拖拽
+    rightDragStart() {
       // eslint-disable-next-line 
-      console.log(d3.event)
+      console.log(d3.event.buttons);
+    },
+    rightDrag() {
+      // eslint-disable-next-line 
+      console.log(d3.event.buttons);
+    },
+    rightDragEnd() {
+      // eslint-disable-next-line 
+      console.log(d3.event.button);
     },
     svgKeyDown() {
       const sele = d3.select('#selectedNode')
@@ -706,7 +704,10 @@ export default {
     this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
     this.dummy = d3.select(this.$refs.dummy)
     // 绑定事件
-    this.mindmap_svg.on('mousedown', this.svgMouseDown)
+    this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
+    // this.mindmap_svg.on('mousedown', this.rightDragStart)
+    // this.mindmap_svg.on('mousemove', this.rightDrag)
+    // this.mindmap_svg.on('mouseup', this.rightDragEnd)
     this.mindmap_svg.on('keydown', this.svgKeyDown)
     this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
       this.mindmap_g.attr('transform', d3.event.transform)
