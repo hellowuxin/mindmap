@@ -1,5 +1,4 @@
 <template>
-<div>
   <div ref="mindmap" id="mindmap" :style="mmStyle">
     <svg ref="svg" tabindex="0">
       <g ref="content" id="content" ></g>
@@ -33,8 +32,6 @@
       </button>
     </div>
   </div>
-</div>
-  
 </template>
 
 <script>
@@ -68,8 +65,9 @@ export default {
     }
   },
   data: () => ({
+    updateValue: true,
     dTop: null,
-    mmdata: Object,// 思维导图数据
+    mmdata: {},// 思维导图数据
     root: '',
     showMenu: false,
     menuX: 0,
@@ -90,9 +88,21 @@ export default {
       handler(newVal) {
         this.updateMindmap(newVal.data[0])
         if (this.draggable) { this.makeDrag() }
+        this.updateValue = false
         this.$emit('change', this.mmdata.getPuredata())
       },
-      deep: true,// watch for nested data
+      deep: true,
+    },
+    value: {
+      handler(newVal) {
+        if (this.updateValue) {
+          this.mmdata = new JSONData(newVal)
+        } else {
+          this.updateValue = true
+        }
+      },
+      deep: true,
+      immediate: true,
     },
     draggable: function(val) {
       if (!val) { this.cancelDrag() } 
@@ -126,8 +136,8 @@ export default {
         this.mindmap_svg.call(this.zoom.translateTo, x, y, [0, 0])
       })
     },
-    fitContent() { // 适应窗口大小
-      d3.transition().end().then(() => {
+    async fitContent() { // 适应窗口大小
+      await d3.transition().end().then(() => {
         const rect = this.$refs.content.getBBox()
         const div = this.$refs.mindmap
         
@@ -695,9 +705,6 @@ export default {
       t.size = [textHeight, textWidth + xSpacing]
     },
   },
-  created() {
-    this.mmdata = new JSONData(this.value)
-  },
   async mounted() {
     // 绑定元素
     this.mindmap_svg = d3.select(this.$refs.svg)
@@ -715,6 +722,7 @@ export default {
     this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
 
     await this.makeCenter()
+    await this.fitContent()
     this.mindmap_g.style('opacity', 1)
   },
 }
