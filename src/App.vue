@@ -60,10 +60,11 @@
                   <mindmap
                     v-model="mmdata"
                     :height="500"
+                    :gps="options.gps.value"
+                    :fitView="options.fitView.value"
                     :draggable="options.draggable.value"
                     :keyboard="options.keyboard.value"
                     :showNodeAdd="options.showNodeAdd.value"
-                    :gps="options.gps.value"
                     :contextMenu="options.contextMenu.value"
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
@@ -133,9 +134,10 @@ export default {
       { title: 'script' }
     ],
     options: {
+      gps: { value: true },
+      fitView: { value: true },
       keyboard: { value: true },
       draggable: { value: true },
-      gps: { value: true },
       showNodeAdd: { value: true },
       contextMenu: { value: true },
     },

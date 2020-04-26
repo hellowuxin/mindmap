@@ -50,7 +50,7 @@ export default {
     draggable: { type: Boolean, default: true },
     gps: { type: Boolean, default: true },
     fitView: { type: Boolean, default: true },
-    download: { type: Boolean, default: true },
+    download: { type: Boolean, default: false },
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
@@ -110,7 +110,7 @@ export default {
     ySpacing: function() { this.updateMindmap() }
   },
   methods: {
-    initSvgEvent() { // 初始化
+    initSvgEvent() {
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
@@ -123,6 +123,38 @@ export default {
       this.makeNodeAdd(this.showNodeAdd)
       this.makeContextMenu(this.contextMenu)
     },
+    // 节点事件
+    makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
+    makeNodeAdd(val) {
+      const fObject = this.mindmap_g.selectAll('foreignObject')
+      const gBtn = this.mindmap_g.selectAll('.gButton')
+
+      if (val) {
+        const { rectTriggerOut, rectTriggerOver, gBtnClick } = this
+
+        fObject.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut)
+        gBtn.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut).on('click', gBtnClick)
+      } else {
+        fObject.on('mouseover', null).on('mouseout', null)
+        gBtn.on('mouseover', null).on('mouseout', null).on('click', null)
+      }
+    },
+    makeContextMenu(val) {
+      this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.gRightClick : null)
+    },
+    makeDrag(val) {
+      if (val) {
+        const { mindmap_g, dragged, dragended } = this
+
+        mindmap_g.selectAll('g.node')
+          .filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
+          .call(d3.drag().on('drag', dragged).on('end', dragended))
+      } else {
+        this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
+      }
+      
+    },
+    // 功能
     exportImage() { // 导出png
     },
     async makeCenter() { // 居中
@@ -176,6 +208,7 @@ export default {
       // eslint-disable-next-line 
       console.log(d3.event.button);
     },
+    // 键盘
     svgKeyDown() {
       const sele = d3.select('#selectedNode')
       if (!sele.node()) { return }
@@ -210,23 +243,6 @@ export default {
         // d3.event.preventDefault()
         // document.execCommand('insertHTML', false, '<br>')
       }   
-    },
-    showContextMenu() {
-      const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
-      this.menuX = d3.event.pageX - svgPosition.x - window.scrollX
-      this.menuY = d3.event.pageY - svgPosition.y - window.scrollY
-      this.showMenu = true
-      this.clearSelection()
-      setTimeout(() => { this.$refs.menu.focus() }, 300)
-    },
-    depthTraverse(d, func) { // 深度遍历，func每个元素
-      func(d)
-      if (d.children) {
-        for (let index = 0; index < d.children.length; index += 1) {
-          const dChild = d.children[index]
-          this.depthTraverse(dChild, func)
-        }
-      }
     },
     // 节点操作
     updateNodeName() { // 文本编辑完成时
@@ -336,37 +352,7 @@ export default {
           .style('opacity', 0.5)
       }
     },
-    makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
-    makeNodeAdd(val) {
-      const fObject = this.mindmap_g.selectAll('foreignObject')
-      const gBtn = this.mindmap_g.selectAll('.gButton')
-
-      if (val) {
-        const { rectTriggerOut, rectTriggerOver, gBtnClick } = this
-
-        fObject.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut)
-        gBtn.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut).on('click', gBtnClick)
-      } else {
-        fObject.on('mouseover', null).on('mouseout', null)
-        gBtn.on('mouseover', null).on('mouseout', null).on('click', null)
-      }
-    },
-    makeContextMenu(val) {
-      this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.gRightClick : null)
-    },
     // 拖拽
-    makeDrag(val) {
-      if (val) {
-        const { mindmap_g, dragged, dragended } = this
-
-        mindmap_g.selectAll('g.node')
-          .filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
-          .call(d3.drag().on('drag', dragged).on('end', dragended))
-      } else {
-        this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
-      }
-      
-    },
     draggedNodeRenew(draggedNode, targetX, targetY, dura = 0) {
       const { link, xSpacing } = this
       const tran = d3.transition().duration(dura).ease(d3.easePoly)
@@ -706,6 +692,23 @@ export default {
           n[i].remove() // remove them just after displaying them
         })
       t.size = [textHeight, textWidth + xSpacing]
+    },
+    showContextMenu() {
+      const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
+      this.menuX = d3.event.pageX - svgPosition.x - window.scrollX
+      this.menuY = d3.event.pageY - svgPosition.y - window.scrollY
+      this.showMenu = true
+      this.clearSelection()
+      setTimeout(() => { this.$refs.menu.focus() }, 300)
+    },
+    depthTraverse(d, func) { // 深度遍历，func每个元素
+      func(d)
+      if (d.children) {
+        for (let index = 0; index < d.children.length; index += 1) {
+          const dChild = d.children[index]
+          this.depthTraverse(dChild, func)
+        }
+      }
     },
   },
   async mounted() {
