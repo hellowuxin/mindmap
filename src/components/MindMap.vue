@@ -50,7 +50,8 @@ export default {
     draggable: { type: Boolean, default: true },
     gps: { type: Boolean, default: true },
     fitView: { type: Boolean, default: true },
-    download: { type: Boolean, default: true }
+    download: { type: Boolean, default: true },
+    keyboard: { type: Boolean, default: true },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -88,6 +89,7 @@ export default {
       handler(newVal) {
         this.updateMindmap(newVal.data[0])
         if (this.draggable) { this.makeDrag() }
+        if (this.keyboard) { this.makeKeyboard() }
         this.updateValue = false
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -103,6 +105,10 @@ export default {
       },
       deep: true,
       immediate: true,
+    },
+    keyboard: function(val) {
+      if (val) { this.makeKeyboard() }
+      else { this.cancelKeyboard() }
     },
     draggable: function(val) {
       if (!val) { this.cancelDrag() } 
@@ -328,6 +334,12 @@ export default {
           .filter((a, b, c) => c[b].parentNode === n[i].parentNode)
           .style('opacity', 0.5)
       }
+    },
+    makeKeyboard() {
+      this.mindmap_svg.on('keydown', this.svgKeyDown)
+    },
+    cancelKeyboard() {
+      this.mindmap_svg.on('keydown', null)
     },
     // 拖拽
     makeDrag() {
@@ -715,7 +727,6 @@ export default {
     // this.mindmap_svg.on('mousedown', this.rightDragStart)
     // this.mindmap_svg.on('mousemove', this.rightDrag)
     // this.mindmap_svg.on('mouseup', this.rightDragEnd)
-    this.mindmap_svg.on('keydown', this.svgKeyDown)
     this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
       this.mindmap_g.attr('transform', d3.event.transform)
     })
