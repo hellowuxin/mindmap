@@ -55,6 +55,7 @@ export default {
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
     nodeClick: { type: Boolean, default: true },
+    zoomable: { type: Boolean, default: true },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -110,15 +111,21 @@ export default {
     xSpacing: function() { this.updateMindmap() },
     ySpacing: function() { this.updateMindmap() },
     nodeClick: function(val) { this.makeNodeClick(val) },
+    zoomable: function(val) { this.makeZoom(val) },
   },
   methods: {
-    initSvgEvent() {
+    init() {
+       // 绑定元素
+      this.mindmap_svg = d3.select(this.$refs.svg)
+      this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
+      this.dummy = d3.select(this.$refs.dummy)
+
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
         this.mindmap_g.attr('transform', d3.event.transform)
       })
-      this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
+      this.makeZoom(this.zoomable)
     },
     initNodeEvent() {
       this.makeDrag(this.draggable)
@@ -126,7 +133,7 @@ export default {
       this.makeContextMenu(this.contextMenu)
       this.makeNodeClick(this.nodeClick)
     },
-    // 节点事件
+    // 事件
     makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
     makeNodeAdd(val) {
       const fObject = this.mindmap_g.selectAll('foreignObject')
@@ -159,6 +166,13 @@ export default {
     },
     makeNodeClick(val) {
       this.mindmap_g.selectAll('foreignObject').on('click', val ? this.gClick : null)
+    },
+    makeZoom(val) {
+      if (val) {
+        this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
+      } else {
+        this.mindmap_svg.on('.zoom', null)
+      }
     },
     // 功能
     exportImage() { // 导出png
@@ -707,13 +721,7 @@ export default {
     },
   },
   async mounted() {
-    // 绑定元素
-    this.mindmap_svg = d3.select(this.$refs.svg)
-    this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
-    this.dummy = d3.select(this.$refs.dummy)
-    // 初始化事件
-    this.initSvgEvent()
-
+    this.init()
     // this.mindmap_svg.on('mousedown', this.rightDragStart)
     // this.mindmap_svg.on('mousemove', this.rightDrag)
     // this.mindmap_svg.on('mouseup', this.rightDragEnd)

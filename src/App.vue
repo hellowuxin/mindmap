@@ -67,6 +67,7 @@
                     :showNodeAdd="options.showNodeAdd.value"
                     :contextMenu="options.contextMenu.value"
                     :nodeClick="options.nodeClick.value"
+                    :zoomable="options.zoomable.value"
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
                   ></mindmap>
@@ -142,6 +143,7 @@ export default {
       showNodeAdd: { value: true },
       contextMenu: { value: true },
       nodeClick: { value: true },
+      zoomable: { value: true },
     },
     xSpacing: 80,
     ySpacing: 20,
