@@ -8,7 +8,7 @@ Based on d3.js
 
 [中文说明](./README.cn.md)
 
-Online demo：<https://blog.5xin.xyz/mycomponents/mindmap>
+Online demo：<https://mindnode.5xin.xyz/>
 
 ## Function
 

@@ -8,7 +8,7 @@
 
 [English Readme](./README.md)
 
-在线演示：<https://blog.5xin.xyz/mycomponents/mindmap>
+在线演示：<https://mindnode.5xin.xyz/>
 
 ## 功能
 
