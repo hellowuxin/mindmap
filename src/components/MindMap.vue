@@ -52,6 +52,7 @@ export default {
     fitView: { type: Boolean, default: true },
     download: { type: Boolean, default: true },
     keyboard: { type: Boolean, default: true },
+    showNodeAdd: { type: Boolean, default: true },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -88,7 +89,6 @@ export default {
     mmdata: {
       handler(newVal) {
         this.updateMindmap(newVal.data[0])
-        this.makeDrag(this.draggable)
         this.updateValue = false
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -102,12 +102,13 @@ export default {
       immediate: true,
     },
     keyboard: function(val) { this.makeKeyboard(val) },
+    showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
     xSpacing: function() { this.updateMindmap() },
     ySpacing: function() { this.updateMindmap() }
   },
   methods: {
-    init() { // 初始化
+    initSvgEvent() { // 初始化
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
@@ -329,6 +330,20 @@ export default {
       }
     },
     makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
+    makeNodeAdd(val) {
+      const fObject = this.mindmap_g.selectAll('foreignObject')
+      const gBtn = this.mindmap_g.selectAll('.gButton')
+      
+      if (val) {
+        const { rectTriggerOut, rectTriggerOver, gBtnClick } = this
+
+        fObject.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut)
+        gBtn.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut).on('click', gBtnClick)
+      } else {
+        fObject.on('mouseover', null).on('mouseout', null)
+        gBtn.on('mouseover', null).on('mouseout', null).on('click', null)
+      }
+    },
     // 拖拽
     makeDrag(val) {
       if (val) {
@@ -488,6 +503,8 @@ export default {
       this.tree()
       this.getDTop()
       this.draw()
+      this.makeDrag(this.draggable)
+      this.makeNodeAdd(this.showNodeAdd)
     },
     gClass(d) { return `depth_${d.depth} node` },
     gTransform(d) { return `translate(${d.dy},${d.dx})` },
@@ -521,22 +538,7 @@ export default {
     },
     appendNode(enter) {
       const { 
-        gClass,
-        gTransform,
-        updateNodeName,
-        rectTriggerOut, 
-        rectTriggerOver, 
-        gClick, 
-        gRightClick, 
-        gBtnClick,
-        divKeyDown,
-        foreignY,
-        gBtnTransform,
-        pathId,
-        pathClass,
-        pathColor,
-        path,
-        nest,
+        gClass, gTransform, updateNodeName, gClick, gRightClick, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest,
       } = this
 
       const gNode = enter.append('g')
@@ -545,8 +547,6 @@ export default {
       const foreign = gNode.append('foreignObject')
         .attr('x', -5)
         .attr('y', foreignY)
-        .on('mouseover', rectTriggerOver)
-        .on('mouseout', rectTriggerOut)
         .on('click', gClick)
         .on('contextmenu', gRightClick)
       const foreignDiv = foreign.append('xhtml:div')
@@ -568,11 +568,8 @@ export default {
         observer.observe(n[i])
       })
       
-      const gBtn = gNode.append('g').attr('class', 'gButton')
-        .attr('transform', gBtnTransform)
-        .on('mouseover', rectTriggerOver)
-        .on('mouseout', rectTriggerOut)
-        .on('click', gBtnClick)
+      const gBtn = gNode.append('g').attr('class', 'gButton').attr('transform', gBtnTransform)
+
       gBtn.append('rect')
         .attr('width', 24)
         .attr('height', 24)
@@ -708,8 +705,8 @@ export default {
     this.mindmap_svg = d3.select(this.$refs.svg)
     this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
     this.dummy = d3.select(this.$refs.dummy)
-
-    this.init()
+    // 初始化事件
+    this.initSvgEvent()
 
     // this.mindmap_svg.on('mousedown', this.rightDragStart)
     // this.mindmap_svg.on('mousemove', this.rightDrag)

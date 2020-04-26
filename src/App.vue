@@ -64,6 +64,7 @@
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
                     :keyboard="keyboard"
+                    :showNodeAdd="showNodeAdd"
                     :gps="gps"
                   ></mindmap>
                   <v-divider vertical></v-divider>
@@ -91,6 +92,14 @@
                       inset 
                       v-model="keyboard"
                       label="Keyboard"
+                    ></v-switch>
+                  </v-col>
+                  <v-col class="pb-0" cols="12">
+                    <v-switch class="mt-0" 
+                      hide-details 
+                      inset 
+                      v-model="showNodeAdd"
+                      label="ShowNodeAdd"
                     ></v-switch>
                   </v-col>
                   <v-col class="pb-0" cols="12">
@@ -151,6 +160,7 @@ export default {
     xSpacing: 80,
     ySpacing: 20,
     gps: true,
+    showNodeAdd: true,
   }),
   mounted() {
   }
