@@ -54,6 +54,7 @@ export default {
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
+    nodeClick: { type: Boolean, default: true },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -107,7 +108,8 @@ export default {
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { this.updateMindmap() },
-    ySpacing: function() { this.updateMindmap() }
+    ySpacing: function() { this.updateMindmap() },
+    nodeClick: function(val) { this.makeNodeClick(val) },
   },
   methods: {
     initSvgEvent() {
@@ -122,6 +124,7 @@ export default {
       this.makeDrag(this.draggable)
       this.makeNodeAdd(this.showNodeAdd)
       this.makeContextMenu(this.contextMenu)
+      this.makeNodeClick(this.nodeClick)
     },
     // 节点事件
     makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
@@ -153,6 +156,9 @@ export default {
         this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
       }
       
+    },
+    makeNodeClick(val) {
+      this.mindmap_g.selectAll('foreignObject').on('click', val ? this.gClick : null)
     },
     // 功能
     exportImage() { // 导出png
@@ -533,7 +539,7 @@ export default {
     },
     appendNode(enter) {
       const { 
-        gClass, gTransform, updateNodeName, gClick, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest,
+        gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest,
       } = this
 
       const gNode = enter.append('g')
@@ -542,7 +548,6 @@ export default {
       const foreign = gNode.append('foreignObject')
         .attr('x', -5)
         .attr('y', foreignY)
-        .on('click', gClick)
       const foreignDiv = foreign.append('xhtml:div')
         .attr('contenteditable', false)
         .text((d) => d.data.name)
@@ -594,17 +599,7 @@ export default {
     },
     updateNode(update) {
       const { 
-        gClass,
-        gTransform,
-        easePolyInOut,
-        xSpacing,
-        foreignY,
-        gBtnTransform,
-        pathId,
-        pathClass,
-        pathColor,
-        path,
-        nest
+        gClass, gTransform, easePolyInOut, xSpacing, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest
       } = this
 
       update.interrupt().selectAll('*').interrupt()

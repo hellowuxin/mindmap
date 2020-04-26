@@ -66,6 +66,7 @@
                     :keyboard="options.keyboard.value"
                     :showNodeAdd="options.showNodeAdd.value"
                     :contextMenu="options.contextMenu.value"
+                    :nodeClick="options.nodeClick.value"
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
                   ></mindmap>
@@ -140,6 +141,7 @@ export default {
       draggable: { value: true },
       showNodeAdd: { value: true },
       contextMenu: { value: true },
+      nodeClick: { value: true },
     },
     xSpacing: 80,
     ySpacing: 20,
