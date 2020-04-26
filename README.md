@@ -41,16 +41,21 @@ import mindmap from '@hellowuxin/mindmap'
 
 ## API
 
-| Name      | Type   | Default   | Description                         |
-| ---       | ---    | ---       | ---                                 |
-| v-model   | Array  | undefined | Set up mindmap data                 |
-| width     | Number | 100%      | Set component width                 |
-| height    | Number | 100%      | Set component height                |
-| xSpacing  | Number | 80        | Set node horizontal spacing         |
-| ySpacing  | Number | 20        | Set node vertical spacing           |
-| draggable | Boolean| true      | Set whether the node is draggable   |
-| gps       | Boolean| true      | Whether to show the center button   |
-| fitView   | Boolean| true      | Whether to show the zoom button     |
+| Name        | Type   | Default   | Description                                    |
+| ---         | ---    | ---       | ---                                            |
+| v-model     | Array  | undefined | Set up mindmap data                            |
+| width       | Number | 100%      | Set component width                            |
+| height      | Number | 100%      | Set component height                           |
+| xSpacing    | Number | 80        | Set node horizontal spacing                    |
+| ySpacing    | Number | 20        | Set node vertical spacing                      |
+| draggable   | Boolean| true      | Set whether node is draggable                  |
+| gps         | Boolean| true      | Whether to show center button                  |
+| fitView     | Boolean| true      | Whether to show zoom button                    |
+| showNodeAdd | Boolean| true      | Whether to show add-node button                |
+| keyboard    | Boolean| true      | Whether to respond to keyboard event           |
+| contextMenu | Boolean| true      | Whether to respond to contextMenu event        |
+| nodeClick   | Boolean| true      | Set whether the node can be clicked and edited |
+| zoomable    | Boolean| true      | Whether it can be zoomed or dragged            |
 
 ## Example
 

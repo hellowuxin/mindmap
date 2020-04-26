@@ -41,16 +41,21 @@ import mindmap from '@hellowuxin/mindmap'
 
 ## API
 
-| Name      | Type   | Default   | Description      |
-| ---       | ---    | ---       | ---              |
-| v-model   | Array  | undefined | 设置思维导图数据    |
-| width     | Number | 100%      | 设置组件宽度       |
-| height    | Number | 100%      | 设置组件高度       |
-| xSpacing  | Number | 80        | 设置节点横向间隔    |
-| ySpacing  | Number | 20        | 设置节点纵向间隔    |
-| draggable | Boolean| true      | 设置节点是否可拖拽  |
-| gps       | Boolean| true      | 是否显示居中按钮    |
-| fitView   | Boolean| true      | 是否显示缩放按钮    |
+| Name        | Type   | Default   | Description          |
+| ---         | ---    | ---       | ---                  |
+| v-model     | Array  | undefined | 设置思维导图数据        |
+| width       | Number | 100%      | 设置组件宽度           |
+| height      | Number | 100%      | 设置组件高度           |
+| xSpacing    | Number | 80        | 设置节点横向间隔        |
+| ySpacing    | Number | 20        | 设置节点纵向间隔        |
+| draggable   | Boolean| true      | 设置节点是否可拖拽      |
+| gps         | Boolean| true      | 是否显示居中按钮        |
+| fitView     | Boolean| true      | 是否显示缩放按钮        |
+| showNodeAdd | Boolean| true      | 是否显示添加节点按钮     |
+| keyboard    | Boolean| true      | 是否响应键盘事件        |
+| contextMenu | Boolean| true      | 是否响应右键菜单        |
+| nodeClick   | Boolean| true      | 设置节点是否可点击、编辑 |
+| zoomable    | Boolean| true      | 是否可缩放、拖移        |
 
 ## 样例
 
