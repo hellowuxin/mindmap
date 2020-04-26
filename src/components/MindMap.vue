@@ -88,8 +88,7 @@ export default {
     mmdata: {
       handler(newVal) {
         this.updateMindmap(newVal.data[0])
-        if (this.draggable) { this.makeDrag() }
-        if (this.keyboard) { this.makeKeyboard() }
+        this.makeDrag(this.draggable)
         this.updateValue = false
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -97,31 +96,25 @@ export default {
     },
     value: {
       handler(newVal) {
-        if (this.updateValue) {
-          this.mmdata = new JSONData(newVal)
-        } else {
-          this.updateValue = true
-        }
+        this.updateValue ? this.mmdata = new JSONData(newVal) : this.updateValue = true
       },
       deep: true,
       immediate: true,
     },
-    keyboard: function(val) {
-      if (val) { this.makeKeyboard() }
-      else { this.cancelKeyboard() }
-    },
-    draggable: function(val) {
-      if (!val) { this.cancelDrag() } 
-      else { this.makeDrag() }
-    },
-    xSpacing: function() {
-      this.updateMindmap()
-    },
-    ySpacing: function() {
-      this.updateMindmap()
-    }
+    keyboard: function(val) { this.makeKeyboard(val) },
+    draggable: function(val) { this.makeDrag(val) },
+    xSpacing: function() { this.updateMindmap() },
+    ySpacing: function() { this.updateMindmap() }
   },
   methods: {
+    init() { // 初始化
+      this.makeKeyboard(this.keyboard)
+      this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
+      this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
+        this.mindmap_g.attr('transform', d3.event.transform)
+      })
+      this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
+    },
     exportImage() { // 导出png
     },
     async makeCenter() { // 居中
@@ -335,26 +328,19 @@ export default {
           .style('opacity', 0.5)
       }
     },
-    makeKeyboard() {
-      this.mindmap_svg.on('keydown', this.svgKeyDown)
-    },
-    cancelKeyboard() {
-      this.mindmap_svg.on('keydown', null)
-    },
+    makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
     // 拖拽
-    makeDrag() {
-      const {
-        mindmap_g,
-        dragged,
-        dragended,
-      } = this
+    makeDrag(val) {
+      if (val) {
+        const { mindmap_g, dragged, dragended } = this
 
-      mindmap_g.selectAll('g.node')
-        .filter((d) => { return d.depth !== 0 })// 非根节点才可以拖拽
-        .call(d3.drag().on('drag', dragged).on('end', dragended))
-    },
-    cancelDrag() {
-      this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
+        mindmap_g.selectAll('g.node')
+          .filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
+          .call(d3.drag().on('drag', dragged).on('end', dragended))
+      } else {
+        this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
+      }
+      
     },
     draggedNodeRenew(draggedNode, targetX, targetY, dura = 0) {
       const { link, xSpacing } = this
@@ -722,15 +708,12 @@ export default {
     this.mindmap_svg = d3.select(this.$refs.svg)
     this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
     this.dummy = d3.select(this.$refs.dummy)
-    // 绑定事件
-    this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
+
+    this.init()
+
     // this.mindmap_svg.on('mousedown', this.rightDragStart)
     // this.mindmap_svg.on('mousemove', this.rightDrag)
     // this.mindmap_svg.on('mouseup', this.rightDragEnd)
-    this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
-      this.mindmap_g.attr('transform', d3.event.transform)
-    })
-    this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
 
     await this.makeCenter()
     await this.fitContent()
