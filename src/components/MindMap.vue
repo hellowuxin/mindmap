@@ -53,6 +53,7 @@ export default {
     download: { type: Boolean, default: true },
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
+    contextMenu: { type: Boolean, default: true },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -104,6 +105,7 @@ export default {
     keyboard: function(val) { this.makeKeyboard(val) },
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
+    contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { this.updateMindmap() },
     ySpacing: function() { this.updateMindmap() }
   },
@@ -115,6 +117,11 @@ export default {
         this.mindmap_g.attr('transform', d3.event.transform)
       })
       this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
+    },
+    initNodeEvent() {
+      this.makeDrag(this.draggable)
+      this.makeNodeAdd(this.showNodeAdd)
+      this.makeContextMenu(this.contextMenu)
     },
     exportImage() { // 导出png
     },
@@ -333,7 +340,7 @@ export default {
     makeNodeAdd(val) {
       const fObject = this.mindmap_g.selectAll('foreignObject')
       const gBtn = this.mindmap_g.selectAll('.gButton')
-      
+
       if (val) {
         const { rectTriggerOut, rectTriggerOver, gBtnClick } = this
 
@@ -343,6 +350,9 @@ export default {
         fObject.on('mouseover', null).on('mouseout', null)
         gBtn.on('mouseover', null).on('mouseout', null).on('click', null)
       }
+    },
+    makeContextMenu(val) {
+      this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.gRightClick : null)
     },
     // 拖拽
     makeDrag(val) {
@@ -503,8 +513,7 @@ export default {
       this.tree()
       this.getDTop()
       this.draw()
-      this.makeDrag(this.draggable)
-      this.makeNodeAdd(this.showNodeAdd)
+      this.initNodeEvent()
     },
     gClass(d) { return `depth_${d.depth} node` },
     gTransform(d) { return `translate(${d.dy},${d.dx})` },
@@ -538,7 +547,7 @@ export default {
     },
     appendNode(enter) {
       const { 
-        gClass, gTransform, updateNodeName, gClick, gRightClick, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest,
+        gClass, gTransform, updateNodeName, gClick, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest,
       } = this
 
       const gNode = enter.append('g')
@@ -548,7 +557,6 @@ export default {
         .attr('x', -5)
         .attr('y', foreignY)
         .on('click', gClick)
-        .on('contextmenu', gRightClick)
       const foreignDiv = foreign.append('xhtml:div')
         .attr('contenteditable', false)
         .text((d) => d.data.name)

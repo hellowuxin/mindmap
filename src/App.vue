@@ -60,12 +60,13 @@
                   <mindmap
                     v-model="mmdata"
                     :height="500"
-                    :draggable="draggable"
+                    :draggable="options.draggable.value"
+                    :keyboard="options.keyboard.value"
+                    :showNodeAdd="options.showNodeAdd.value"
+                    :gps="options.gps.value"
+                    :contextMenu="options.contextMenu.value"
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
-                    :keyboard="keyboard"
-                    :showNodeAdd="showNodeAdd"
-                    :gps="gps"
                   ></mindmap>
                   <v-divider vertical></v-divider>
                 </div>
@@ -78,36 +79,12 @@
                 </div>
                 <v-divider></v-divider>
                 <div class="py-3">
-                  <v-col class="pb-0" cols="12">
+                  <v-col class="pb-0" cols="12" v-for="(opt, key) in options" :key="key">
                     <v-switch class="mt-0" 
                       hide-details 
                       inset 
-                      v-model="draggable"
-                      label="Draggable"
-                    ></v-switch>
-                  </v-col>
-                  <v-col class="pb-0" cols="12">
-                    <v-switch class="mt-0" 
-                      hide-details 
-                      inset 
-                      v-model="keyboard"
-                      label="Keyboard"
-                    ></v-switch>
-                  </v-col>
-                  <v-col class="pb-0" cols="12">
-                    <v-switch class="mt-0" 
-                      hide-details 
-                      inset 
-                      v-model="showNodeAdd"
-                      label="ShowNodeAdd"
-                    ></v-switch>
-                  </v-col>
-                  <v-col class="pb-0" cols="12">
-                    <v-switch class="mt-0" 
-                      hide-details 
-                      inset 
-                      v-model="gps"
-                      label="Gps"
+                      v-model="opt.value"
+                      :label="key"
                     ></v-switch>
                   </v-col>
                   <v-col class="pb-0" cols="12">
@@ -155,12 +132,15 @@ export default {
       { title: 'template' },
       { title: 'script' }
     ],
-    keyboard: true,
-    draggable: true,
+    options: {
+      keyboard: { value: true },
+      draggable: { value: true },
+      gps: { value: true },
+      showNodeAdd: { value: true },
+      contextMenu: { value: true },
+    },
     xSpacing: 80,
     ySpacing: 20,
-    gps: true,
-    showNodeAdd: true,
   }),
   mounted() {
   }
