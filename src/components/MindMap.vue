@@ -50,7 +50,7 @@ export default {
     draggable: { type: Boolean, default: true },
     gps: { type: Boolean, default: true },
     fitView: { type: Boolean, default: true },
-    download: { type: Boolean, default: false },
+    download: { type: Boolean, default: false }, // 待实现
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
