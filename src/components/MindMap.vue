@@ -264,6 +264,12 @@ export default {
         // document.execCommand('insertHTML', false, '<br>')
       }   
     },
+    fdivMouseDown() {
+      const flag = d3.event.target.getAttribute('contenteditable')
+      if (flag === 'true') {
+        d3.event.stopPropagation()
+      }
+    },
     // 节点操作
     updateNodeName() { // 文本编辑完成时
       const editP = document.querySelector('#editing > foreignObject > div')
@@ -280,8 +286,10 @@ export default {
       if (sele) { sele.removeAttribute('id') }
     },
     selectNode(n) { // 选中节点
-      this.removeSelectedNode()
-      d3.select(n).attr('id', 'selectedNode')
+      if (n.getAttribute('id') !== 'selectedNode') {
+        this.removeSelectedNode()
+        d3.select(n).attr('id', 'selectedNode')
+      }
     },
     editNode(n) { // 编辑节点
       this.removeSelectedNode()
@@ -290,7 +298,9 @@ export default {
         .filter((a, b, c) => c[b].parentNode === n)
         .select('div')
         .attr('contenteditable', true)
-      document.querySelector('#editing > foreignObject > div').focus()
+      
+      const fdiv = document.querySelector('#editing > foreignObject > div')
+      window.getSelection().selectAllChildren(fdiv);
     },
     editNew(newJSON, depth, pNode) { // 聚焦新节点
       d3.transition().end().then(() => {
@@ -304,20 +314,40 @@ export default {
     },
     // 节点点击
     gClick(d, i, n) {
-      d3.event.stopPropagation()// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-      const sele = document.getElementById('selectedNode')
       const edit = document.getElementById('editing')
+      const sele = document.getElementById('selectedNode')
       const clickedNode = n[i].parentNode
-      if (edit) { // 正在编辑
-      } else if (clickedNode.isSameNode(sele)) { // 进入编辑状态
-        this.editNode(clickedNode)
-      } else { // 选中
+
+      if (!edit) { // 未在编辑
         this.selectNode(clickedNode)
+
+        const fdiv = d3.select(clickedNode).selectAll('foreignObject')
+          .filter((a, b, c) => c[b].parentNode === clickedNode)
+          .select('div')
+          .node()
+        fdiv.contentEditable = true
+
+        new Promise((resolve) => {
+          setTimeout(() => {
+            let flag = false // 单击false 双击true
+            if (document.activeElement !== fdiv) {
+              fdiv.contentEditable = false
+            } else {
+              flag = true
+              this.removeSelectedNode()
+              clickedNode.setAttribute('id', 'editing')
+            }
+            resolve(flag);
+          }, 150);
+        }).then((flag) => {
+          if (!flag && clickedNode.isSameNode(sele)) { // 进入编辑状态
+            this.editNode(clickedNode)
+          }
+        })
       }
     },
     gRightClick(d, i, n) {
       d3.event.preventDefault()
-      d3.event.stopPropagation()// 阻止捕获和冒泡阶段中当前事件的进一步传播。
 
       const sele = document.getElementById('selectedNode')
       const edit = document.getElementById('editing')
@@ -331,9 +361,6 @@ export default {
       this.showContextMenu()
     },
     gBtnClick(a, i, n) { // 添加子节点
-      d3.event.preventDefault()
-      d3.event.stopPropagation()// 阻止捕获和冒泡阶段中当前事件的进一步传播。
-
       const newJSON = { name: '新建节点', children: [] }
       const d = d3.select(n[i].parentNode).data()[0]
       this.mmdata.add(d.data, newJSON)
@@ -553,20 +580,17 @@ export default {
     },
     appendNode(enter) {
       const { 
-        gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest,
+        gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, 
+        pathId, pathClass, pathColor, path, nest, fdivMouseDown,
       } = this
 
       const gNode = enter.append('g')
-      gNode.attr('class', gClass)
-        .attr('transform', gTransform)
-      const foreign = gNode.append('foreignObject')
-        .attr('x', -5)
-        .attr('y', foreignY)
+      gNode.attr('class', gClass).attr('transform', gTransform)
+      const foreign = gNode.append('foreignObject').attr('x', -5).attr('y', foreignY)
       const foreignDiv = foreign.append('xhtml:div')
         .attr('contenteditable', false)
         .text((d) => d.data.name)
-      foreignDiv.on('blur', updateNodeName)
-        .on('keydown', divKeyDown)
+      foreignDiv.on('blur', updateNodeName).on('keydown', divKeyDown).on('mousedown', fdivMouseDown)
       foreignDiv.each((d, i, n) => {
         const observer = new ResizeObserver((l) => {
           const t = l[0].target
