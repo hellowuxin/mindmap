@@ -91,7 +91,7 @@ export default {
   watch: {
     mmdata: {
       handler(newVal) {
-        this.updateMindmap(newVal.data[0])
+        this.updateMindmap(newVal.data)
         this.updateValue = false
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -541,8 +541,8 @@ export default {
       })
     },
     // 绘制
-    updateMindmap(d = this.mmdata.data[0]) {
-      this.depthTraverse(d, this.getTextSize)
+    updateMindmap(d = this.mmdata.data) {
+      this.depthTraverse2(d, this.getTextSize)
       this.tree()
       this.getDTop()
       this.draw()
@@ -690,14 +690,14 @@ export default {
         )
     },
     tree() { // 数据处理
-      // x纵轴 y横轴
       const { mmdata, ySpacing } = this
+
       const layout = flextree({spacing: ySpacing})
       const t = layout.hierarchy(mmdata.data[0])
       layout(t)
 
       this.root = t
-      this.root.each((a) => {
+      this.root.each((a) => { // x纵轴 y横轴
         // 相对偏移
         a.dx = a.x - (a.parent ? a.parent.x : 0)
         a.dy = a.y - (a.parent ? a.parent.y : 0)
@@ -734,15 +734,15 @@ export default {
       this.clearSelection()
       setTimeout(() => { this.$refs.menu.focus() }, 300)
     },
-    depthTraverse(d, func) { // 深度遍历，func每个元素
-      func(d)
-      if (d.children) {
-        for (let index = 0; index < d.children.length; index += 1) {
-          const dChild = d.children[index]
-          this.depthTraverse(dChild, func)
+    depthTraverse2(d, func) { // 深度遍历，func每个元素
+      for (let index = 0; index < d.length; index++) {
+        const dChild = d[index];
+        func(dChild)
+        if (dChild.children) {
+          this.depthTraverse2(dChild.children, func);
         }
       }
-    },
+    }
   },
   async mounted() {
     this.init()

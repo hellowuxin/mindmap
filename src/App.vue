@@ -130,7 +130,7 @@ export default {
     showSource: false,
     onboarding: 0,
     length: 3,
-    mmdata: [dataLearn],
+    mmdata: dataLearn,
     items: [
       { title: 'template' },
       { title: 'script' }
