@@ -68,6 +68,7 @@
                     :contextMenu="options.contextMenu.value"
                     :nodeClick="options.nodeClick.value"
                     :zoomable="options.zoomable.value"
+                    :showUndo="options.showUndo.value"
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
                   ></mindmap>
@@ -144,6 +145,7 @@ export default {
       contextMenu: { value: true },
       nodeClick: { value: true },
       zoomable: { value: true },
+      showUndo: { value: true },
     },
     xSpacing: 80,
     ySpacing: 20,

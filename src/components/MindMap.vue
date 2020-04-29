@@ -37,7 +37,7 @@
       >
         <i class="undo"></i>
       </button>
-      <button v-show="showRedo" class="icon" :class="{disabled: !canRedo()}" ref="redo" 
+      <button v-show="showUndo" class="icon" :class="{disabled: !canRedo()}" ref="redo" 
         type="button" @click="canRedo() ? redo() : null"
       >
         <i class="redo"></i>
@@ -70,7 +70,6 @@ export default {
     nodeClick: { type: Boolean, default: true },
     zoomable: { type: Boolean, default: true },
     showUndo: { type: Boolean, default: true },
-    showRedo: { type: Boolean, default: true }
   },
   model: { // 双向绑定
     prop: 'value',
