@@ -1,15 +1,10 @@
 import * as d3 from 'd3'
-import { produce, applyPatches, enablePatches } from "immer"
-
-enablePatches()
 
 let colorNumber = 0
 const colorScale = d3.scaleOrdinal(d3.schemePaired)// 颜色列表
 
 function isEqualJSON(a, b) { // 判断a，b是否完全一致
-  // 局限性：
-  // 如果对象里属性的位置发生变化，转换来的字符串就不相等
-  // 但实际我们只需要看他们的内容是否一致，与顺序没有关系，所以这种方法有局限性。
+  // 局限性：如果对象里属性的位置发生变化，转换来的字符串就不相等
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
