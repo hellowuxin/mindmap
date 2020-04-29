@@ -12,8 +12,10 @@ function breadthTraverse2(d, c) { // 广度遍历添加颜色
   for (let index = 0; index < d.length; index++) {
     const dChild = d[index]
     if (!c) {
-      dChild.color = colorScale(colorNumber)
-      colorNumber += 1
+      if (!dChild.color) {
+        dChild.color = colorScale(colorNumber)
+        colorNumber += 1
+      }
     } else {
       dChild.color = c
     }
@@ -77,7 +79,7 @@ class JSONData {
   }
 
   del(s) { // 删除s
-    const parent = this.getParent(s)
+    const parent = this._getParent(s)
     if (parent) {
       const children = parent.children
       let position = 0
@@ -93,7 +95,7 @@ class JSONData {
     }
   }
 
-  getItself(d, data = this.data) {
+  _getItself(d, data = this.data) {
     let dSelf = data
     const id = d.id.split('').map(s => parseInt(s, 10))
     if (id.length > 0) {
@@ -108,7 +110,7 @@ class JSONData {
   }
 
   add(dParent, d) { // dParent添加子节点d
-    const parent = this.getItself(dParent)
+    const parent = this._getItself(dParent)
     if (parent.id === '0') { // 根节点
       if (!d.color) {
         d.color = colorScale(colorNumber)
@@ -123,7 +125,7 @@ class JSONData {
     this._addId(`${d.id}`, d.children)
   }
 
-  getParent(d, data = this.data) {
+  _getParent(d, data = this.data) {
     let dParent = data
     const id = d.id.split('').map(s => parseInt(s, 10))
     id.pop()
@@ -139,7 +141,7 @@ class JSONData {
   }
 
   insert(dPosition, d, i = 0) { // 把d插入到dPosition的前面(i=0)或者后面(i=1)
-    const parent = this.getParent(dPosition)
+    const parent = this._getParent(dPosition)
     if (parent) {
       const children = parent.children
       let position = 0

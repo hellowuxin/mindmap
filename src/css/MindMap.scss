@@ -181,6 +181,16 @@ div#mindmap {
         opacity: 0.1;
       }
 
+      &.disabled {
+        cursor: default;
+        
+        &:hover::before {
+          opacity: 0;
+        }
+
+        i { filter: invert(85%) sepia(20%) saturate(0%) hue-rotate(125deg) brightness(86%) contrast(93%); }
+      }
+
       i {
         width: 24px;
         height: 24px;

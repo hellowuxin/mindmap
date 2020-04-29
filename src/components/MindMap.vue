@@ -20,7 +20,7 @@
         <div>{{ item.title }}</div>
       </div>
     </div>
-    <div ref="button" class="button">
+    <div class="button right-bottom">
       <button v-show="gps" class="icon" ref="gps" type="button" @click="makeCenter()">
         <i class="gps"></i>
       </button>
@@ -31,13 +31,26 @@
         <i class="download"></i>
       </button>
     </div>
+    <div class="button top-right">
+      <button v-show="showUndo" class="icon" :class="{disabled: !canUndo()}" ref="undo" 
+        type="button" @click="canUndo() ? undo() : null"
+      >
+        <i class="undo"></i>
+      </button>
+      <button v-show="showRedo" class="icon" :class="{disabled: !canRedo()}" ref="redo" 
+        type="button" @click="canRedo() ? redo() : null"
+      >
+        <i class="redo"></i>
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
 import * as d3 from 'd3'
 import { flextree } from 'd3-flextree'
-import JSONData from '../JSONData'
+import JSONData from '../js/JSONData'
+import History from '../js/History'
 
 export default {
   name: 'mindmap',
@@ -56,6 +69,8 @@ export default {
     contextMenu: { type: Boolean, default: true },
     nodeClick: { type: Boolean, default: true },
     zoomable: { type: Boolean, default: true },
+    showUndo: { type: Boolean, default: true },
+    showRedo: { type: Boolean, default: true }
   },
   model: { // 双向绑定
     prop: 'value',
@@ -70,6 +85,7 @@ export default {
     }
   },
   data: () => ({
+    isAction: true,
     updateValue: true,
     dTop: null,
     mmdata: {},// 思维导图数据
@@ -87,22 +103,17 @@ export default {
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
     link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
     zoom: d3.zoom(),
+    history: new History()
   }),
   watch: {
     mmdata: {
       handler(newVal) {
+        if (this.isAction) { this.history.record(newVal.data) }
         this.updateMindmap(newVal.data)
         this.updateValue = false
         this.$emit('change', this.mmdata.getPuredata())
       },
       deep: true,
-    },
-    value: {
-      handler(newVal) {
-        this.updateValue ? this.mmdata = new JSONData(newVal) : this.updateValue = true
-      },
-      deep: true,
-      immediate: true,
     },
     keyboard: function(val) { this.makeKeyboard(val) },
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
@@ -133,6 +144,8 @@ export default {
       this.makeContextMenu(this.contextMenu)
       this.makeNodeClick(this.nodeClick)
     },
+    canUndo() { return this.history.canUndo },
+    canRedo() { return this.history.canRedo },
     // 事件
     makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
     makeNodeAdd(val) {
@@ -175,6 +188,16 @@ export default {
       }
     },
     // 功能
+    undo() {
+      this.isAction = false
+      const prev = this.history.undo()
+      this.mmdata = new JSONData(prev)
+    },
+    redo() {
+      this.isAction = false
+      const next = this.history.redo()
+      this.mmdata = new JSONData(next)
+    },
     exportImage() { // 导出png
     },
     async makeCenter() { // 居中
@@ -215,6 +238,27 @@ export default {
           sel.removeAllRanges()
       }
     },
+    // 数据操作
+    add(dParent, d) {
+      this.isAction = true
+      this.mmdata.add(dParent, d)
+      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+    },
+    insert(dPosition, d, i = 0) {
+      this.isAction = true
+      this.mmdata.insert(dPosition, d, i)
+      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+    },
+    del(s) {
+      this.isAction = true
+      this.mmdata.del(s)
+      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+    },
+    updateName(d, name) {
+      this.isAction = true
+      d.data.name = name
+      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+    },
     // 右键拖拽
     rightDragStart() {
       // eslint-disable-next-line 
@@ -233,7 +277,6 @@ export default {
       const sele = d3.select('#selectedNode')
       if (!sele.node()) { return }
 
-      const { mmdata } = this
       const seleData = sele.data()[0]
       const seleRawData = sele.data()[0].data
       const pNode = sele.node().parentNode
@@ -242,20 +285,20 @@ export default {
 
       if (keyName === 'Tab') { // 添加子节点
         d3.event.preventDefault()
-        mmdata.add(seleRawData, newJSON)
+        this.add(seleRawData, newJSON)
         this.editNew(newJSON, seleData.depth+1, pNode)
       } else if (keyName === 'Enter') { // 添加弟弟节点
         d3.event.preventDefault()
         if (pNode.isSameNode(this.$refs.content)) {
-          mmdata.add(seleRawData, newJSON)// 根节点enter时，等效tab
+          this.add(seleRawData, newJSON)// 根节点enter时，等效tab
           this.editNew(newJSON, seleData.depth+1, pNode)
         } else {
-          mmdata.insert(seleRawData, newJSON, 1)
+          this.insert(seleRawData, newJSON, 1)
           this.editNew(newJSON, seleData.depth, pNode)
         }
       } else if (keyName === 'Backspace') { // 删除节点
         d3.event.preventDefault()
-        mmdata.del(seleRawData)
+        this.del(seleRawData)
       }
     },
     divKeyDown() {
@@ -278,7 +321,7 @@ export default {
       d3.select('g#editing').each((d, i, n) => {
         n[i].removeAttribute('id')
         editP.setAttribute('contenteditable', false)
-        d.data.name = editText
+        this.updateName(d, editText)
       })
     },
     removeSelectedNode() {
@@ -363,7 +406,7 @@ export default {
     gBtnClick(a, i, n) { // 添加子节点
       const newJSON = { name: '新建节点', children: [] }
       const d = d3.select(n[i].parentNode).data()[0]
-      this.mmdata.add(d.data, newJSON)
+      this.add(d.data, newJSON)
       this.rectTriggerOut(null, i, n)
       this.editNew(newJSON, d.depth+1, n[i].parentNode)
     },
@@ -372,7 +415,7 @@ export default {
       if (item.command === 0) { // 删除节点
         const sele = d3.select('g#selectedNode')
         sele.each((d) => {
-          this.mmdata.del(d.data)
+          this.del(d.data)
         })
       }
     },
@@ -477,7 +520,7 @@ export default {
       draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000)
     },
     dragended(d, i, n) {
-      const { dragback, mmdata, draw, root } = this
+      const { dragback, draw, root } = this
       const { subject } = d3.event
       const draggedNode = n[i]
       let draggedParentNode = draggedNode.parentNode
@@ -491,8 +534,8 @@ export default {
         d3.select(draggedNode).each((draggedD) => {
           d3.select(newParentNode).each((newParentD) => {
             // 处理数据
-            mmdata.del(draggedD.data)
-            mmdata.add(newParentD.data, draggedD.data)
+            this.del(draggedD.data)
+            this.add(newParentD.data, draggedD.data)
             draggedNode.parentNode.removeChild(draggedNode)// 必要，使动画看起来更流畅
             // 绘制图形
             draw()
@@ -526,12 +569,12 @@ export default {
           }
         })
         if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
-          mmdata.del(subject.data)
+          this.del(subject.data)
           if (a.b0) { // 插入在兄弟节点前面
-            mmdata.insert(a.b0, subject.data)
+            this.insert(a.b0, subject.data)
             draggedNode.parentNode.insertBefore(draggedNode, a.n0)
           } else if (a.b1) { // 插入在兄弟节点后面
-            mmdata.insert(a.b1, subject.data, 1)
+            this.insert(a.b1, subject.data, 1)
             draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling)
           }
           draw()
@@ -541,8 +584,7 @@ export default {
       })
     },
     // 绘制
-    updateMindmap(d = this.mmdata.data) {
-      this.depthTraverse2(d, this.getTextSize)
+    updateMindmap() {
       this.tree()
       this.getDTop()
       this.draw()
@@ -587,9 +629,7 @@ export default {
       const gNode = enter.append('g')
       gNode.attr('class', gClass).attr('transform', gTransform)
       const foreign = gNode.append('foreignObject').attr('x', -5).attr('y', foreignY)
-      const foreignDiv = foreign.append('xhtml:div')
-        .attr('contenteditable', false)
-        .text((d) => d.data.name)
+      const foreignDiv = foreign.append('xhtml:div').attr('contenteditable', false).text((d) => d.data.name)
       foreignDiv.on('blur', updateNodeName).on('keydown', divKeyDown).on('mousedown', fdivMouseDown)
       foreignDiv.each((d, i, n) => {
         const observer = new ResizeObserver((l) => {
@@ -749,6 +789,14 @@ export default {
     // this.mindmap_svg.on('mousedown', this.rightDragStart)
     // this.mindmap_svg.on('mousemove', this.rightDrag)
     // this.mindmap_svg.on('mouseup', this.rightDragEnd)
+    this.$watch('value', (newVal) => {
+      if (this.updateValue) {
+          this.mmdata = new JSONData(newVal)
+          this.depthTraverse2(this.mmdata.data, this.getTextSize)
+        } else {
+          this.updateValue = true
+        }
+    }, { immediate: true, deep: true, })
 
     await this.makeCenter()
     await this.fitContent()
