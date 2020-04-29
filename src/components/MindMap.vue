@@ -647,13 +647,8 @@ export default {
       
       const gBtn = gNode.append('g').attr('class', 'gButton').attr('transform', gBtnTransform)
 
-      gBtn.append('rect')
-        .attr('width', 24)
-        .attr('height', 24)
-        .attr('rx', 3)
-        .attr('ry', 3)
-      gBtn.append('path')
-        .attr('d', 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z')
+      gBtn.append('rect').attr('width', 24).attr('height', 24).attr('rx', 3).attr('ry', 3)
+      gBtn.append('path').attr('d', 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z')
       
       const enterData = enter.data()
       if (enterData.length) {
@@ -688,9 +683,10 @@ export default {
       update.each((d, i, n) => {
         const node = d3.select(n[i])
         const foreign = node.selectAll('foreignObject')
-          .filter((d, i, n) => (d.data.id !== '0') && (n[i].parentNode === node.node()))
-          .attr('y', foreignY)
+          .filter((d, i, n) => (n[i].parentNode === node.node()))
+          .attr('y', d.data.id !== '0' ? foreignY(d) : foreignY(d)+d.size[0]/2)
           .attr('width', d.data.size[1] + 11 - xSpacing)
+        
         foreign.select('div').text(d.data.name)
         node.select('path')
           .filter((d, i, n) => n[i].parentNode === node.node())
@@ -782,14 +778,9 @@ export default {
           this.depthTraverse2(dChild.children, func);
         }
       }
-    }
-  },
-  async mounted() {
-    this.init()
-    // this.mindmap_svg.on('mousedown', this.rightDragStart)
-    // this.mindmap_svg.on('mousemove', this.rightDrag)
-    // this.mindmap_svg.on('mouseup', this.rightDragEnd)
-    this.$watch('value', (newVal) => {
+    },
+    addWatch() {
+      this.$watch('value', (newVal) => {
       if (this.updateValue) {
           this.mmdata = new JSONData(newVal)
           this.depthTraverse2(this.mmdata.data, this.getTextSize)
@@ -797,6 +788,14 @@ export default {
           this.updateValue = true
         }
     }, { immediate: true, deep: true, })
+    }
+  },
+  async mounted() {
+    this.init()
+    // this.mindmap_svg.on('mousedown', this.rightDragStart)
+    // this.mindmap_svg.on('mousemove', this.rightDrag)
+    // this.mindmap_svg.on('mouseup', this.rightDragEnd)
+    this.addWatch()
 
     await this.makeCenter()
     await this.fitContent()
