@@ -130,8 +130,19 @@ div#mindmap {
   
   div.button {
     position: absolute;
-    bottom: 0;
-    right: 0;
+  
+    &.right-bottom {
+      bottom: 0;
+      right: 0;
+    }
+
+    &.top-right {
+      top: 0;
+      right: 0;
+      display: flex;
+      flex-direction: row;
+    }
+
     button.icon {
       position: relative;
       cursor: pointer;
@@ -185,6 +196,14 @@ div#mindmap {
 
         &.download {
           background-image: url(../../public/icons/download.png);
+        }
+
+        &.undo {
+          background-image: url(../../public/icons/undo.png);
+        }
+
+        &.redo {
+          background-image: url(../../public/icons/redo.png);
         }
       }
     }
