@@ -2,31 +2,12 @@
 
 # Mindmap Vue Component
 
-![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
-
-Based on d3.js
+> A mind map Vue component inspired by MindNode, based on d3.js  
+> The functions currently implemented include editing, dragging, zooming, undoing, and context menu ...
 
 [中文说明](./README.cn.md)
 
 Online demo：<https://mindnode.5xin.xyz/>
-
-## Function
-
-Support keyboard and mouse
-
-- Drag
-- Zoom
-- Add, delete and edit node
-- ...
-
-## Usage
-
-- tab - Add child node
-- enter - Add siblings
-- delete - Delete node
-- right click - Open contextMenu
-- click twice - Edit node content
-- ...
 
 ## Install
 
