@@ -2,7 +2,7 @@
 
 # Mindmap Vue Component
 
-> A mind map Vue component inspired by MindNode, based on d3.js  
+> A mind map Vue component inspired by [MindNode](https://mindnode.com), based on d3.js  
 > The functions currently implemented include editing, dragging, zooming, undoing, and context menu ...
 
 [中文说明](./README.cn.md)
