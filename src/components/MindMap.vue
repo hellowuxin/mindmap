@@ -7,13 +7,13 @@
     <div ref="menu"
       id="menu"
       tabindex="0"
-      v-show="showMenu"
-      :style="{ top: menuY+'px', left: menuX+'px' }"
-      @blur="showMenu = false"
+      v-show="showContextMenu"
+      :style="{ top: contextMenuY+'px', left: contextMenuX+'px' }"
+      @blur="showContextMenu = false"
     >
       <div 
         class="menu-item"
-        v-for="(item, index) in items"
+        v-for="(item, index) in contextMenuItems"
         :key="index"
         @click="clickMenu(item)"
       >
@@ -84,15 +84,15 @@ export default {
     }
   },
   data: () => ({
-    isAction: true,
-    updateValue: true,
-    dTop: null,
-    mmdata: {},// 思维导图数据
-    root: '',
-    showMenu: false,
-    menuX: 0,
-    menuY: 0,
-    items: [
+    toRecord: true, // 判断是否需要记录mmdata的数据快照
+    toUpdate: true, // 判断是否需要更新mmdata
+    dTop: null, // mmdata中纵坐标最高的数据
+    mmdata: {}, // 思维导图数据
+    root: '', // 包含位置信息的mmdata
+    showContextMenu: false,
+    contextMenuX: 0,
+    contextMenuY: 0,
+    contextMenuItems: [
       { title: '删除节点', command: 0 },
     ],
     mindmap_svg: Object,
@@ -107,9 +107,9 @@ export default {
   watch: {
     mmdata: {
       handler(newVal) {
-        if (this.isAction) { this.history.record(newVal.data) }
+        if (this.toRecord) { this.history.record(newVal.data) }
         this.updateMindmap(newVal.data)
-        this.updateValue = false
+        this.toUpdate = false
         this.$emit('change', this.mmdata.getPuredata())
       },
       deep: true,
@@ -125,11 +125,11 @@ export default {
   },
   methods: {
     init() {
-       // 绑定元素
+      // 绑定元素
       this.mindmap_svg = d3.select(this.$refs.svg)
       this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
       this.dummy = d3.select(this.$refs.dummy)
-
+      // 绑定事件
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
@@ -138,6 +138,7 @@ export default {
       this.makeZoom(this.zoomable)
     },
     initNodeEvent() {
+      // 绑定节点事件
       this.makeDrag(this.draggable)
       this.makeNodeAdd(this.showNodeAdd)
       this.makeContextMenu(this.contextMenu)
@@ -168,13 +169,11 @@ export default {
       if (val) {
         const { mindmap_g, dragged, dragended } = this
 
-        mindmap_g.selectAll('g.node')
-          .filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
+        mindmap_g.selectAll('g.node').filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
           .call(d3.drag().on('drag', dragged).on('end', dragended))
       } else {
         this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
       }
-      
     },
     makeNodeClick(val) {
       this.mindmap_g.selectAll('foreignObject').on('click', val ? this.gClick : null)
@@ -186,18 +185,18 @@ export default {
         this.mindmap_svg.on('.zoom', null)
       }
     },
-    // 功能
+    // button事件
     undo() {
-      this.isAction = false
+      this.toRecord = false
       const prev = this.history.undo()
       this.mmdata = new JSONData(prev)
     },
     redo() {
-      this.isAction = false
+      this.toRecord = false
       const next = this.history.redo()
       this.mmdata = new JSONData(next)
     },
-    exportImage() { // 导出png
+    exportImage() { // 导出png：待解决
     },
     async makeCenter() { // 居中
       await d3.transition().end().then(() => {
@@ -229,47 +228,39 @@ export default {
         this.mindmap_svg.transition(this.easePolyInOut).call(this.zoom.scaleTo, multiple)
       })
     },
-    clearSelection() {
-      if(document.selection && document.selection.empty) {
-          document.selection.empty()
-      } else if(window.getSelection) {
-          const sel = window.getSelection()
-          sel.removeAllRanges()
-      }
-    },
     // 数据操作
     add(dParent, d) {
-      this.isAction = true
+      this.toRecord = true
       this.mmdata.add(dParent, d)
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     insert(dPosition, d, i = 0) {
-      this.isAction = true
+      this.toRecord = true
       this.mmdata.insert(dPosition, d, i)
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     del(s) {
-      this.isAction = true
+      this.toRecord = true
       this.mmdata.del(s)
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     updateName(d, name) {
-      this.isAction = true
+      this.toRecord = true
       d.data.name = name
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     // 右键拖拽
     rightDragStart() {
       // eslint-disable-next-line 
-      console.log(d3.event.buttons);
+      console.log(d3.event.buttons)
     },
     rightDrag() {
       // eslint-disable-next-line 
-      console.log(d3.event.buttons);
+      console.log(d3.event.buttons)
     },
     rightDragEnd() {
       // eslint-disable-next-line 
-      console.log(d3.event.button);
+      console.log(d3.event.button)
     },
     // 键盘
     svgKeyDown() {
@@ -306,12 +297,6 @@ export default {
         // document.execCommand('insertHTML', false, '<br>')
       }   
     },
-    fdivMouseDown() {
-      const flag = d3.event.target.getAttribute('contenteditable')
-      if (flag === 'true') {
-        d3.event.stopPropagation()
-      }
-    },
     // 节点操作
     updateNodeName() { // 文本编辑完成时
       const editP = document.querySelector('#editing > foreignObject > div')
@@ -342,7 +327,7 @@ export default {
         .attr('contenteditable', true)
       
       const fdiv = document.querySelector('#editing > foreignObject > div')
-      window.getSelection().selectAllChildren(fdiv);
+      window.getSelection().selectAllChildren(fdiv)
     },
     editNew(newJSON, depth, pNode) { // 聚焦新节点
       d3.transition().end().then(() => {
@@ -355,6 +340,12 @@ export default {
       })
     },
     // 节点点击
+    fdivMouseDown() {
+      const flag = d3.event.target.getAttribute('contenteditable')
+      if (flag === 'true') {
+        d3.event.stopPropagation() // 防止触发drag、click
+      }
+    },
     gClick(d, i, n) {
       const edit = document.getElementById('editing')
       const sele = document.getElementById('selectedNode')
@@ -379,8 +370,8 @@ export default {
               this.removeSelectedNode()
               clickedNode.setAttribute('id', 'editing')
             }
-            resolve(flag);
-          }, 150);
+            resolve(flag)
+          }, 150)
         }).then((flag) => {
           if (!flag && clickedNode.isSameNode(sele)) { // 进入编辑状态
             this.editNode(clickedNode)
@@ -389,8 +380,6 @@ export default {
       }
     },
     gRightClick(d, i, n) {
-      d3.event.preventDefault()
-
       const sele = document.getElementById('selectedNode')
       const edit = document.getElementById('editing')
       const clickedNode = n[i].parentNode
@@ -400,7 +389,13 @@ export default {
       if (!clickedNode.isSameNode(sele)) { // 选中
         this.selectNode(clickedNode)
       }
-      this.showContextMenu()
+      // 显示右键菜单
+      const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
+      this.contextMenuX = d3.event.pageX - svgPosition.x - window.scrollX
+      this.contextMenuY = d3.event.pageY - svgPosition.y - window.scrollY
+      this.showContextMenu = true
+      this.clearSelection()
+      setTimeout(() => { this.$refs.menu.focus() }, 300)
     },
     gBtnClick(a, i, n) { // 添加子节点
       const newJSON = { name: '新建节点', children: [] }
@@ -410,35 +405,25 @@ export default {
       this.editNew(newJSON, d.depth+1, n[i].parentNode)
     },
     clickMenu(item) {
-      this.showMenu = false
+      this.showContextMenu = false
       if (item.command === 0) { // 删除节点
         const sele = d3.select('g#selectedNode')
-        sele.each((d) => {
-          this.del(d.data)
-        })
+        sele.each((d) => { this.del(d.data) })
       }
     },
-    // 悬浮
+    // 悬浮事件
     rectTriggerOut(d, i, n) {
-      let gBtn = null
       if (n[i].className.baseVal.includes('gButton')) {
-        gBtn = d3.select(n[i])
-        gBtn.style('opacity', 0)
+        d3.select(n[i]).style('opacity', 0)
       } else {
-        d3.selectAll('g.gButton')
-          .filter((a, b, c) => c[b].parentNode === n[i].parentNode)
-          .style('opacity', 0)
+        d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0)
       }
     },
     rectTriggerOver(d, i, n) {
-      let gBtn = null
       if (n[i].className.baseVal.includes('gButton')) {
-        gBtn = d3.select(n[i])
-        gBtn.style('opacity', 1)
+        d3.select(n[i]).style('opacity', 1)
       } else {
-        d3.selectAll('g.gButton')
-          .filter((a, b, c) => c[b].parentNode === n[i].parentNode)
-          .style('opacity', 0.5)
+        d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0.5)
       }
     },
     // 拖拽
@@ -705,12 +690,7 @@ export default {
       return update
     },
     exitNode(exit) {
-      exit.filter((d, i, n) => {
-        if (n[i].classList[0] === 'gButton') {
-          return false
-        }
-        return true
-      }).remove()
+      exit.filter((d, i, n) => n[i].classList[0] !== 'gButton').remove()
     },
     draw() { // 生成svg
       const { mindmap_g, appendNode, updateNode, exitNode} = this
@@ -727,7 +707,7 @@ export default {
     tree() { // 数据处理
       const { mmdata, ySpacing } = this
 
-      const layout = flextree({spacing: ySpacing})
+      const layout = flextree({ spacing: ySpacing })
       const t = layout.hierarchy(mmdata.data[0])
       layout(t)
 
@@ -761,32 +741,33 @@ export default {
         })
       t.size = [textHeight, textWidth + xSpacing]
     },
-    showContextMenu() {
-      const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
-      this.menuX = d3.event.pageX - svgPosition.x - window.scrollX
-      this.menuY = d3.event.pageY - svgPosition.y - window.scrollY
-      this.showMenu = true
-      this.clearSelection()
-      setTimeout(() => { this.$refs.menu.focus() }, 300)
+    clearSelection() { // 清除右键触发的选中单词
+      if(document.selection && document.selection.empty) {
+        document.selection.empty()
+      } else if(window.getSelection) {
+        const sel = window.getSelection()
+        sel.removeAllRanges()
+      }
     },
     depthTraverse2(d, func) { // 深度遍历，func每个元素
       for (let index = 0; index < d.length; index++) {
-        const dChild = d[index];
+        const dChild = d[index]
         func(dChild)
-        if (dChild.children) {
-          this.depthTraverse2(dChild.children, func);
-        }
+        if (dChild.children) { this.depthTraverse2(dChild.children, func) }
       }
     },
     addWatch() {
       this.$watch('value', (newVal) => {
-      if (this.updateValue) {
+        if (this.toUpdate) {
           this.mmdata = new JSONData(newVal)
           this.depthTraverse2(this.mmdata.data, this.getTextSize)
         } else {
-          this.updateValue = true
+          this.toUpdate = true
         }
-    }, { immediate: true, deep: true, })
+      }, { 
+        immediate: true, 
+        deep: true, 
+      })
     }
   },
   async mounted() {
