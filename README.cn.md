@@ -4,29 +4,12 @@
 
 ![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
 
-基于d3.js实现
+> 一个由[MindNode](https://mindnode.com)启发的思维导图Vue组件，基于d3.js实现  
+> 目前实现的功能有基本的编辑、拖移、缩放、撤销、上下文菜单...
 
 [English Readme](./README.md)
 
 在线演示：<https://mindnode.5xin.xyz/>
-
-## 功能
-
-支持键盘和鼠标
-
-- 拖移
-- 缩放
-- 节点的增删改
-- ...
-
-## 使用
-
-- Tab - 添加子节点
-- Enter - 添加兄弟节点
-- delete - 删除节点
-- 右键 - 菜单
-- 单击两次 - 编辑节点内容
-- ...
 
 ## 安装
 
