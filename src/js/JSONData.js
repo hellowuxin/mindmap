@@ -1,7 +1,8 @@
-import * as d3 from 'd3'
+import * as d3ScaleChromatic from 'd3-scale-chromatic'
+import * as d3Scale from 'd3-scale'
 
 let colorNumber = 0
-const colorScale = d3.scaleOrdinal(d3.schemePaired)// 颜色列表
+const colorScale = d3Scale.scaleOrdinal(d3ScaleChromatic.schemePaired)// 颜色列表
 
 function isEqualJSON(a, b) { // 判断a，b是否完全一致
   // 局限性：如果对象里属性的位置发生变化，转换来的字符串就不相等
