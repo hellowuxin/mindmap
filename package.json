@@ -14,7 +14,12 @@
   "files": [
     "dist"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "d3": "^5.16.0",
+    "d3-flextree": "^2.1.1",
+    "vue": "^2.6.11",
+    "vuetify": "^2.2.23"
+  },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.3.1",
     "@vue/cli-plugin-eslint": "^4.3.1",
@@ -24,13 +29,9 @@
     "eslint-plugin-vue": "^6.2.2",
     "sass": "^1.26.3",
     "sass-loader": "^8.0.2",
-    "vue": "^2.6.11",
     "vue-cli-plugin-vuetify": "~2.0.5",
     "vue-template-compiler": "^2.6.11",
-    "vuetify": "^2.2.23",
-    "vuetify-loader": "^1.4.3",
-    "d3": "^5.16.0",
-    "d3-flextree": "^2.1.1"
+    "vuetify-loader": "^1.4.3"
   },
   "eslintConfig": {
     "root": true,
