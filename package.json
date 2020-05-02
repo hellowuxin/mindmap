@@ -15,8 +15,6 @@
     "dist"
   ],
   "dependencies": {
-    "d3": "^5.16.0",
-    "d3-flextree": "^2.1.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.3.1",
@@ -31,7 +29,9 @@
     "vue-cli-plugin-vuetify": "~2.0.5",
     "vue-template-compiler": "^2.6.11",
     "vuetify": "^2.2.23",
-    "vuetify-loader": "^1.4.3"
+    "vuetify-loader": "^1.4.3",
+    "d3": "^5.16.0",
+    "d3-flextree": "^2.1.1"
   },
   "eslintConfig": {
     "root": true,
