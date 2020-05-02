@@ -47,12 +47,7 @@
 </template>
 
 <script>
-import * as d3Transition from 'd3-transition'
-import * as d3Shape from 'd3-shape'
-import * as d3Ease from 'd3-ease'
-import * as d3Zoom from 'd3-zoom'
-import * as d3Selection from 'd3-selection'
-import * as d3Drag from 'd3-drag'
+import * as d3 from '../js/d3'
 import { flextree } from 'd3-flextree'
 import JSONData from '../js/JSONData'
 import History from '../js/History'
@@ -104,9 +99,9 @@ export default {
     mindmap_g: Object,
     dummy: Object,
     mindmapSvgZoom: Function,
-    easePolyInOut: d3Transition.transition().duration(1000).ease(d3Ease.easePolyInOut),
-    link: d3Shape.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
-    zoom: d3Zoom.zoom(),
+    easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
+    link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
+    zoom: d3.zoom(),
     history: new History()
   }),
   watch: {
@@ -131,14 +126,14 @@ export default {
   methods: {
     init() {
       // 绑定元素
-      this.mindmap_svg = d3Selection.select(this.$refs.svg)
-      this.mindmap_g = d3Selection.select(this.$refs.content).style('opacity', 0)
-      this.dummy = d3Selection.select(this.$refs.dummy)
+      this.mindmap_svg = d3.select(this.$refs.svg)
+      this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
+      this.dummy = d3.select(this.$refs.dummy)
       // 绑定事件
       this.makeKeyboard(this.keyboard)
-      this.mindmap_svg.on('contextmenu', () => { d3Selection.event.preventDefault() })
+      this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
-        this.mindmap_g.attr('transform', d3Selection.event.transform)
+        this.mindmap_g.attr('transform', d3.event.transform)
       })
       this.makeZoom(this.zoomable)
     },
@@ -175,9 +170,9 @@ export default {
         const { mindmap_g, dragged, dragended } = this
 
         mindmap_g.selectAll('g.node').filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
-          .call(d3Drag.drag().on('drag', dragged).on('end', dragended))
+          .call(d3.drag().on('drag', dragged).on('end', dragended))
       } else {
-        this.mindmap_g.selectAll('g.node').call(d3Drag.drag().on('drag', null).on('end', null))
+        this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
       }
     },
     makeNodeClick(val) {
@@ -204,10 +199,10 @@ export default {
     exportImage() { // 导出png：待解决
     },
     async makeCenter() { // 居中
-      await d3Transition.transition().end().then(() => {
+      await d3.transition().end().then(() => {
         const div = this.$refs.mindmap
         const content = this.$refs.content.getBBox()
-        const { k } = d3Zoom.zoomTransform(this.$refs.svg)
+        const { k } = d3.zoomTransform(this.$refs.svg)
 
         const x = (
           -(div.offsetWidth - k*content.width)/(2*k) 
@@ -222,7 +217,7 @@ export default {
       })
     },
     async fitContent() { // 适应窗口大小
-      await d3Transition.transition().end().then(() => {
+      await d3.transition().end().then(() => {
         const rect = this.$refs.content.getBBox()
         const div = this.$refs.mindmap
         
@@ -257,33 +252,33 @@ export default {
     // 右键拖拽
     rightDragStart() {
       // eslint-disable-next-line 
-      console.log(d3Selection.event.buttons)
+      console.log(d3.event.buttons)
     },
     rightDrag() {
       // eslint-disable-next-line 
-      console.log(d3Selection.event.buttons)
+      console.log(d3.event.buttons)
     },
     rightDragEnd() {
       // eslint-disable-next-line 
-      console.log(d3Selection.event.button)
+      console.log(d3.event.button)
     },
     // 键盘
     svgKeyDown() {
-      const sele = d3Selection.select('#selectedNode')
+      const sele = d3.select('#selectedNode')
       if (!sele.node()) { return }
 
       const seleData = sele.data()[0]
       const seleRawData = sele.data()[0].data
       const pNode = sele.node().parentNode
       const newJSON = { name: '新建节点', children: [] }
-      const keyName = d3Selection.event.key
+      const keyName = d3.event.key
 
       if (keyName === 'Tab') { // 添加子节点
-        d3Selection.event.preventDefault()
+        d3.event.preventDefault()
         this.add(seleRawData, newJSON)
         this.editNew(newJSON, seleData.depth+1, pNode)
       } else if (keyName === 'Enter') { // 添加弟弟节点
-        d3Selection.event.preventDefault()
+        d3.event.preventDefault()
         if (pNode.isSameNode(this.$refs.content)) {
           this.add(seleRawData, newJSON)// 根节点enter时，等效tab
           this.editNew(newJSON, seleData.depth+1, pNode)
@@ -292,13 +287,13 @@ export default {
           this.editNew(newJSON, seleData.depth, pNode)
         }
       } else if (keyName === 'Backspace') { // 删除节点
-        d3Selection.event.preventDefault()
+        d3.event.preventDefault()
         this.del(seleRawData)
       }
     },
     divKeyDown() {
-      if (d3Selection.event.key === 'Enter') {
-        // d3Selection.event.preventDefault()
+      if (d3.event.key === 'Enter') {
+        // d3.event.preventDefault()
         // document.execCommand('insertHTML', false, '<br>')
       }   
     },
@@ -307,7 +302,7 @@ export default {
       const editP = document.querySelector('#editing > foreignObject > div')
       window.getSelection().removeAllRanges()// 清除选中
       const editText = editP.innerText
-      d3Selection.select('g#editing').each((d, i, n) => {
+      d3.select('g#editing').each((d, i, n) => {
         n[i].removeAttribute('id')
         editP.setAttribute('contenteditable', false)
         this.updateName(d, editText)
@@ -320,13 +315,13 @@ export default {
     selectNode(n) { // 选中节点
       if (n.getAttribute('id') !== 'selectedNode') {
         this.removeSelectedNode()
-        d3Selection.select(n).attr('id', 'selectedNode')
+        d3.select(n).attr('id', 'selectedNode')
       }
     },
     editNode(n) { // 编辑节点
       this.removeSelectedNode()
       n.setAttribute('id', 'editing')
-      d3Selection.select(n).selectAll('foreignObject')
+      d3.select(n).selectAll('foreignObject')
         .filter((a, b, c) => c[b].parentNode === n)
         .select('div')
         .attr('contenteditable', true)
@@ -335,8 +330,8 @@ export default {
       window.getSelection().selectAllChildren(fdiv)
     },
     editNew(newJSON, depth, pNode) { // 聚焦新节点
-      d3Transition.transition().end().then(() => {
-        const clickedNode = d3Selection.select(pNode)
+      d3.transition().end().then(() => {
+        const clickedNode = d3.select(pNode)
           .selectAll(`g.node.depth_${depth}`)
           .filter((b) => b.data === newJSON)
           .node()
@@ -346,9 +341,9 @@ export default {
     },
     // 节点点击
     fdivMouseDown() {
-      const flag = d3Selection.event.target.getAttribute('contenteditable')
+      const flag = d3.event.target.getAttribute('contenteditable')
       if (flag === 'true') {
-        d3Selection.event.stopPropagation() // 防止触发drag、click
+        d3.event.stopPropagation() // 防止触发drag、click
       }
     },
     gClick(d, i, n) {
@@ -359,7 +354,7 @@ export default {
       if (!edit) { // 未在编辑
         this.selectNode(clickedNode)
 
-        const fdiv = d3Selection.select(clickedNode).selectAll('foreignObject')
+        const fdiv = d3.select(clickedNode).selectAll('foreignObject')
           .filter((a, b, c) => c[b].parentNode === clickedNode)
           .select('div')
           .node()
@@ -396,15 +391,15 @@ export default {
       }
       // 显示右键菜单
       const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
-      this.contextMenuX = d3Selection.event.pageX - svgPosition.x - window.scrollX
-      this.contextMenuY = d3Selection.event.pageY - svgPosition.y - window.scrollY
+      this.contextMenuX = d3.event.pageX - svgPosition.x - window.scrollX
+      this.contextMenuY = d3.event.pageY - svgPosition.y - window.scrollY
       this.showContextMenu = true
       this.clearSelection()
       setTimeout(() => { this.$refs.menu.focus() }, 300)
     },
     gBtnClick(a, i, n) { // 添加子节点
       const newJSON = { name: '新建节点', children: [] }
-      const d = d3Selection.select(n[i].parentNode).data()[0]
+      const d = d3.select(n[i].parentNode).data()[0]
       this.add(d.data, newJSON)
       this.rectTriggerOut(null, i, n)
       this.editNew(newJSON, d.depth+1, n[i].parentNode)
@@ -412,33 +407,33 @@ export default {
     clickMenu(item) {
       this.showContextMenu = false
       if (item.command === 0) { // 删除节点
-        const sele = d3Selection.select('g#selectedNode')
+        const sele = d3.select('g#selectedNode')
         sele.each((d) => { this.del(d.data) })
       }
     },
     // 悬浮事件
     rectTriggerOut(d, i, n) {
       if (n[i].className.baseVal.includes('gButton')) {
-        d3Selection.select(n[i]).style('opacity', 0)
+        d3.select(n[i]).style('opacity', 0)
       } else {
-        d3Selection.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0)
+        d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0)
       }
     },
     rectTriggerOver(d, i, n) {
       if (n[i].className.baseVal.includes('gButton')) {
-        d3Selection.select(n[i]).style('opacity', 1)
+        d3.select(n[i]).style('opacity', 1)
       } else {
-        d3Selection.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0.5)
+        d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0.5)
       }
     },
     // 拖拽
     draggedNodeRenew(draggedNode, targetX, targetY, dura = 0) {
       const { link, xSpacing } = this
-      const tran = d3Transition.transition().duration(dura).ease(d3Ease.easePoly)
-      d3Selection.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`)
+      const tran = d3.transition().duration(dura).ease(d3.easePoly)
+      d3.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`)
       // 更新draggedNode与父节点的path
-      d3Selection.select(draggedNode).each((d) => {
-        d3Selection.select(`path#path_${d.data.id}`).transition(tran).attr('d', `${link({
+      d3.select(draggedNode).each((d) => {
+        d3.select(`path#path_${d.data.id}`).transition(tran).attr('d', `${link({
           source: [
             -targetY + (d.parent ? d.parent.data.size[1] : 0) - xSpacing, 
             -targetX + (d.parent ? d.parent.data.size[0]/2 : 0)
@@ -469,8 +464,8 @@ export default {
       }
       // 拖拽
       // 相对a原本位置的偏移
-      const py = d3Selection.event.x - a.x// x轴偏移的量
-      const px = d3Selection.event.y - a.y// y轴偏移的量
+      const py = d3.event.x - a.x// x轴偏移的量
+      const px = d3.event.y - a.y// y轴偏移的量
       draggedNodeChildrenRenew(a, px, py)
       // 相对a.parent位置的坐标
       let targetY = a.dy + py// x轴坐标
@@ -510,7 +505,7 @@ export default {
     },
     dragended(d, i, n) {
       const { dragback, draw, root } = this
-      const { subject } = d3Selection.event
+      const { subject } = d3.event
       const draggedNode = n[i]
       let draggedParentNode = draggedNode.parentNode
       if (draggedParentNode.isEqualNode(this.$refs.content)) { // 拖拽的是根节点时复原
@@ -520,8 +515,8 @@ export default {
       const newParentNode = document.getElementById('newParentNode')
       if (newParentNode) { // 建立新的父子关系
         newParentNode.removeAttribute('id')
-        d3Selection.select(draggedNode).each((draggedD) => {
-          d3Selection.select(newParentNode).each((newParentD) => {
+        d3.select(draggedNode).each((draggedD) => {
+          d3.select(newParentNode).each((newParentD) => {
             // 处理数据
             this.del(draggedD.data)
             this.add(newParentD.data, draggedD.data)
@@ -537,7 +532,7 @@ export default {
         return
       }
       // 调换兄弟节点顺序
-      draggedParentNode = d3Selection.select(draggedParentNode)
+      draggedParentNode = d3.select(draggedParentNode)
       draggedParentNode.each((d) => {
         const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${d.depth + 1}`).filter((a, i, n) => !draggedNode.isSameNode(n[i]))
         if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
@@ -600,7 +595,7 @@ export default {
     nest(d, i, n) {
       const dd = d.children
       if (dd) {
-        d3Selection.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
+        d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
           .data(dd)
           .join(
             (enter) => this.appendNode(enter),
@@ -670,7 +665,7 @@ export default {
         .attr('transform', gTransform)
 
       update.each((d, i, n) => {
-        const node = d3Selection.select(n[i])
+        const node = d3.select(n[i])
         const foreign = node.selectAll('foreignObject')
           .filter((d, i, n) => (n[i].parentNode === node.node()))
           .attr('y', d.data.id !== '0' ? foreignY(d) : foreignY(d)+d.size[0]/2)
