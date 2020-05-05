@@ -168,11 +168,10 @@ export default {
     makeDrag(val) {
       if (val) {
         const { mindmap_g, dragged, dragended } = this
-
-        mindmap_g.selectAll('g.node').filter((d) => d.depth !== 0 )// 非根节点才可以拖拽
-          .call(d3.drag().on('drag', dragged).on('end', dragended))
+        mindmap_g.selectAll('foreignObject').filter((d) => d.depth !== 0)// 非根节点才可以拖拽
+          .call(d3.drag().container((d, i, n) => n[i].parentNode.parentNode).on('drag', dragged).on('end', dragended))
       } else {
-        this.mindmap_g.selectAll('g.node').call(d3.drag().on('drag', null).on('end', null))
+        this.mindmap_g.selectAll('foreignObject').call(d3.drag().on('drag', null).on('end', null))
       }
     },
     makeNodeClick(val) {
@@ -453,8 +452,8 @@ export default {
     },
     dragged(a, i, n) { // 拖拽中【待完善】
       const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing } = this
-      const draggedNode = n[i]
-      const fObject = draggedNode.getElementsByTagName('foreignObject')[0]
+      const draggedNode = n[i].parentNode
+      const fObject = n[i]
       // 选中
       const sele = document.getElementById('selectedNode')
       if (sele && !sele.isSameNode(draggedNode)) {
@@ -504,7 +503,7 @@ export default {
     dragended(d, i, n) {
       const { dragback, root } = this
       const { subject } = d3.event
-      const draggedNode = n[i]
+      const draggedNode = n[i].parentNode
       let draggedParentNode = draggedNode.parentNode
       if (draggedParentNode.isEqualNode(this.$refs.content)) { // 拖拽的是根节点时复原
         dragback(subject, draggedNode)
@@ -662,8 +661,9 @@ export default {
       update.each((d, i, n) => {
         const node = d3.select(n[i])
         const foreign = node.selectAll('foreignObject')
-          .filter((d, i, n) => (n[i].parentNode === node.node()))
-          .attr('y', d.data.id !== '0' ? foreignY(d) : foreignY(d)+d.size[0]/2)
+          .filter((d, i, n) => n[i].parentNode === node.node())
+          .data((d) => [d])
+          .attr('y', d.data.id !== '0' ? foreignY(d) : (foreignY(d) + d.size[0]/2))
           .attr('width', d.data.size[1] + 11 - xSpacing)
         
         foreign.select('div').text(d.data.name)
