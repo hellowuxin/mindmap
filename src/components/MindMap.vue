@@ -398,11 +398,13 @@ export default {
       setTimeout(() => { this.$refs.menu.focus() }, 300)
     },
     gBtnClick(a, i, n) { // 添加子节点
-      const newJSON = { name: '新建节点', children: [] }
-      const d = d3.select(n[i].parentNode).data()[0]
-      this.add(d.data, newJSON)
-      this.rectTriggerOut(null, i, n)
-      this.editNew(newJSON, d.depth+1, n[i].parentNode)
+      if (n[i].style.opacity === '1') {
+        const newJSON = { name: '新建节点', children: [] }
+        const d = d3.select(n[i].parentNode).data()[0]
+        this.add(d.data, newJSON)
+        this.rectTriggerOut(null, i, n)
+        this.editNew(newJSON, d.depth+1, n[i].parentNode)
+      }
     },
     clickMenu(item) {
       this.showContextMenu = false
