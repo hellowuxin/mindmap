@@ -52,7 +52,11 @@
                 <div class="d-flex grey lighten-3">
                   <div class="d-flex px-3 title font-weight-regular align-center" 
                     style="height: 48px; width: 100%"
-                  ></div>
+                  >
+                    <v-btn icon href="https://github.com/hellowuxin/mindmap">
+                      <v-icon>mdi-github</v-icon>
+                    </v-btn>
+                  </div>
                   <v-divider vertical></v-divider>
                 </div>
                 <v-divider></v-divider>
