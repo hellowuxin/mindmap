@@ -32,13 +32,13 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-vue": "^6.2.2",
-    "sass": "^1.26.3",
+    "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
+    "vue": "^2.6.11",
     "vue-cli-plugin-vuetify": "~2.0.5",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.4.3",
-    "vue": "^2.6.11",
-    "vuetify": "^2.2.23"
+    "vuetify": "^2.2.26",
+    "vuetify-loader": "^1.4.3"
   },
   "eslintConfig": {
     "root": true,
