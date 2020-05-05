@@ -662,7 +662,7 @@ export default {
         const node = d3.select(n[i])
         const foreign = node.selectAll('foreignObject')
           .filter((d, i, n) => n[i].parentNode === node.node())
-          .data((d) => [d])
+          .data((d) => [d]) // must rebind the children using selection.data to give them the new data.
           .attr('y', d.data.id !== '0' ? foreignY(d) : (foreignY(d) + d.size[0]/2))
           .attr('width', d.data.size[1] + 11 - xSpacing)
         
