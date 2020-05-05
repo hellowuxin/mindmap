@@ -108,7 +108,7 @@ export default {
     mmdata: {
       handler(newVal) {
         if (this.toRecord) { this.history.record(newVal.data) }
-        this.updateMindmap(newVal.data)
+        this.updateMindmap()
         this.toUpdate = false
         this.$emit('change', this.mmdata.getPuredata())
       },
@@ -251,16 +251,10 @@ export default {
     },
     // 右键拖拽
     rightDragStart() {
-      // eslint-disable-next-line 
-      console.log(d3.event.buttons)
     },
     rightDrag() {
-      // eslint-disable-next-line 
-      console.log(d3.event.buttons)
     },
     rightDragEnd() {
-      // eslint-disable-next-line 
-      console.log(d3.event.button)
     },
     // 键盘
     svgKeyDown() {
@@ -337,6 +331,8 @@ export default {
           .node()
 
         this.editNode(clickedNode)
+      }, (err) => {
+        console.log(err)
       })
     },
     // 节点点击
@@ -458,7 +454,7 @@ export default {
     dragged(a, i, n) { // 拖拽中【待完善】
       const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing } = this
       const draggedNode = n[i]
-      const draggedNodeRect = draggedNode.getElementsByTagName('foreignObject')[0]
+      const fObject = draggedNode.getElementsByTagName('foreignObject')[0]
       // 选中
       const sele = document.getElementById('selectedNode')
       if (sele && !sele.isSameNode(draggedNode)) {
@@ -466,16 +462,16 @@ export default {
       }
       // 拖拽
       // 相对a原本位置的偏移
-      const py = d3.event.x - a.x// x轴偏移的量
-      const px = d3.event.y - a.y// y轴偏移的量
+      const py = d3.event.x - a.x // x轴偏移的量
+      const px = d3.event.y - a.y // y轴偏移的量
       draggedNodeChildrenRenew(a, px, py)
       // 相对a.parent位置的坐标
       let targetY = a.dy + py// x轴坐标
       let targetX = a.dx + px// y轴坐标
       draggedNodeRenew(draggedNode, targetX, targetY)
       // foreignObject偏移
-      targetY += parseInt(draggedNodeRect.getAttribute('x'), 10)
-      targetX += parseInt(draggedNodeRect.getAttribute('y'), 10)
+      targetY += parseInt(fObject.getAttribute('x'), 10)
+      targetX += parseInt(fObject.getAttribute('y'), 10)
 
       // 计算others相对a.parent位置的坐标
       mindmap_g.selectAll('g.node')
@@ -506,7 +502,7 @@ export default {
       draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000)
     },
     dragended(d, i, n) {
-      const { dragback, draw, root } = this
+      const { dragback, root } = this
       const { subject } = d3.event
       const draggedNode = n[i]
       let draggedParentNode = draggedNode.parentNode
@@ -523,8 +519,6 @@ export default {
             this.del(draggedD.data)
             this.add(newParentD.data, draggedD.data)
             draggedNode.parentNode.removeChild(draggedNode)// 必要，使动画看起来更流畅
-            // 绘制图形
-            draw()
           })
         })
         return
@@ -563,7 +557,6 @@ export default {
             this.insert(a.b1, subject.data, 1)
             draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling)
           }
-          draw()
         } else {
           dragback(subject, draggedNode)
         }
@@ -587,8 +580,8 @@ export default {
       return `${
         this.link({
           source: [
-            (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - this.xSpacing,
-            (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,
+            (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - this.xSpacing, // 横坐标
+            (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,// 纵坐标
           ],
           target: [0, d.data.size[0]/2],
           })
@@ -695,7 +688,7 @@ export default {
       exit.filter((d, i, n) => n[i].classList[0] !== 'gButton').remove()
     },
     draw() { // 生成svg
-      const { mindmap_g, appendNode, updateNode, exitNode} = this
+      const { mindmap_g, appendNode, updateNode, exitNode } = this
       const d = [ this.root ]
 
       mindmap_g.selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ''}`)
@@ -708,7 +701,6 @@ export default {
     },
     tree() { // 数据处理
       const { mmdata, ySpacing } = this
-
       const layout = flextree({ spacing: ySpacing })
       const t = layout.hierarchy(mmdata.data[0])
       layout(t)
