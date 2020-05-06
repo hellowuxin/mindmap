@@ -9,7 +9,7 @@
       tabindex="0"
       v-show="showContextMenu"
       :style="{ top: contextMenuY+'px', left: contextMenuX+'px' }"
-      @blur="showContextMenu = false; removeSelectedNode()"
+      @blur="showContextMenu = false"
     >
       <div 
         class="menu-item"
@@ -107,7 +107,7 @@ export default {
     link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
     zoom: d3.zoom(),
     history: new History(),
-    selectedData: {}
+    selectedElement: undefined,
   }),
   watch: {
     mmdata: {
@@ -247,6 +247,7 @@ export default {
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     del(s) {
+      this.selectedElement?.remove() // 使动画流畅
       this.toRecord = true
       this.mmdata.del(s)
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
@@ -310,15 +311,18 @@ export default {
       })
     },
     removeSelectedNode() {
-      const sele = document.getElementById('selectedNode')
+      const sele = this.selectedElement
       if (sele) { sele.removeAttribute('id') }
     },
     selectNode(n) { // 选中节点
       if (n.getAttribute('id') !== 'selectedNode') {
+        this.removeSelectedNode()
         d3.select(n).attr('id', 'selectedNode')
+        this.selectedElement = n
       }
     },
     editNode(n) { // 编辑节点
+      this.removeSelectedNode()
       n.setAttribute('id', 'editing')
       d3.select(n).selectAll('foreignObject')
         .filter((a, b, c) => c[b].parentNode === n)
@@ -367,6 +371,7 @@ export default {
               fdiv.contentEditable = false
             } else {
               flag = true
+              this.removeSelectedNode()
               clickedNode.setAttribute('id', 'editing')
             }
             resolve(flag)
@@ -388,7 +393,6 @@ export default {
       if (!clickedNode.isSameNode(sele)) { // 选中
         this.selectNode(clickedNode)
       }
-      this.selectedData = clickedNode.__data__.data
       // 显示右键菜单
       const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
       this.contextMenuX = d3.event.pageX - svgPosition.x - window.scrollX
@@ -396,11 +400,6 @@ export default {
       this.showContextMenu = true
       this.clearSelection()
       setTimeout(() => { this.$refs.menu.focus() }, 300)
-    },
-    fObjectBlur(d, i, n) { 
-      if (this.showContextMenu === false) {
-        n[i].parentNode.removeAttribute('id')
-      }
     },
     gBtnClick(a, i, n) { // 添加子节点
       if (n[i].style.opacity === '1') {
@@ -413,8 +412,9 @@ export default {
     },
     clickMenu(item) {
       this.showContextMenu = false
+      this.removeSelectedNode()
       if (item.command === 0) { // 删除节点
-        this.del(this.selectedData)
+        this.del(this.selectedElement.__data__.data)
       }
     },
     // 悬浮事件
@@ -524,9 +524,9 @@ export default {
         d3.select(draggedNode).each((draggedD) => {
           d3.select(newParentNode).each((newParentD) => {
             // 处理数据
+            draggedNode.remove()
             this.del(draggedD.data)
-            this.add(newParentD.data, draggedD.data)
-            draggedNode.parentNode.removeChild(draggedNode)// 必要，使动画看起来更流畅
+            this.add(newParentD.data, draggedD.data) 
           })
         })
         return
@@ -610,14 +610,13 @@ export default {
     appendNode(enter) {
       const { 
         gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, 
-        pathId, pathClass, pathColor, path, nest, fdivMouseDown, fObjectBlur
+        pathId, pathClass, pathColor, path, nest, fdivMouseDown
       } = this
 
       const gNode = enter.append('g')
       gNode.attr('class', gClass).attr('transform', gTransform)
 
       const foreign = gNode.append('foreignObject').attr('x', -5).attr('y', foreignY)
-      foreign.on('blur', fObjectBlur)
       const foreignDiv = foreign.append('xhtml:div').attr('contenteditable', false).text((d) => d.data.name)
       foreignDiv.on('blur', updateNodeName).on('keydown', divKeyDown).on('mousedown', fdivMouseDown)
       foreignDiv.each((d, i, n) => {
