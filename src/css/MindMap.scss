@@ -30,6 +30,10 @@ div#mindmap {
       border-color: transparent;
       border-style: solid;
 
+      &:focus {
+        outline: none;
+      }
+      
       div {
         text-align: left;
         border: 1px solid transparent;
@@ -57,7 +61,7 @@ div#mindmap {
       opacity: 0;
       > {
         path {
-          fill: blue;
+          fill: #8685FF;
         }
         rect {
           fill: white;

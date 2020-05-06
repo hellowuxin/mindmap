@@ -163,7 +163,7 @@ export default {
       }
     },
     makeContextMenu(val) {
-      this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.gRightClick : null)
+      this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.fObjectRightClick : null)
     },
     makeDrag(val) {
       if (val) {
@@ -175,7 +175,7 @@ export default {
       }
     },
     makeNodeClick(val) {
-      this.mindmap_g.selectAll('foreignObject').on('click', val ? this.gClick : null)
+      this.mindmap_g.selectAll('foreignObject').on('click', val ? this.fObjectClick : null)
     },
     makeZoom(val) {
       if (val) {
@@ -301,18 +301,16 @@ export default {
         this.updateName(d, editText)
       })
     },
-    removeSelectedNode() {
+    removeSelectedNode() { // 目前不需要
       const sele = document.getElementById('selectedNode')
       if (sele) { sele.removeAttribute('id') }
     },
     selectNode(n) { // 选中节点
       if (n.getAttribute('id') !== 'selectedNode') {
-        this.removeSelectedNode()
         d3.select(n).attr('id', 'selectedNode')
       }
     },
     editNode(n) { // 编辑节点
-      this.removeSelectedNode()
       n.setAttribute('id', 'editing')
       d3.select(n).selectAll('foreignObject')
         .filter((a, b, c) => c[b].parentNode === n)
@@ -334,14 +332,13 @@ export default {
         console.log(err)
       })
     },
-    // 节点点击
     fdivMouseDown() {
       const flag = d3.event.target.getAttribute('contenteditable')
       if (flag === 'true') {
         d3.event.stopPropagation() // 防止触发drag、click
       }
     },
-    gClick(d, i, n) {
+    fObjectClick(d, i, n) {
       const edit = document.getElementById('editing')
       const sele = document.getElementById('selectedNode')
       const clickedNode = n[i].parentNode
@@ -362,7 +359,6 @@ export default {
               fdiv.contentEditable = false
             } else {
               flag = true
-              this.removeSelectedNode()
               clickedNode.setAttribute('id', 'editing')
             }
             resolve(flag)
@@ -374,7 +370,7 @@ export default {
         })
       }
     },
-    gRightClick(d, i, n) {
+    fObjectRightClick(d, i, n) {
       const sele = document.getElementById('selectedNode')
       const edit = document.getElementById('editing')
       const clickedNode = n[i].parentNode
@@ -391,6 +387,9 @@ export default {
       this.showContextMenu = true
       this.clearSelection()
       setTimeout(() => { this.$refs.menu.focus() }, 300)
+    },
+    fObjectBlur(d, i, n) { 
+      n[i].parentNode.removeAttribute('id')
     },
     gBtnClick(a, i, n) { // 添加子节点
       if (n[i].style.opacity === '1') {
@@ -601,12 +600,14 @@ export default {
     appendNode(enter) {
       const { 
         gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, 
-        pathId, pathClass, pathColor, path, nest, fdivMouseDown,
+        pathId, pathClass, pathColor, path, nest, fdivMouseDown, fObjectBlur
       } = this
 
       const gNode = enter.append('g')
       gNode.attr('class', gClass).attr('transform', gTransform)
+
       const foreign = gNode.append('foreignObject').attr('x', -5).attr('y', foreignY)
+      foreign.on('blur', fObjectBlur)
       const foreignDiv = foreign.append('xhtml:div').attr('contenteditable', false).text((d) => d.data.name)
       foreignDiv.on('blur', updateNodeName).on('keydown', divKeyDown).on('mousedown', fdivMouseDown)
       foreignDiv.each((d, i, n) => {
@@ -624,7 +625,6 @@ export default {
       })
       
       const gBtn = gNode.append('g').attr('class', 'gButton').attr('transform', gBtnTransform)
-
       gBtn.append('rect').attr('width', 24).attr('height', 24).attr('rx', 3).attr('ry', 3)
       gBtn.append('path').attr('d', 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z')
       
