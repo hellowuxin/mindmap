@@ -9,7 +9,7 @@
       tabindex="0"
       v-show="showContextMenu"
       :style="{ top: contextMenuY+'px', left: contextMenuX+'px' }"
-      @blur="showContextMenu = false"
+      @blur="showContextMenu = false; removeSelectedNode()"
     >
       <div 
         class="menu-item"
@@ -80,7 +80,7 @@ export default {
     mmStyle() {
       return {
         width: this.width ? `${this.width}px` : '100%',
-        height: this.height ? `${this.height}px` : '100%',
+        height: this.height ? `${this.height}px` : '',
       }
     },
     svgClass() {
@@ -309,7 +309,7 @@ export default {
         this.updateName(d, editText)
       })
     },
-    removeSelectedNode() { // 目前不需要
+    removeSelectedNode() {
       const sele = document.getElementById('selectedNode')
       if (sele) { sele.removeAttribute('id') }
     },
@@ -398,7 +398,9 @@ export default {
       setTimeout(() => { this.$refs.menu.focus() }, 300)
     },
     fObjectBlur(d, i, n) { 
-      n[i].parentNode.removeAttribute('id')
+      if (this.showContextMenu === false) {
+        n[i].parentNode.removeAttribute('id')
+      }
     },
     gBtnClick(a, i, n) { // 添加子节点
       if (n[i].style.opacity === '1') {
