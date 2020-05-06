@@ -1,54 +1,11 @@
 <template>
   <v-app>
     <v-content>
-      <v-container fluid>
-        <v-card outlined>
-          <!-- <v-toolbar class="grey lighten-3" flat dense>
-            <v-spacer></v-spacer>
-            <v-btn icon href="https://github.com/hellowuxin/mindmap" target="_blank">
-              <v-icon>mdi-github-circle</v-icon>
-            </v-btn>
-            <v-btn icon disabled @click="showSource = !showSource">
-              <v-icon>mdi-code-tags</v-icon>
-            </v-btn>
-          </v-toolbar>
-          <v-expand-transition>
-            <v-card flat dark tile
-              v-show="showSource"
-            >
-              <v-item-group
-                v-model="onboarding"
-                class="pa-2"
-                mandatory
-              >
-                <v-item
-                  v-for="(item, index) in items"
-                  :key="index"
-                  v-slot:default="{ active, toggle }"
-                >
-                  <v-btn rounded
-                    class="mr-2"
-                    :input-value="active"
-                    @click="toggle"
-                  >
-                    {{ item.title }}
-                  </v-btn>
-                </v-item>
-              </v-item-group>
-              <v-divider></v-divider>
-              <v-window v-model="onboarding">
-                <v-window-item
-                  v-for="n in length"
-                  :key="`card-${n}`"
-                >
-                  <pre class="pa-5"><code>str</code></pre>
-                </v-window-item>
-              </v-window>
-            </v-card>
-          </v-expand-transition> -->
-          <v-sheet>
-            <v-row no-gutters>
-              <v-col md="9" cols="12">
+      <v-container fluid class="fill-height">
+        <v-card outlined class="fill-height" width="100%">
+          <v-sheet class="fill-height">
+            <v-row no-gutters class="fill-height">
+              <v-col md="9" cols="12" class="d-flex flex-column">
                 <div class="d-flex grey lighten-3">
                   <div class="d-flex px-3 title font-weight-regular align-center" 
                     style="height: 48px; width: 100%"
@@ -60,10 +17,9 @@
                   <v-divider vertical></v-divider>
                 </div>
                 <v-divider></v-divider>
-                <div class="d-flex">
+                <div class="d-flex flex-grow-1">
                   <mindmap
-                    v-model="mmdata"
-                    :height="500"
+                    v-model="mmdata"  
                     :gps="options.gps.value"
                     :fitView="options.fitView.value"
                     :draggable="options.draggable.value"
