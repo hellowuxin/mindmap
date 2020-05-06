@@ -28,9 +28,10 @@ import mindmap from '@hellowuxin/mindmap'
 | ---         | ---    | ---       | ---                  |
 | v-model     | Array  | undefined | 设置思维导图数据        |
 | width       | Number | 100%      | 设置组件宽度           |
-| height      | Number | 100%      | 设置组件高度           |
+| height      | Number | undefined | 设置组件高度           |
 | xSpacing    | Number | 80        | 设置节点横向间隔        |
 | ySpacing    | Number | 20        | 设置节点纵向间隔        |
+| strokeWidth | Number | 4         | 设置连线的宽度          |
 | draggable   | Boolean| true      | 设置节点是否可拖拽      |
 | gps         | Boolean| true      | 是否显示居中按钮        |
 | fitView     | Boolean| true      | 是否显示缩放按钮        |

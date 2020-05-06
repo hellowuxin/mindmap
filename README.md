@@ -26,9 +26,10 @@ import mindmap from '@hellowuxin/mindmap'
 | ---         | ---    | ---       | ---                                            |
 | v-model     | Array  | undefined | Set up mindmap data                            |
 | width       | Number | 100%      | Set component width                            |
-| height      | Number | 100%      | Set component height                           |
+| height      | Number | undefined | Set component height                           |
 | xSpacing    | Number | 80        | Set node horizontal spacing                    |
 | ySpacing    | Number | 20        | Set node vertical spacing                      |
+| strokeWidth | Number | 4         | Set the width of the line                      |
 | draggable   | Boolean| true      | Set whether node is draggable                  |
 | gps         | Boolean| true      | Whether to show center button                  |
 | fitView     | Boolean| true      | Whether to show zoom button                    |
