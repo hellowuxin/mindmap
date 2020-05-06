@@ -153,13 +153,13 @@ export default {
       const gBtn = this.mindmap_g.selectAll('.gButton')
 
       if (val) {
-        const { rectTriggerOut, rectTriggerOver, gBtnClick } = this
+        const { mouseLeave, mouseEnter, gBtnClick } = this
 
-        fObject.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut)
-        gBtn.on('mouseover', rectTriggerOver).on('mouseout', rectTriggerOut).on('click', gBtnClick)
+        fObject.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave)
+        gBtn.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave).on('click', gBtnClick)
       } else {
-        fObject.on('mouseover', null).on('mouseout', null)
-        gBtn.on('mouseover', null).on('mouseout', null).on('click', null)
+        fObject.on('mouseenter', null).on('mouseleave', null)
+        gBtn.on('mouseenter', null).on('mouseleave', null).on('click', null)
       }
     },
     makeContextMenu(val) {
@@ -397,7 +397,7 @@ export default {
         const newJSON = { name: '新建节点', children: [] }
         const d = d3.select(n[i].parentNode).data()[0]
         this.add(d.data, newJSON)
-        this.rectTriggerOut(null, i, n)
+        this.mouseLeave(null, i, n)
         this.editNew(newJSON, d.depth+1, n[i].parentNode)
       }
     },
@@ -409,14 +409,14 @@ export default {
       }
     },
     // 悬浮事件
-    rectTriggerOut(d, i, n) {
+    mouseLeave(d, i, n) {
       if (n[i].className.baseVal.includes('gButton')) {
         d3.select(n[i]).style('opacity', 0)
       } else {
         d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0)
       }
     },
-    rectTriggerOver(d, i, n) {
+    mouseEnter(d, i, n) {
       if (n[i].className.baseVal.includes('gButton')) {
         d3.select(n[i]).style('opacity', 1)
       } else {
