@@ -1,6 +1,6 @@
 <template>
   <div ref="mindmap" id="mindmap" :style="mmStyle">
-    <svg ref="svg" tabindex="0">
+    <svg ref="svg" tabindex="0" :class="svgClass">
       <g ref="content" id="content" ></g>
     </svg>
     <div ref="dummy" id="dummy"></div>
@@ -70,6 +70,7 @@ export default {
     nodeClick: { type: Boolean, default: true },
     zoomable: { type: Boolean, default: true },
     showUndo: { type: Boolean, default: true },
+    strokeWidth: { type: Number, default: 4 },
   },
   model: { // 双向绑定
     prop: 'value',
@@ -81,6 +82,9 @@ export default {
         width: this.width ? `${this.width}px` : '100%',
         height: this.height ? `${this.height}px` : '100%',
       }
+    },
+    svgClass() {
+      return `stroke-width-${this.strokeWidth}`
     }
   },
   data: () => ({
@@ -102,7 +106,8 @@ export default {
     easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
     link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
     zoom: d3.zoom(),
-    history: new History()
+    history: new History(),
+    selectedData: {}
   }),
   watch: {
     mmdata: {
@@ -118,7 +123,10 @@ export default {
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
-    xSpacing: function() { this.updateMindmap() },
+    xSpacing: function() { 
+      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      this.updateMindmap() 
+    },
     ySpacing: function() { this.updateMindmap() },
     nodeClick: function(val) { this.makeNodeClick(val) },
     zoomable: function(val) { this.makeZoom(val) },
@@ -380,6 +388,7 @@ export default {
       if (!clickedNode.isSameNode(sele)) { // 选中
         this.selectNode(clickedNode)
       }
+      this.selectedData = clickedNode.__data__.data
       // 显示右键菜单
       const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
       this.contextMenuX = d3.event.pageX - svgPosition.x - window.scrollX
@@ -403,8 +412,7 @@ export default {
     clickMenu(item) {
       this.showContextMenu = false
       if (item.command === 0) { // 删除节点
-        const sele = d3.select('g#selectedNode')
-        sele.each((d) => { this.del(d.data) })
+        this.del(this.selectedData)
       }
     },
     // 悬浮事件
@@ -650,7 +658,7 @@ export default {
     },
     updateNode(update) {
       const { 
-        gClass, gTransform, easePolyInOut, xSpacing, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest
+        gClass, gTransform, easePolyInOut, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest
       } = this
 
       update.interrupt().selectAll('*').interrupt()
@@ -664,7 +672,7 @@ export default {
           .filter((d, i, n) => n[i].parentNode === node.node())
           .data((d) => [d]) // must rebind the children using selection.data to give them the new data.
           .attr('y', d.data.id !== '0' ? foreignY(d) : (foreignY(d) + d.size[0]/2))
-          .attr('width', d.data.size[1] + 11 - xSpacing)
+          
         
         foreign.select('div').text(d.data.name)
         node.select('path')

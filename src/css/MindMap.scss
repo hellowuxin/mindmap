@@ -1,4 +1,5 @@
 $seleColor: rgba($color: blue, $alpha: 0.15);
+$strokeWidths: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
 
 div#mindmap {
   font-size: 14px;
@@ -26,7 +27,7 @@ div#mindmap {
     foreignObject {
       cursor: default;
       border-radius: 3px;
-      border-width: 3px;
+      border-width: 2px;
       border-color: transparent;
       border-style: solid;
 
@@ -71,10 +72,17 @@ div#mindmap {
       }
     }
 
+    @each $sw in $strokeWidths {
+      &.stroke-width-#{$sw} {
+        path {
+          stroke-width: $sw;
+        }
+      }
+    }
+    
     path {
       fill: none;
       stroke-linecap: round;
-      stroke-width: 4;
     }
 
     #selectedNode:not(.depth_0) > foreignObject {

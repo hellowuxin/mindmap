@@ -31,6 +31,7 @@
                     :showUndo="options.showUndo.value"
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
+                    :strokeWidth="strokeWidth"
                   ></mindmap>
                   <v-divider vertical></v-divider>
                 </div>
@@ -50,6 +51,17 @@
                       v-model="opt.value"
                       :label="key"
                     ></v-switch>
+                  </v-col>
+                  <v-col class="pb-0" cols="12">
+                    <v-slider
+                      hide-details 
+                      v-model="strokeWidth"
+                      label="strokeWidth"
+                      :thumb-size="20"
+                      thumb-label
+                      min="1"
+                      max="10"
+                    ></v-slider>
                   </v-col>
                   <v-col class="pb-0" cols="12">
                     <v-slider
@@ -109,6 +121,7 @@ export default {
     },
     xSpacing: 80,
     ySpacing: 20,
+    strokeWidth: 4,
   }),
   mounted() {
   }
