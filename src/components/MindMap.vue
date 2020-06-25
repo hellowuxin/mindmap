@@ -242,6 +242,8 @@ export default {
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     insert(dPosition, d, i = 0) {
+      // 尝试优化动画效果
+      // this.selectedElement.insertAdjacentElement('afterend', this.initG(dPosition.id.length-1))
       this.toRecord = true
       this.mmdata.insert(dPosition, d, i)
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
@@ -606,6 +608,9 @@ export default {
             (exit) => this.exitNode(exit)
           )
       }
+    },
+    initG() {
+      d3.create('g').data()
     },
     appendNode(enter) {
       const { 
