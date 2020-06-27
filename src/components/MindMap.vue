@@ -48,10 +48,11 @@
       <div class="content">
         <div class="exportTo">
           <div class="optionList">
-            <div :class="`option ${index===selectedOption ? 'select' : ''}`" 
+            <div 
+              :class="`option ${index===selectedOption ? 'select' : ''} ${opt.disabled ? 'disabled' : ''}`" 
               v-for="(opt, index) in optionList"
               :key="index"
-              @click="selectedOption=index"
+              @click="opt.disabled ? '' : selectedOption=index"
             >
               <div :class="`icon ${opt.color}`">
                 <i :class="opt.icon"></i>
@@ -59,9 +60,7 @@
               <div class="text">{{ opt.title }}</div>
             </div>
           </div>
-          <div class="optionTip">
-            {{ optionTip }}
-          </div>
+          <div class="optionTip">{{ optionTip }}</div>
           <div class="action">
             <div class="spacer"></div>
             <button class="cancel" @click="showPopUps=false">取消</button>
@@ -126,7 +125,7 @@ export default {
     contextMenuItems: [{ title: '删除节点', command: 0 }],
     optionList: [
       { title: 'JSON', icon: 'code-json', tip: '创建一个JSON格式的文本文件', color: 'purpleOpt' },
-      { title: '图像', icon: 'image', tip: '创建一个PNG格式的图像文件', color: 'greenOpt' },
+      { title: '图像', icon: 'image', tip: '创建一个PNG格式的图像文件', color: 'greenOpt', disabled: true },
       { title: 'Markdown', icon: 'markdown', tip: '创建一个Markdown格式的文本文件', color: 'grassOpt' }
     ],
     selectedOption: 0,

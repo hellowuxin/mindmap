@@ -253,6 +253,10 @@ div#mindmap {
             color: #747474;
 
             &.select { background-color: #E8E8E8; }
+            &.disabled {
+              cursor: not-allowed;
+              .icon { background-color: rgba(0,0,0,.12)!important; }
+            }
 
             .icon {  
               padding: 2px;
