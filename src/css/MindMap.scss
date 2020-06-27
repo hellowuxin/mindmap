@@ -1,6 +1,60 @@
 $seleColor: rgba($color: blue, $alpha: 0.15);
 $strokeWidths: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
 
+button:focus { outline: none; }
+
+
+button.icon {
+  position: relative;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  color: #3f51b5;
+
+  &::before {
+    background-color: currentColor;
+    border-radius: inherit;
+    bottom: 0;
+    color: inherit;
+    content: "";
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  &:hover::before { opacity: 0.1; }
+
+  &.disabled {
+    cursor: default;
+    &:hover::before { opacity: 0; }
+  }
+
+  i {
+    width: 24px;
+    height: 24px;
+
+    &.gps { background-image: url(../../public/icons/crosshairs-gps.png); }
+    &.fitView { background-image: url(../../public/icons/fit-to-page-outline.png); }
+    &.download { background-image: url(../../public/icons/download.png); }
+    &.undo { background-image: url(../../public/icons/undo.png); }
+    &.redo { background-image: url(../../public/icons/redo.png); }
+    &.close { background-image: url(../../public/icons/close.png); }
+
+  }
+}
+
 div#mindmap {
   font-size: 14px;
   position: relative;
@@ -140,92 +194,116 @@ div#mindmap {
     }
   }
   
-  div.button {
+  div.buttonList {
     position: absolute;
   
-    &.right-bottom {
+    &.right-bottom { bottom: 0; right: 0; }
+    &.top-right { top: 0; right: 0; display: flex; flex-direction: row; }
+
+    i { filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%); }
+
+    button.icon.disabled {
+      i { filter: invert(85%) sepia(20%) saturate(0%) hue-rotate(125deg) brightness(86%) contrast(93%); }
+    }
+  }
+
+  div.pop-ups {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    div.layer {
+      position: absolute;
+      left: 0;
+      top: 0;
       bottom: 0;
       right: 0;
+      
+      opacity: 0.46;
+      background-color: rgb(33, 33, 33);
     }
 
-    &.top-right {
-      top: 0;
-      right: 0;
-      display: flex;
-      flex-direction: row;
-    }
-
-    button.icon {
+    .content {
       position: relative;
-      cursor: pointer;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-repeat: no-repeat;
-      background-color: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      border: 0;
-      color: #3f51b5;
 
-      &::before {
-        background-color: currentColor;
-        border-radius: inherit;
-        bottom: 0;
-        color: inherit;
-        content: "";
-        left: 0;
-        opacity: 0;
-        pointer-events: none;
-        position: absolute;
-        right: 0;
-        top: 0;
-        transition: opacity 0.2s cubic-bezier(0.4, 0, 0.6, 1);
-      }
+      div.exportTo {
+        background-color: #ECECEC;
+        border-radius: 4px;
 
-      &:focus {
-        outline: none;
-      }
+        .optionList {
+          padding: 5px;
+          background-color: white;
+          border-top-left-radius: inherit;
+          border-top-right-radius: inherit;
+          
+          
+          .option {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #E8E8E8;
+            width: 74px;
+            height: 74px;
+            border-radius: 4px;
+            color: #747474;
 
-      &:hover::before {
-        opacity: 0.1;
-      }
+            .icon {
+              background-color: #8685FF;
+              padding: 5px;
+              border-radius: inherit;
+              margin-bottom: 10px;
 
-      &.disabled {
-        cursor: default;
+              i {
+                display: block;
+                width: 24px;
+                height: 24px;
         
-        &:hover::before {
-          opacity: 0;
+                &.code-json {
+                  background-image: url(../../public/icons/code-json.png);
+                }
+              }
+            }
+
+            .text {
+              font-size: 12px;
+            }
+          }
         }
 
-        i { filter: invert(85%) sepia(20%) saturate(0%) hue-rotate(125deg) brightness(86%) contrast(93%); }
-      }
-
-      i {
-        width: 24px;
-        height: 24px;
-        filter: invert(25%) sepia(40%) saturate(5050%) hue-rotate(227deg) brightness(78%) contrast(74%);
-
-        &.gps {
-          background-image: url(../../public/icons/crosshairs-gps.png);
+        .optionTip {
+          padding: 10px 30px;
+          border-top: 1px solid #DDDDDE;
+          border-bottom: 1px solid #DDDDDE;
         }
 
-        &.fitView {
-          background-image: url(../../public/icons/fit-to-page-outline.png);
-        }
+        .action {
+          padding: 10px;
+          display: flex;
 
-        &.download {
-          background-image: url(../../public/icons/download.png);
-        }
+          .spacer {
+            flex-grow: 1;
+          }
 
-        &.undo {
-          background-image: url(../../public/icons/undo.png);
-        }
+          button {
+            height: 24px;
+            width: 64px;
+            margin: 0 5px;
+            background-color: #3C89FD;
+            color: white;
+            border-radius: 4px;
 
-        &.redo {
-          background-image: url(../../public/icons/redo.png);
+            &.cancel {
+              background-color: white;
+              color: black;
+            }
+          }
         }
       }
     }

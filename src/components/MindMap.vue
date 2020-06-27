@@ -20,18 +20,18 @@
         <div>{{ item.title }}</div>
       </div>
     </div>
-    <div class="button right-bottom">
+    <div class="buttonList right-bottom">
       <button v-show="gps" class="icon" ref="gps" type="button" @click="makeCenter()">
         <i class="gps"></i>
       </button>
       <button v-show="fitView" class="icon" ref="fitView" type="button" @click="fitContent()">
         <i class="fitView"></i>
       </button>
-      <button v-show="download" class="icon" ref="download" type="button" @click="exportImage()">
+      <button v-show="download" class="icon" ref="download" type="button" @click="showPopUps=true">
         <i class="download"></i>
       </button>
     </div>
-    <div class="button top-right">
+    <div class="buttonList top-right">
       <button v-show="showUndo" class="icon" :class="{disabled: !canUndo()}" ref="undo" 
         type="button" @click="canUndo() ? undo() : null"
       >
@@ -42,6 +42,29 @@
       >
         <i class="redo"></i>
       </button>
+    </div>
+    <div class="pop-ups" v-show="showPopUps">
+      <div class="layer"></div>
+      <div class="content">
+        <div class="exportTo">
+          <div class="optionList">
+            <div class="option">
+              <div class="icon">
+                <i class="code-json"></i>
+              </div>
+              <div class="text">JSON</div>
+            </div>
+          </div>
+          <div class="optionTip">
+            <div>创建一个JSON格式的文件</div>
+          </div>
+          <div class="action">
+            <div class="spacer"></div>
+            <button class="cancel" @click="showPopUps=false">取消</button>
+            <button>导出</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -63,7 +86,7 @@ export default {
     draggable: { type: Boolean, default: true },
     gps: { type: Boolean, default: true },
     fitView: { type: Boolean, default: true },
-    download: { type: Boolean, default: false }, // 待实现
+    download: { type: Boolean, default: true }, // 待实现
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
@@ -94,6 +117,7 @@ export default {
     mmdata: {}, // 思维导图数据
     root: '', // 包含位置信息的mmdata
     showContextMenu: false,
+    showPopUps: false,
     contextMenuX: 0,
     contextMenuY: 0,
     contextMenuItems: [
@@ -203,7 +227,7 @@ export default {
       const next = this.history.redo()
       this.mmdata = new JSONData(next)
     },
-    exportImage() { // 导出png：待解决
+    exportTo() { // 导出至
     },
     async makeCenter() { // 居中
       await d3.transition().end().then(() => {
