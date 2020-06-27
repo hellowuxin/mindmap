@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-content>
+    <v-main>
       <v-container fluid class="fill-height">
         <v-card outlined class="fill-height" width="100%">
           <v-sheet class="fill-height">
@@ -87,7 +87,7 @@
           </v-sheet>
         </v-card>
       </v-container>
-    </v-content>
+    </v-main>
   </v-app>
 </template>
 

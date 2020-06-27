@@ -45,13 +45,12 @@ button.icon {
     width: 24px;
     height: 24px;
 
-    &.gps { background-image: url(../../public/icons/crosshairs-gps.png); }
-    &.fitView { background-image: url(../../public/icons/fit-to-page-outline.png); }
-    &.download { background-image: url(../../public/icons/download.png); }
-    &.undo { background-image: url(../../public/icons/undo.png); }
-    &.redo { background-image: url(../../public/icons/redo.png); }
-    &.close { background-image: url(../../public/icons/close.png); }
-
+    &.gps { background-image: url(../../public/icons/24px/crosshairs-gps.png); }
+    &.fitView { background-image: url(../../public/icons/24px/fit-to-page-outline.png); }
+    &.download { background-image: url(../../public/icons/24px/download.png); }
+    &.undo { background-image: url(../../public/icons/24px/undo.png); }
+    &.redo { background-image: url(../../public/icons/24px/redo.png); }
+    &.close { background-image: url(../../public/icons/24px/close.png); }
   }
 }
 
@@ -85,9 +84,7 @@ div#mindmap {
       border-color: transparent;
       border-style: solid;
 
-      &:focus {
-        outline: none;
-      }
+      &:focus { outline: none; }
       
       div {
         text-align: left;
@@ -235,39 +232,45 @@ div#mindmap {
       div.exportTo {
         background-color: #ECECEC;
         border-radius: 4px;
+        width: min-content;
 
         .optionList {
           padding: 5px;
           background-color: white;
           border-top-left-radius: inherit;
           border-top-right-radius: inherit;
-          
+          display: flex;
           
           .option {
+            cursor: pointer;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #E8E8E8;
-            width: 74px;
-            height: 74px;
+            width: 84px;
+            height: 84px;
             border-radius: 4px;
             color: #747474;
 
-            .icon {
-              background-color: #8685FF;
-              padding: 5px;
-              border-radius: inherit;
+            &.select { background-color: #E8E8E8; }
+
+            .icon {  
+              padding: 2px;
+              border-radius: 6px;
               margin-bottom: 10px;
+
+              &.purpleOpt { background-color: #C38EFC; }
+              &.greenOpt { background-color: #4BD964; }
+              &.grassOpt { background-color: #97D439; }
 
               i {
                 display: block;
-                width: 24px;
-                height: 24px;
+                width: 36px;
+                height: 36px;
         
-                &.code-json {
-                  background-image: url(../../public/icons/code-json.png);
-                }
+                &.code-json { background-image: url(../../public/icons/36px/code-json.png); }
+                &.image { background-image: url(../../public/icons/36px/image.png); }
+                &.markdown { background-image: url(../../public/icons/36px/markdown.png); }
               }
             }
 

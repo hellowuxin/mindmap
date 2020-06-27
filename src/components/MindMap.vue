@@ -48,15 +48,19 @@
       <div class="content">
         <div class="exportTo">
           <div class="optionList">
-            <div class="option">
-              <div class="icon">
-                <i class="code-json"></i>
+            <div :class="`option ${index===selectedOption ? 'select' : ''}`" 
+              v-for="(opt, index) in optionList"
+              :key="index"
+              @click="selectedOption=index"
+            >
+              <div :class="`icon ${opt.color}`">
+                <i :class="opt.icon"></i>
               </div>
-              <div class="text">JSON</div>
+              <div class="text">{{ opt.title }}</div>
             </div>
           </div>
           <div class="optionTip">
-            <div>创建一个JSON格式的文件</div>
+            {{ optionTip }}
           </div>
           <div class="action">
             <div class="spacer"></div>
@@ -106,9 +110,8 @@ export default {
         height: this.height ? `${this.height}px` : '',
       }
     },
-    svgClass() {
-      return `stroke-width-${this.strokeWidth}`
-    }
+    svgClass() { return `stroke-width-${this.strokeWidth}` },
+    optionTip() { return this.optionList[this.selectedOption].tip }
   },
   data: () => ({
     toRecord: true, // 判断是否需要记录mmdata的数据快照
@@ -120,9 +123,13 @@ export default {
     showPopUps: false,
     contextMenuX: 0,
     contextMenuY: 0,
-    contextMenuItems: [
-      { title: '删除节点', command: 0 },
+    contextMenuItems: [{ title: '删除节点', command: 0 }],
+    optionList: [
+      { title: 'JSON', icon: 'code-json', tip: '创建一个JSON格式的文本文件', color: 'purpleOpt' },
+      { title: '图像', icon: 'image', tip: '创建一个PNG格式的图像文件', color: 'greenOpt' },
+      { title: 'Markdown', icon: 'markdown', tip: '创建一个Markdown格式的文本文件', color: 'grassOpt' }
     ],
+    selectedOption: 0,
     mindmap_svg: Object,
     mindmap_g: Object,
     dummy: Object,
