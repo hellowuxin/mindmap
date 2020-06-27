@@ -64,7 +64,7 @@
           <div class="action">
             <div class="spacer"></div>
             <button class="cancel" @click="showPopUps=false">取消</button>
-            <button>导出</button>
+            <button @click="exportTo()">导出</button>
           </div>
         </div>
       </div>
@@ -233,7 +233,24 @@ export default {
       const next = this.history.redo()
       this.mmdata = new JSONData(next)
     },
+    downloadFile(content, filename) {
+      const eleLink = document.createElement('a');
+      eleLink.download = filename;
+      eleLink.style.display = 'none';
+      // 字符内容转变成blob地址
+      const blob = new Blob([content]);
+      eleLink.href = URL.createObjectURL(blob);
+      // 触发点击
+      document.body.appendChild(eleLink);
+      eleLink.click();
+      // 然后移除
+      document.body.removeChild(eleLink);
+    },
     exportTo() { // 导出至
+      if (this.selectedOption === 0) { // JSON
+        const content = this.mmdata.getPuredata()
+        this.downloadFile(JSON.stringify(content, null, 2),'test.json')
+      }
     },
     async makeCenter() { // 居中
       await d3.transition().end().then(() => {
