@@ -88,8 +88,7 @@ export default {
 
 ### 键盘事件
 
-<kbd>⇥</kbd>、<kbd>⏎</kbd>、<kbd>⌫</kbd>、<kbd>⌘+z</kbd>、<kbd>⌘+y</kbd>
-
+⇥、⏎、⌫、⌘+z、⌘+y
 
 ## 待解决
 
