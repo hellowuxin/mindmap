@@ -84,6 +84,10 @@ export default {
 </script>
 ```
 
+## Keyboard Event
+
+<kbd>⇥ tab</kbd>、<kbd>⏎ enter</kbd>、<kbd>⌫ backspace</kbd>、<kbd>⌘ cmd</kbd>+<kbd>z</kbd>、<kbd>⌘ cmd</kbd>+<kbd>y</kbd>
+
 ## Todo
 
 - [ ] Export multiple formats
