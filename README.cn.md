@@ -86,9 +86,9 @@ export default {
 </script>
 ```
 
-### 键盘事件
+## 键盘事件
 
-⇥、⏎、⌫、⌘+z、⌘+y
+<kbd>⇥ tab</kbd>、<kbd>⏎ enter</kbd>、<kbd>⌫ backspace</kbd>、<kbd>⌘ cmd</kbd>+<kbd>z</kbd>、<kbd>⌘ cmd</kbd>+<kbd>y</kbd>
 
 ## 待解决
 
