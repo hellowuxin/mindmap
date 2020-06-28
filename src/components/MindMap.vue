@@ -250,15 +250,15 @@ export default {
     exportTo() { // 导出至
       const data = this.mmdata.getPuredata()
       let content = ''
-      let filename = ''
+      let filename = data[0].name
       switch (this.selectedOption) {
         case 0: // JSON
           content = JSON.stringify(data, null, 2)
-          filename = 'test.json'
+          filename += '.json'
           break
         case 2: // Markdown
           content = toMarkdown(data)
-          filename = 'test.md'
+          filename += '.md'
           break
         default:
           break
