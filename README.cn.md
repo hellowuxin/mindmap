@@ -88,7 +88,8 @@ export default {
 
 ### 键盘事件
 
-<kbd>tab</kbd>、<kbd>enter</kbd>、<kbd>backspace</kbd>、<kbd>metaKey+z</kbd>
+<kbd>⇥</kbd>、<kbd>⏎</kbd>、<kbd>⌫</kbd>、<kbd>⌘+z</kbd>、<kbd>⌘+y</kbd>
+
 
 ## 待解决
 
