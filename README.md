@@ -2,6 +2,8 @@
 
 # Mindmap Vue Component
 
+![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
+
 > A mind map Vue component inspired by [MindNode](https://mindnode.com), based on d3.js  
 > The functions currently implemented include editing, dragging, zooming, undoing, and context menu ...
 
@@ -83,6 +85,10 @@ export default {
 }
 </script>
 ```
+
+## Keyboard Event
+
+<kbd>⇥ tab</kbd>、<kbd>⏎ enter</kbd>、<kbd>⌫ backspace</kbd>、<kbd>⌘ cmd</kbd>+<kbd>z</kbd>、<kbd>⌘ cmd</kbd>+<kbd>y</kbd>
 
 ## Todo
 

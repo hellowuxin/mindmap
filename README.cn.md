@@ -86,6 +86,10 @@ export default {
 </script>
 ```
 
+## 键盘事件
+
+<kbd>⇥ tab</kbd>、<kbd>⏎ enter</kbd>、<kbd>⌫ backspace</kbd>、<kbd>⌘ cmd</kbd>+<kbd>z</kbd>、<kbd>⌘ cmd</kbd>+<kbd>y</kbd>
+
 ## 待解决
 
 - [ ] 导出多种格式
