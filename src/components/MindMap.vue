@@ -64,7 +64,7 @@
           <div class="action">
             <div class="spacer"></div>
             <button class="cancel" @click="showPopUps=false">取消</button>
-            <button @click="exportTo()">导出</button>
+            <button @click="exportTo(); showPopUps=false">导出</button>
           </div>
         </div>
       </div>
@@ -77,6 +77,7 @@ import * as d3 from '../js/d3'
 import { flextree } from 'd3-flextree'
 import JSONData from '../js/JSONData'
 import History from '../js/History'
+import toMarkdown from '../js/toMarkdown'
 
 export default {
   name: 'mindmap',
@@ -247,10 +248,22 @@ export default {
       document.body.removeChild(eleLink);
     },
     exportTo() { // 导出至
-      if (this.selectedOption === 0) { // JSON
-        const content = this.mmdata.getPuredata()
-        this.downloadFile(JSON.stringify(content, null, 2),'test.json')
+      const data = this.mmdata.getPuredata()
+      let content = ''
+      let filename = ''
+      switch (this.selectedOption) {
+        case 0: // JSON
+          content = JSON.stringify(data, null, 2)
+          filename = 'test.json'
+          break
+        case 2: // Markdown
+          content = toMarkdown(data)
+          filename = 'test.md'
+          break
+        default:
+          break
       }
+      this.downloadFile(content, filename)
     },
     async makeCenter() { // 居中
       await d3.transition().end().then(() => {
