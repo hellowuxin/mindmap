@@ -339,10 +339,10 @@ export default {
       const keyName = event.key
       // 针对导图的操作
       if (event.metaKey) {
-        if (keyName === 'z') {
+        if (keyName === 'z') { // 撤销
           d3.event.preventDefault()
           this.undo()
-        } else if (keyName === 'y') {
+        } else if (keyName === 'y') { // 重做
           d3.event.preventDefault()
           this.redo()
         }
