@@ -9,7 +9,7 @@ function isEqualJSON(a, b) { // 判断a，b是否完全一致
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
-function breadthTraverse2(d, c) { // 广度遍历添加颜色
+function deepTraverse(d, c) { // 深度遍历添加颜色
   for (let index = 0; index < d.length; index++) {
     const dChild = d[index]
     if (!c) {
@@ -21,7 +21,7 @@ function breadthTraverse2(d, c) { // 广度遍历添加颜色
       dChild.color = c
     }
     if (dChild.children) {
-      breadthTraverse2(dChild.children, dChild.color)
+      deepTraverse(dChild.children, dChild.color)
     }
   }
 }
@@ -30,7 +30,7 @@ function initColor(d) {
   for (let index = 0; index < d.length; index++) {
     const dChild = d[index]
     if (dChild.children) {
-      breadthTraverse2(dChild.children) 
+      deepTraverse(dChild.children) 
     }
   }
 }
@@ -44,7 +44,6 @@ function inheritColor(d, c) { // 赋予新颜色，并更新子节点的颜色
     }
   }
 }
-
 class JSONData {
   constructor(d) { // d为数组
     this.data = JSON.parse(JSON.stringify(d))// 深拷贝
