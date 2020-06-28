@@ -32,13 +32,13 @@
       </button>
     </div>
     <div class="buttonList top-right">
-      <button v-show="showUndo" class="icon" :class="{disabled: !canUndo()}" ref="undo" 
-        type="button" @click="canUndo() ? undo() : null"
+      <button v-show="showUndo" class="icon" :class="{disabled: !canUndo}" ref="undo" 
+        type="button" @click="undo()"
       >
         <i class="undo"></i>
       </button>
-      <button v-show="showUndo" class="icon" :class="{disabled: !canRedo()}" ref="redo" 
-        type="button" @click="canRedo() ? redo() : null"
+      <button v-show="showUndo" class="icon" :class="{disabled: !canRedo}" ref="redo" 
+        type="button" @click="redo()"
       >
         <i class="redo"></i>
       </button>
@@ -111,7 +111,9 @@ export default {
       }
     },
     svgClass() { return `stroke-width-${this.strokeWidth}` },
-    optionTip() { return this.optionList[this.selectedOption].tip }
+    optionTip() { return this.optionList[this.selectedOption].tip },
+    canUndo() { return this.history.canUndo },
+    canRedo() { return this.history.canRedo },
   },
   data: () => ({
     toRecord: true, // 判断是否需要记录mmdata的数据快照
@@ -183,8 +185,6 @@ export default {
       this.makeContextMenu(this.contextMenu)
       this.makeNodeClick(this.nodeClick)
     },
-    canUndo() { return this.history.canUndo },
-    canRedo() { return this.history.canRedo },
     // 事件
     makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
     makeNodeAdd(val) {
@@ -225,14 +225,18 @@ export default {
     },
     // button事件
     undo() {
-      this.toRecord = false
-      const prev = this.history.undo()
-      this.mmdata = new JSONData(prev)
+      if (this.canUndo) {
+        this.toRecord = false
+        const prev = this.history.undo()
+        this.mmdata = new JSONData(prev)
+      }
     },
     redo() {
-      this.toRecord = false
-      const next = this.history.redo()
-      this.mmdata = new JSONData(next)
+      if (this.canRedo) {
+        this.toRecord = false
+        const next = this.history.redo()
+        this.mmdata = new JSONData(next)
+      }
     },
     downloadFile(content, filename) {
       const eleLink = document.createElement('a');
@@ -315,9 +319,12 @@ export default {
       this.depthTraverse2(this.mmdata.data, this.getTextSize)
     },
     updateName(d, name) {
-      this.toRecord = true
-      d.data.name = name
-      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      const n = d.data.name
+      if (n !== name) { // 有改变
+        this.toRecord = true
+        d.data.name = name
+        this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      }
     },
     // 右键拖拽
     rightDragStart() {
@@ -328,6 +335,19 @@ export default {
     },
     // 键盘
     svgKeyDown() {
+      const event = d3.event
+      const keyName = event.key
+      // 针对导图的操作
+      if (event.metaKey) {
+        if (keyName === 'z') {
+          d3.event.preventDefault()
+          this.undo()
+        } else if (keyName === 'y') {
+          d3.event.preventDefault()
+          this.redo()
+        }
+      }
+      // 针对节点的操作
       const sele = d3.select('#selectedNode')
       if (!sele.node()) { return }
 
@@ -335,7 +355,6 @@ export default {
       const seleRawData = sele.data()[0].data
       const pNode = sele.node().parentNode
       const newJSON = { name: '新建节点', children: [] }
-      const keyName = d3.event.key
 
       if (keyName === 'Tab') { // 添加子节点
         d3.event.preventDefault()
@@ -371,6 +390,7 @@ export default {
         editP.setAttribute('contenteditable', false)
         this.updateName(d, editText)
       })
+      this.$refs.svg.focus()
     },
     removeSelectedNode() {
       const sele = this.selectedElement
