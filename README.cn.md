@@ -41,6 +41,7 @@ import mindmap from '@hellowuxin/mindmap'
 | nodeClick   | Boolean| true      | 设置节点是否可点击、编辑 |
 | zoomable    | Boolean| true      | 是否可缩放、拖移        |
 | showUndo    | Boolean| true      | 是否显示撤销重做按钮     |
+| download    | Boolean| true      | 是否显示下载按钮        |
 
 ## 样例
 

@@ -90,7 +90,7 @@ export default {
     draggable: { type: Boolean, default: true },
     gps: { type: Boolean, default: true },
     fitView: { type: Boolean, default: true },
-    download: { type: Boolean, default: true }, // 待实现
+    download: { type: Boolean, default: true },
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
