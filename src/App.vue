@@ -32,6 +32,7 @@
                     :xSpacing="xSpacing"
                     :ySpacing="ySpacing"
                     :strokeWidth="strokeWidth"
+                    :download="options.download.value"
                   ></mindmap>
                   <v-divider vertical></v-divider>
                 </div>
@@ -118,6 +119,7 @@ export default {
       nodeClick: { value: true },
       zoomable: { value: true },
       showUndo: { value: true },
+      download: { value: true },
     },
     xSpacing: 80,
     ySpacing: 20,
