@@ -406,22 +406,26 @@ export default {
     editNode(n) { // 编辑节点
       this.removeSelectedNode()
       n.setAttribute('id', 'editing')
-      d3.select(n).selectAll('foreignObject')
-        .filter((a, b, c) => c[b].parentNode === n)
-        .select('div')
-        .attr('contenteditable', true)
+      const fObj = d3.select(n).selectAll('foreignObject').filter((a, b, c) => c[b].parentNode === n)
+      fObj.select('div').attr('contenteditable', true)
+      
+      const fObjPos = fObj.node().getBoundingClientRect()
+      const svgPos = this.mindmap_svg.node().getBoundingClientRect()
+      const overX = fObjPos.right - svgPos.left - svgPos.width
+      if (overX > 0) { // 保持节点可视
+        this.mindmap_svg.call(this.zoom.translateBy, -overX, 0)
+      }
       
       const fdiv = document.querySelector('#editing > foreignObject > div')
       window.getSelection().selectAllChildren(fdiv)
     },
     editNew(newJSON, depth, pNode) { // 聚焦新节点
       d3.transition().end().then(() => {
-        const clickedNode = d3.select(pNode)
-          .selectAll(`g.node.depth_${depth}`)
+        const node = d3.select(pNode).selectAll(`g.node.depth_${depth}`)
           .filter((b) => b.data === newJSON)
           .node()
 
-        this.editNode(clickedNode)
+        this.editNode(node)
       }, (err) => {
         console.log(err)
       })
@@ -476,9 +480,9 @@ export default {
         this.selectNode(clickedNode)
       }
       // 显示右键菜单
-      const svgPosition = this.mindmap_svg.node().getBoundingClientRect()
-      this.contextMenuX = d3.event.pageX - svgPosition.x - window.scrollX
-      this.contextMenuY = d3.event.pageY - svgPosition.y - window.scrollY
+      const svgPos = this.mindmap_svg.node().getBoundingClientRect()
+      this.contextMenuX = d3.event.pageX - svgPos.left - window.pageXOffset
+      this.contextMenuY = d3.event.pageY - svgPos.top - window.pageYOffset
       this.showContextMenu = true
       this.clearSelection()
       setTimeout(() => { this.$refs.menu.focus() }, 300)
