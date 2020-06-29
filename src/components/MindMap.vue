@@ -407,17 +407,26 @@ export default {
       this.removeSelectedNode()
       n.setAttribute('id', 'editing')
       const fObj = d3.select(n).selectAll('foreignObject').filter((a, b, c) => c[b].parentNode === n)
+      this.focusNode(fObj)
       fObj.select('div').attr('contenteditable', true)
-      
-      const fObjPos = fObj.node().getBoundingClientRect()
-      const svgPos = this.mindmap_svg.node().getBoundingClientRect()
-      const overX = fObjPos.right - svgPos.left - svgPos.width
-      if (overX > 0) { // 保持节点可视
-        this.mindmap_svg.call(this.zoom.translateBy, -overX, 0)
-      }
-      
       const fdiv = document.querySelector('#editing > foreignObject > div')
       window.getSelection().selectAllChildren(fdiv)
+    },
+    focusNode(fObj) { // 使节点处于可视区域
+      const { k } = d3.zoomTransform(this.$refs.svg)// 放大缩小倍数
+      const fObjPos = fObj.node().getBoundingClientRect()
+      const svgPos = this.mindmap_svg.node().getBoundingClientRect()
+
+      const r = fObjPos.right - svgPos.right
+      const b = fObjPos.bottom - svgPos.bottom
+      const l = fObjPos.left - svgPos.left
+      const t = fObjPos.top - svgPos.top
+      const x = (r > 0 && r) || (l < 0 && l)
+      const y = (b > 0 && b) || (t < 0 && t)
+      
+      // 保持节点可视
+      if (x) { this.mindmap_svg.call(this.zoom.translateBy, -x/k, 0) }
+      if (y) { this.mindmap_svg.call(this.zoom.translateBy, 0, -y/k) }
     },
     editNew(newJSON, depth, pNode) { // 聚焦新节点
       d3.transition().end().then(() => {
@@ -443,11 +452,9 @@ export default {
 
       if (!edit) { // 未在编辑
         this.selectNode(clickedNode)
-
-        const fdiv = d3.select(clickedNode).selectAll('foreignObject')
+        const fObj = d3.select(clickedNode).selectAll('foreignObject')
           .filter((a, b, c) => c[b].parentNode === clickedNode)
-          .select('div')
-          .node()
+        const fdiv = fObj.select('div').node()
         fdiv.contentEditable = true
 
         new Promise((resolve) => {
@@ -459,6 +466,7 @@ export default {
               flag = true
               this.removeSelectedNode()
               clickedNode.setAttribute('id', 'editing')
+              this.focusNode(fObj)
             }
             resolve(flag)
           }, 150)
