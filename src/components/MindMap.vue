@@ -111,7 +111,7 @@ export default {
         height: this.height ? `${this.height}px` : '',
       }
     },
-    svgClass() { return `stroke-width-${this.strokeWidth} ${this.spaceKey ? 'grab' : ''}` },
+    svgClass() { return `stroke-width-${this.strokeWidth} ${this.spaceKey && this.zoomable ? 'grab' : ''}` },
     optionTip() { return this.optionList[this.selectedOption].tip },
     canUndo() { return this.history.canUndo },
     canRedo() { return this.history.canRedo },
@@ -176,15 +176,13 @@ export default {
       // 绑定事件
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
-      // todo：使空格+左键可以移动画布
-      this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8])
-        .on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
+      this.mindmapSvgZoom = this.zoom.on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
         .filter(() => 
           (
-            d3.event.ctrlKey // 开启双指捏合，关闭双指滚动
+            d3.event.ctrlKey // 开启双指捏合
             || (this.spaceKey && d3.event.type !== 'wheel') // 空格键+左键可拖移
           ) && !d3.event.button
-        ) 
+        )
       this.makeZoom(this.zoomable)
     },
     initNodeEvent() {
@@ -231,7 +229,21 @@ export default {
     },
     makeZoom(val) {
       if (val) {
-        this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
+        this.mindmap_svg.call(this.mindmapSvgZoom)
+          .on('dblclick.zoom', null)
+          .on('wheel.zoom', () => {
+            const { ctrlKey, deltaY, deltaX } = d3.event
+            d3.event.preventDefault()
+            const current = d3.zoomTransform(this.$refs.svg)
+            if (ctrlKey) { // 缩放
+              current.k = Math.max(current.k - deltaY * 0.01, 0.1)
+              current.k = Math.min(current.k, 8)
+            } else { // 移动
+              current.y = current.y - deltaY
+              current.x = current.x - deltaX
+            }
+            this.mindmap_g.attr('transform', current)
+          })
       } else {
         this.mindmap_svg.on('.zoom', null)
       }
