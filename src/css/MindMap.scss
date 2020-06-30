@@ -77,6 +77,8 @@ div#mindmap {
     outline: none;
     background-color: rgb(238, 238, 243);
 
+    &.grab { cursor: grab; }
+
     foreignObject {
       cursor: default;
       border-radius: 3px;
@@ -151,6 +153,10 @@ div#mindmap {
 
     #editing > foreignObject > div {
       background-color: white;
+    }
+
+    #selectedBox {
+      color: #DADADE;
     }
   }
 

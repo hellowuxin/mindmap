@@ -2,6 +2,7 @@
   <div ref="mindmap" id="mindmap" :style="mmStyle">
     <svg ref="svg" tabindex="0" :class="svgClass">
       <g ref="content" id="content" ></g>
+      <rect v-show="showSelectedBox" id="selectedBox" width='24' height='24'></rect>
     </svg>
     <div ref="dummy" id="dummy"></div>
     <div ref="menu"
@@ -110,12 +111,13 @@ export default {
         height: this.height ? `${this.height}px` : '',
       }
     },
-    svgClass() { return `stroke-width-${this.strokeWidth}` },
+    svgClass() { return `stroke-width-${this.strokeWidth} ${this.spaceKey ? 'grab' : ''}` },
     optionTip() { return this.optionList[this.selectedOption].tip },
     canUndo() { return this.history.canUndo },
     canRedo() { return this.history.canRedo },
   },
   data: () => ({
+    spaceKey: false,
     toRecord: true, // 判断是否需要记录mmdata的数据快照
     toUpdate: true, // 判断是否需要更新mmdata
     dTop: null, // mmdata中纵坐标最高的数据
@@ -123,6 +125,7 @@ export default {
     root: '', // 包含位置信息的mmdata
     showContextMenu: false,
     showPopUps: false,
+    showSelectedBox: false,
     contextMenuX: 0,
     contextMenuY: 0,
     contextMenuItems: [{ title: '删除节点', command: 0 }],
@@ -173,9 +176,15 @@ export default {
       // 绑定事件
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
-      this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
-        this.mindmap_g.attr('transform', d3.event.transform)
-      })
+      // todo：使空格+左键可以移动画布
+      this.mindmapSvgZoom = this.zoom.scaleExtent([0.1, 8])
+        .on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
+        .filter(() => 
+          (
+            d3.event.ctrlKey // 开启双指捏合，关闭双指滚动
+            || (this.spaceKey && d3.event.type !== 'wheel') // 空格键+左键可拖移
+          ) && !d3.event.button
+        ) 
       this.makeZoom(this.zoomable)
     },
     initNodeEvent() {
@@ -186,7 +195,11 @@ export default {
       this.makeNodeClick(this.nodeClick)
     },
     // 事件
-    makeKeyboard(val) { this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null) },
+    makeKeyboard(val) { 
+      this.mindmap_svg
+        .on('keydown', val ? this.svgKeyDown : null)
+        .on('keyup', val ? this.svgKeyUp : null)
+    },
     makeNodeAdd(val) {
       const fObject = this.mindmap_g.selectAll('foreignObject')
       const gBtn = this.mindmap_g.selectAll('.gButton')
@@ -326,18 +339,12 @@ export default {
         this.depthTraverse2(this.mmdata.data, this.getTextSize)
       }
     },
-    // 右键拖拽
-    rightDragStart() {
-    },
-    rightDrag() {
-    },
-    rightDragEnd() {
-    },
     // 键盘
     svgKeyDown() {
       const event = d3.event
       const keyName = event.key
       // 针对导图的操作
+      if (keyName === ' ' && !this.spaceKey) { this.spaceKey = true }
       if (event.metaKey) {
         if (keyName === 'z') { // 撤销
           d3.event.preventDefault()
@@ -373,6 +380,12 @@ export default {
         d3.event.preventDefault()
         this.del(seleRawData)
       }
+    },
+    svgKeyUp() {
+      const event = d3.event
+      const keyName = event.key
+      // 针对导图的操作
+      if (keyName === ' ') { this.spaceKey = false }
     },
     divKeyDown() {
       if (d3.event.key === 'Enter') {
@@ -559,9 +572,7 @@ export default {
       const fObject = n[i]
       // 选中
       const sele = document.getElementById('selectedNode')
-      if (sele && !sele.isSameNode(draggedNode)) {
-        sele.removeAttribute('id')
-      }
+      if (sele && !sele.isSameNode(draggedNode)) { sele.removeAttribute('id') }
       // 拖拽
       // 相对a原本位置的偏移
       const py = d3.event.x - a.x // x轴偏移的量
@@ -872,9 +883,7 @@ export default {
   },
   async mounted() {
     this.init()
-    // this.mindmap_svg.on('mousedown', this.rightDragStart)
-    // this.mindmap_svg.on('mousemove', this.rightDrag)
-    // this.mindmap_svg.on('mouseup', this.rightDragEnd)
+    // this.mindmap_svg.on('wheel', () => { })
     this.addWatch()
 
     await this.makeCenter()
