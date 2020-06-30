@@ -90,6 +90,11 @@ export default {
 
 <kbd>⇥ tab</kbd>、<kbd>⏎ enter</kbd>、<kbd>⌫ backspace</kbd>、<kbd>⌘ cmd</kbd>+<kbd>z</kbd>、<kbd>⌘ cmd</kbd>+<kbd>y</kbd>
 
+## 交互逻辑（待完成）
+
+**鼠标**：space+左键移动、右键菜单、ctrl+滚轮缩放、左键选中
+**触控板**：双指滚动移动、双指菜单、双指捏合缩放、单指选中、
+
 ## 待解决
 
 - [ ] 导出多种格式
