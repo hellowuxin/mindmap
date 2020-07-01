@@ -440,7 +440,7 @@ export default {
     focusNode(fObj) { // 使节点处于可视区域
       const { k } = d3.zoomTransform(this.$refs.svg)// 放大缩小倍数
       const fObjPos = fObj.node().getBoundingClientRect()
-      const svgPos = this.mindmap_svg.node().getBoundingClientRect()
+      const svgPos = this.$refs.svg.getBoundingClientRect()
 
       const r = fObjPos.right - svgPos.right
       const b = fObjPos.bottom - svgPos.bottom
@@ -513,7 +513,7 @@ export default {
         this.selectNode(clickedNode)
       }
       // 显示右键菜单
-      const svgPos = this.mindmap_svg.node().getBoundingClientRect()
+      const svgPos = this.$refs.svg.getBoundingClientRect()
       this.contextMenuX = d3.event.pageX - svgPos.left - window.pageXOffset
       this.contextMenuY = d3.event.pageY - svgPos.top - window.pageYOffset
       this.showContextMenu = true
@@ -891,11 +891,14 @@ export default {
         immediate: true, 
         deep: true, 
       })
-    }
+    },
+    // 左键选中（待完成）
+
   },
   async mounted() {
     this.init()
-    // this.mindmap_svg.on('wheel', () => { })
+    // this.mindmap_svg.on('mousedown', () => { })
+    // this.mindmap_svg.on('mousemove', () => { })
     this.addWatch()
 
     await this.makeCenter()
