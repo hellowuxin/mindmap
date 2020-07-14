@@ -7,10 +7,28 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
+    "test": "jest",
     "lint": "vue-cli-service lint",
     "build-lib": "vue-cli-service build --target lib --name mindmap ./src/components/MindMap.vue"
   },
   "main": "./dist/mindmap.umd.min.js",
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "**/*.{js,vue}",
+      "!**/node_modules/**"
+    ],
+    "coverageReporters": ["html", "text-summary"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "vue"
+    ],
+    "transform": {
+      ".*\\.(vue)$": "vue-jest",
+      "^.+\\.js$": "<rootDir>/node_modules/babel-jest"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -30,13 +48,18 @@
     "@vue/cli-plugin-babel": "^4.4.6",
     "@vue/cli-plugin-eslint": "^4.4.6",
     "@vue/cli-service": "^4.4.6",
+    "@vue/test-utils": "^1.0.3",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.1.0",
     "eslint": "^7.3.1",
     "eslint-plugin-vue": "^6.2.2",
+    "jest": "^26.1.0",
     "sass": "^1.26.9",
     "sass-loader": "^8.0.2",
     "vue": "^2.6.11",
     "vue-cli-plugin-vuetify": "^2.0.6",
+    "vue-jest": "^3.0.6",
     "vue-template-compiler": "^2.6.11",
     "vuetify": "^2.3.2",
     "vuetify-loader": "^1.5.0"

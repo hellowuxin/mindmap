@@ -6,7 +6,7 @@ class History {
   }
 
   get canUndo() { return this.cursor > 0 }
-  get canClear() { return this.snapshots.length }
+  get canClear() { return this.snapshots.length >= 0 }
   get canRedo() { return this.snapshots.length > this.cursor + 1 }
 
   record(snapshot) { // 记录数据快照
