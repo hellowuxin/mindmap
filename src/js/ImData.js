@@ -58,7 +58,7 @@ class ImData {
     return produce(this, (draftState) => draftState)
   }
 
-  getSource(id) {
+  getSource(id = '0') {
     return _getSource(this.findId(id))
   }
 

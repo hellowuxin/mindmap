@@ -146,7 +146,7 @@ export default {
     selectedElement: undefined,
   }),
   watch: {
-    mmdata: function(newVal) {
+    mmdata: function(newVal) { // 不可变数据
       this.toRecord ? this.history.record(newVal) : null
       this.updateMindmap()
       this.toUpdate = false
@@ -157,7 +157,7 @@ export default {
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { 
-      this.depthTraverse2([this.mmdata], this.getTextSize)
+      this.mmdata = this.mmdata.initSize(this.getTextSize)
       this.updateMindmap() 
     },
     ySpacing: function() { this.updateMindmap() },
@@ -270,7 +270,7 @@ export default {
       document.body.removeChild(eleLink);
     },
     exportTo() { // 导出至
-      const { data } = this.mmdata
+      const data = this.mmdata.getSource()
       let content = ''
       let filename = data.name
       switch (this.selectedOption) {
@@ -866,13 +866,9 @@ export default {
         if (dChild.children) { this.depthTraverse2(dChild.children, func) }
       }
     },
-    updateMmdata(d) {
-      let im = new ImData(d)
-      this.mmdata = im.initSize(this.getTextSize)
-    },
     addWatch() {
       this.$watch('value', (newVal) => {
-        this.toUpdate ? this.updateMmdata(newVal[0]) : this.toUpdate = true
+        this.toUpdate ? this.mmdata = new ImData(newVal[0]).initSize(this.getTextSize) : this.toUpdate = true
       }, { immediate: true, deep: true })
     },
     // 左键选中（待完成）
