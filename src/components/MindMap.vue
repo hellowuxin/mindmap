@@ -76,7 +76,7 @@
 <script>
 import * as d3 from '../js/d3'
 import { flextree } from 'd3-flextree'
-import JSONData from '../js/JSONData'
+import ImData from '../js/ImData'
 import History from '../js/History'
 import toMarkdown from '../js/toMarkdown'
 
@@ -146,21 +146,18 @@ export default {
     selectedElement: undefined,
   }),
   watch: {
-    mmdata: {
-      handler(newVal) {
-        if (this.toRecord) { this.history.record(newVal.data) }
-        this.updateMindmap()
-        this.toUpdate = false
-        this.$emit('change', this.mmdata.getPuredata())
-      },
-      deep: true,
+    mmdata: function(newVal) {
+      this.toRecord ? this.history.record(newVal) : null
+      this.updateMindmap()
+      this.toUpdate = false
+      this.$emit('change', [this.mmdata.getSource('0')])
     },
     keyboard: function(val) { this.makeKeyboard(val) },
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { 
-      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      this.depthTraverse2([this.mmdata], this.getTextSize)
       this.updateMindmap() 
     },
     ySpacing: function() { this.updateMindmap() },
@@ -173,13 +170,12 @@ export default {
       this.mindmap_svg = d3.select(this.$refs.svg)
       this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
       this.dummy = d3.select(this.$refs.dummy)
-      // 绑定事件
+      // 绑定svg事件
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
         .filter(() => 
-          (
-            d3.event.ctrlKey // 开启双指捏合
+          ( d3.event.ctrlKey // 开启双指捏合
             || (this.spaceKey && d3.event.type !== 'wheel') // 空格键+左键可拖移
           ) && !d3.event.button
         )
@@ -194,17 +190,13 @@ export default {
     },
     // 事件
     makeKeyboard(val) { 
-      this.mindmap_svg
-        .on('keydown', val ? this.svgKeyDown : null)
-        .on('keyup', val ? this.svgKeyUp : null)
+      this.mindmap_svg.on('keydown', val ? this.svgKeyDown : null).on('keyup', val ? this.svgKeyUp : null)
     },
     makeNodeAdd(val) {
       const fObject = this.mindmap_g.selectAll('foreignObject')
       const gBtn = this.mindmap_g.selectAll('.gButton')
-
       if (val) {
         const { mouseLeave, mouseEnter, gBtnClick } = this
-
         fObject.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave)
         gBtn.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave).on('click', gBtnClick)
       } else {
@@ -219,7 +211,10 @@ export default {
       if (val) {
         const { mindmap_g, dragged, dragended } = this
         mindmap_g.selectAll('foreignObject').filter((d) => d.depth !== 0)// 非根节点才可以拖拽
-          .call(d3.drag().container((d, i, n) => n[i].parentNode.parentNode).on('drag', dragged).on('end', dragended))
+          .call(
+            d3.drag().container((d, i, n) => n[i].parentNode.parentNode)
+              .on('drag', dragged).on('end', dragended)
+          )
       } else {
         this.mindmap_g.selectAll('foreignObject').call(d3.drag().on('drag', null).on('end', null))
       }
@@ -252,15 +247,13 @@ export default {
     undo() {
       if (this.canUndo) {
         this.toRecord = false
-        const prev = this.history.undo()
-        this.mmdata = new JSONData(prev)
+        this.mmdata = this.history.undo()
       }
     },
     redo() {
       if (this.canRedo) {
         this.toRecord = false
-        const next = this.history.redo()
-        this.mmdata = new JSONData(next)
+        this.mmdata = this.history.redo()
       }
     },
     downloadFile(content, filename) {
@@ -277,9 +270,9 @@ export default {
       document.body.removeChild(eleLink);
     },
     exportTo() { // 导出至
-      const data = this.mmdata.getPuredata()
+      const { data } = this.mmdata
       let content = ''
-      let filename = data[0].name
+      let filename = data.name
       switch (this.selectedOption) {
         case 0: // JSON
           content = JSON.stringify(data, null, 2)
@@ -327,28 +320,34 @@ export default {
     // 数据操作
     add(dParent, d) {
       this.toRecord = true
-      this.mmdata.add(dParent, d)
-      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      this.mmdata = this.mmdata.add(dParent.id, d).initSize(this.getTextSize, dParent.id)
+      return d
     },
     insert(dPosition, d, i = 0) {
       // 尝试优化动画效果
       // this.selectedElement.insertAdjacentElement('afterend', this.initG(dPosition.id.length-1))
       this.toRecord = true
-      this.mmdata.insert(dPosition, d, i)
-      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      this.mmdata = this.mmdata.insert(dPosition.id, d, i).initSize(this.getTextSize, dPosition.id.slice(0, -2))
+      return d
+    },
+    move(del, insert, i=0) {
+      this.toRecord = true
+      this.mmdata = this.mmdata.move(del.id, insert.id, i)
+    },
+    reparent(p, d) {
+      this.toRecord = true
+      this.mmdata = this.mmdata.reparent(p.id, d.id)
     },
     del(s) {
       this.selectedElement?.remove() // 使动画流畅
       this.toRecord = true
-      this.mmdata.del(s)
-      this.depthTraverse2(this.mmdata.data, this.getTextSize)
+      this.mmdata = this.mmdata.del(s.id)
     },
     updateName(d, name) {
-      const n = d.data.name
-      if (n !== name) { // 有改变
+      const { data } = d // Json
+      if (data.name !== name) { // 有改变
         this.toRecord = true
-        d.data.name = name
-        this.depthTraverse2(this.mmdata.data, this.getTextSize)
+        this.mmdata = this.mmdata.rename(data.id, name).resize(data.id, this.getTextSize(name))
       }
     },
     // 键盘
@@ -365,33 +364,42 @@ export default {
           d3.event.preventDefault()
           this.redo()
         }
-      }
-      // 针对节点的操作
-      const sele = d3.select('#selectedNode')
-      if (!sele.node()) { return }
+      } else { // 针对节点的操作
+        const sele = d3.select('#selectedNode')
+        if (sele.node()) {
+          const seleData = sele.data()[0] // FlexNode
+          const seleDepth = seleData.depth
+          const im = seleData.data
+          const pNode = sele.node().parentNode
 
-      const seleData = sele.data()[0]
-      const seleRawData = sele.data()[0].data
-      const pNode = sele.node().parentNode
-      const newJSON = { name: '新建节点', children: [] }
-
-      if (keyName === 'Tab') { // 添加子节点
-        d3.event.preventDefault()
-        this.add(seleRawData, newJSON)
-        this.editNew(newJSON, seleData.depth+1, pNode)
-      } else if (keyName === 'Enter') { // 添加弟弟节点
-        d3.event.preventDefault()
-        if (pNode.isSameNode(this.$refs.content)) {
-          this.add(seleRawData, newJSON)// 根节点enter时，等效tab
-          this.editNew(newJSON, seleData.depth+1, pNode)
-        } else {
-          this.insert(seleRawData, newJSON, 1)
-          this.editNew(newJSON, seleData.depth, pNode)
+          if (keyName === 'Tab') { // 添加子节点
+            d3.event.preventDefault()
+            this.editNew(
+              this.add(im, { name: '新建节点' }),
+              seleDepth+1,
+              pNode
+            )
+          } else if (keyName === 'Enter') { // 添加弟弟节点
+            d3.event.preventDefault()
+            if (pNode.isSameNode(this.$refs.content)) { // 根节点enter时，等效tab
+              this.editNew(
+                this.add(im, { name: '新建节点' }),
+                seleDepth+1,
+                pNode
+              )
+            } else {
+              this.editNew(
+                this.insert(im, { name: '新建节点' }, 1),
+                seleDepth,
+                pNode
+              )
+            }
+          } else if (keyName === 'Backspace') { // 删除节点
+            d3.event.preventDefault()
+            this.del(im)
+          }
         }
-      } else if (keyName === 'Backspace') { // 删除节点
-        d3.event.preventDefault()
-        this.del(seleRawData)
-      }
+      } 
     },
     svgKeyUp() {
       const event = d3.event
@@ -418,8 +426,8 @@ export default {
       this.$refs.svg.focus()
     },
     removeSelectedNode() {
-      const sele = this.selectedElement
-      if (sele) { sele.removeAttribute('id') }
+      this.selectedElement?.removeAttribute('id')
+      this.selectedElement = null
     },
     selectNode(n) { // 选中节点
       if (n.getAttribute('id') !== 'selectedNode') {
@@ -453,10 +461,10 @@ export default {
       if (x) { this.mindmap_svg.call(this.zoom.translateBy, -x/k, 0) }
       if (y) { this.mindmap_svg.call(this.zoom.translateBy, 0, -y/k) }
     },
-    editNew(newJSON, depth, pNode) { // 聚焦新节点
+    editNew(newD, depth, pNode) { // 聚焦新节点
       d3.transition().end().then(() => {
         const node = d3.select(pNode).selectAll(`g.node.depth_${depth}`)
-          .filter((b) => b.data === newJSON)
+          .filter((b) => b.data.id === newD.id) // b: FlexNode
           .node()
 
         this.editNode(node)
@@ -522,19 +530,18 @@ export default {
     },
     gBtnClick(a, i, n) { // 添加子节点
       if (n[i].style.opacity === '1') {
-        const newJSON = { name: '新建节点', children: [] }
         const d = d3.select(n[i].parentNode).data()[0]
-        this.add(d.data, newJSON)
+        const newD = this.add(d.data, { name: '新建节点' })
         this.mouseLeave(null, i, n)
-        this.editNew(newJSON, d.depth+1, n[i].parentNode)
+        this.editNew(newD, d.depth+1, n[i].parentNode)
       }
     },
     clickMenu(item) {
       this.showContextMenu = false
-      this.removeSelectedNode()
       if (item.command === 0) { // 删除节点
         this.del(this.selectedElement.__data__.data)
       }
+      this.removeSelectedNode()
     },
     // 悬浮事件
     mouseLeave(d, i, n) {
@@ -628,64 +635,55 @@ export default {
     },
     dragended(d, i, n) {
       const { dragback, root } = this
-      const { subject } = d3.event
+      const { subject } = d3.event // FlexNode
       const draggedNode = n[i].parentNode
-      let draggedParentNode = draggedNode.parentNode
-      if (draggedParentNode.isEqualNode(this.$refs.content)) { // 拖拽的是根节点时复原
-        dragback(subject, draggedNode)
-        return
-      }
       const newParentNode = document.getElementById('newParentNode')
       if (newParentNode) { // 建立新的父子关系
         newParentNode.removeAttribute('id')
         d3.select(draggedNode).each((draggedD) => {
           d3.select(newParentNode).each((newParentD) => {
-            // 处理数据
             draggedNode.remove()
-            this.del(draggedD.data)
-            this.add(newParentD.data, draggedD.data) 
+            this.reparent(newParentD.data, draggedD.data)
           })
         })
-        return
-      }
-      if (Math.abs(subject.px) < root.nodeHeight) { // 平移距离不足以调换兄弟节点顺序时复原
+      } else if (Math.abs(subject.px) < root.nodeHeight) { // 平移距离不足以调换兄弟节点顺序时复原
         dragback(subject, draggedNode)
-        return
-      }
-      // 调换兄弟节点顺序
-      draggedParentNode = d3.select(draggedParentNode)
-      draggedParentNode.each((d) => {
-        const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${d.depth + 1}`).filter((a, i, n) => !draggedNode.isSameNode(n[i]))
-        if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
-          dragback(subject, draggedNode)
-          return
-        }
-        const a = { x0: Infinity, x1: -Infinity }
-        draggedBrotherNodes.each((b, i, n) => {
-          if (b.x > subject.x && b.x > a.x1 && b.x < (subject.x + subject.px)) { // 新哥哥节点
-            a.x1 = b.x
-            a.b1 = b.data
-            a.n1 = n[i]
+      } else { // 调换兄弟节点顺序
+        const draggedParentNode = d3.select(draggedNode.parentNode)
+        draggedParentNode.each((d) => {
+          const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${d.depth + 1}`).filter((a, i, n) => !draggedNode.isSameNode(n[i]))
+          if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
+            dragback(subject, draggedNode)
+          } else {
+            const a = { x0: Infinity, x1: -Infinity }
+            draggedBrotherNodes.each((b, i, n) => {
+              if (b.x > subject.x && b.x > a.x1 && b.x < (subject.x + subject.px)) { // 新哥哥节点
+                a.x1 = b.x
+                a.b1 = b.data
+                a.n1 = n[i]
+              }
+              if (b.x < subject.x && b.x < a.x0 && b.x > (subject.x + subject.px)) { // 新弟弟节点
+                a.x0 = b.x
+                a.b0 = b.data
+                a.n0 = n[i]
+              }
+            })
+            if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
+              const sdata = subject.data
+              if (a.b0) { // 插入在兄弟节点前面
+                this.move(sdata, a.b0)
+                draggedNode.parentNode.insertBefore(draggedNode, a.n0)
+              } else if (a.b1) { // 插入在兄弟节点后面
+                this.move(sdata, a.b1, 1)
+                draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling)
+              }
+            } else {
+              dragback(subject, draggedNode)
+            }
           }
-          if (b.x < subject.x && b.x < a.x0 && b.x > (subject.x + subject.px)) { // 新弟弟节点
-            a.x0 = b.x
-            a.b0 = b.data
-            a.n0 = n[i]
-          }
+          
         })
-        if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
-          this.del(subject.data)
-          if (a.b0) { // 插入在兄弟节点前面
-            this.insert(a.b0, subject.data)
-            draggedNode.parentNode.insertBefore(draggedNode, a.n0)
-          } else if (a.b1) { // 插入在兄弟节点后面
-            this.insert(a.b1, subject.data, 1)
-            draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling)
-          }
-        } else {
-          dragback(subject, draggedNode)
-        }
-      })
+      }
     },
     // 绘制
     updateMindmap() {
@@ -713,16 +711,14 @@ export default {
         }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
     },
     nest(d, i, n) {
-      const dd = d.children
-      if (dd) {
-        d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
-          .data(dd)
-          .join(
-            (enter) => this.appendNode(enter),
-            (update) => this.updateNode(update),
-            (exit) => this.exitNode(exit)
-          )
-      }
+      const dd = d.children ? d.children : []
+      d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
+        .data(dd)
+        .join(
+          (enter) => this.appendNode(enter),
+          (update) => this.updateNode(update),
+          (exit) => this.exitNode(exit)
+        )
     },
     initG() {
       d3.create('g').data()
@@ -783,9 +779,7 @@ export default {
       } = this
 
       update.interrupt().selectAll('*').interrupt()
-      update.attr('class', gClass)
-        .transition(easePolyInOut)
-        .attr('transform', gTransform)
+      update.attr('class', gClass).transition(easePolyInOut).attr('transform', gTransform)
 
       update.each((d, i, n) => {
         const node = d3.select(n[i])
@@ -793,11 +787,9 @@ export default {
           .filter((d, i, n) => n[i].parentNode === node.node())
           .data((d) => [d]) // must rebind the children using selection.data to give them the new data.
           .attr('y', d.data.id !== '0' ? foreignY(d) : (foreignY(d) + d.size[0]/2))
-          
         
         foreign.select('div').text(d.data.name)
-        node.select('path')
-          .filter((d, i, n) => n[i].parentNode === node.node())
+        node.select('path').filter((d, i, n) => n[i].parentNode === node.node())
           .attr('id', pathId(d))
           .attr('class', pathClass(d))
           .attr('stroke', pathColor(d))
@@ -806,16 +798,13 @@ export default {
         
         node.each(nest)
         
-        node.selectAll('g.gButton')
-          .filter((d, i, n) => n[i].parentNode === node.node())
+        node.selectAll('g.gButton').filter((d, i, n) => n[i].parentNode === node.node())
           .attr('transform', gBtnTransform(d))
           .raise()
       })
       return update
     },
-    exitNode(exit) {
-      exit.filter((d, i, n) => n[i].classList[0] !== 'gButton').remove()
-    },
+    exitNode(exit) { exit.filter((d, i, n) => n[i].classList[0] !== 'gButton').remove() },
     draw() { // 生成svg
       const { mindmap_g, appendNode, updateNode, exitNode } = this
       const d = [ this.root ]
@@ -831,7 +820,7 @@ export default {
     tree() { // 数据处理
       const { mmdata, ySpacing } = this
       const layout = flextree({ spacing: ySpacing })
-      const t = layout.hierarchy(mmdata.data[0])
+      const t = layout.hierarchy(mmdata)
       layout(t)
 
       this.root = t
@@ -839,21 +828,19 @@ export default {
         // 相对偏移
         a.dx = a.x - (a.parent ? a.parent.x : 0)
         a.dy = a.y - (a.parent ? a.parent.y : 0)
-
-        if (!a.children) { a.children = [] }
       })
     },
     getDTop() {
       let t = this.root
-      while (t.children[0]) { t = t.children[0] }
+      while (t.children) { t = t.children[0] }
       this.dTop = t
     },
-    getTextSize(t) {
+    getTextSize(text) {
       const { dummy, xSpacing } = this
       let textWidth = 0
       let textHeight = 0
       dummy.selectAll('.dummyText')
-        .data([t.name])
+        .data([text])
         .enter()
         .append("div")
         .text((d) => d)
@@ -862,7 +849,7 @@ export default {
           textHeight = n[i].offsetHeight
           n[i].remove() // remove them just after displaying them
         })
-      t.size = [textHeight, textWidth + xSpacing]
+      return [textHeight, textWidth + xSpacing]
     },
     clearSelection() { // 清除右键触发的选中单词
       if(document.selection && document.selection.empty) {
@@ -879,18 +866,14 @@ export default {
         if (dChild.children) { this.depthTraverse2(dChild.children, func) }
       }
     },
+    updateMmdata(d) {
+      let im = new ImData(d)
+      this.mmdata = im.initSize(this.getTextSize)
+    },
     addWatch() {
       this.$watch('value', (newVal) => {
-        if (this.toUpdate) {
-          this.mmdata = new JSONData(newVal)
-          this.depthTraverse2(this.mmdata.data, this.getTextSize)
-        } else {
-          this.toUpdate = true
-        }
-      }, { 
-        immediate: true, 
-        deep: true, 
-      })
+        this.toUpdate ? this.updateMmdata(newVal[0]) : this.toUpdate = true
+      }, { immediate: true, deep: true })
     },
     // 左键选中（待完成）
 
