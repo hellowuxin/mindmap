@@ -557,20 +557,18 @@ export default {
       }
     },
     // 拖拽
-    draggedNodeRenew(draggedNode, targetX, targetY, dura = 0) {
+    draggedNodeRenew(draggedNode, targetX, targetY, dura = 0, d) {
       const { link, xSpacing } = this
       const tran = d3.transition().duration(dura).ease(d3.easePoly)
       d3.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`)
       // 更新draggedNode与父节点的path
-      d3.select(draggedNode).each((d) => {
-        d3.select(`path#path_${d.data.id}`).transition(tran).attr('d', `${link({
-          source: [
-            -targetY + (d.parent ? d.parent.data.size[1] : 0) - xSpacing, 
-            -targetX + (d.parent ? d.parent.data.size[0]/2 : 0)
-          ],
-          target: [0, d.data.size[0]/2],
-        })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`)
-      })
+      d3.select(`path#path_${d.data.id}`).transition(tran).attr('d', `${link({
+        source: [
+          -targetY + (d.parent ? d.parent.data.size[1] : 0) - xSpacing, 
+          -targetX + (d.parent ? d.parent.data.size[0]/2 : 0)
+        ],
+        target: [0, d.data.size[0]/2],
+      })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`)
     },
     draggedNodeChildrenRenew(d, px, py) {
       const { draggedNodeChildrenRenew } = this
@@ -598,7 +596,7 @@ export default {
       // 相对a.parent位置的坐标
       let targetY = a.dy + py// x轴坐标
       let targetX = a.dx + px// y轴坐标
-      draggedNodeRenew(draggedNode, targetX, targetY)
+      draggedNodeRenew(draggedNode, targetX, targetY, null, a)
       // foreignObject偏移
       targetY += parseInt(fObject.getAttribute('x'), 10)
       targetX += parseInt(fObject.getAttribute('y'), 10)
@@ -626,61 +624,55 @@ export default {
           }
         })
     },
-    dragback(subject, draggedNode) {
+    dragback(d, draggedNode) {
       const { draggedNodeChildrenRenew, draggedNodeRenew } = this
-      draggedNodeChildrenRenew(subject, 0, 0)
-      draggedNodeRenew(draggedNode, subject.dx, subject.dy, 1000)
+      draggedNodeChildrenRenew(d, 0, 0)
+      draggedNodeRenew(draggedNode, d.dx, d.dy, 1000, d)
     },
     dragended(d, i, n) {
       const { dragback, root } = this
-      const { subject } = d3.event // FlexNode
       const draggedNode = n[i].parentNode
       const newParentNode = document.getElementById('newParentNode')
       if (newParentNode) { // 建立新的父子关系
         newParentNode.removeAttribute('id')
-        d3.select(draggedNode).each((draggedD) => {
-          d3.select(newParentNode).each((newParentD) => {
-            draggedNode.remove()
-            this.reparent(newParentD.data, draggedD.data)
-          })
-        })
-      } else if (Math.abs(subject.px) < root.nodeHeight) { // 平移距离不足以调换兄弟节点顺序时复原
-        dragback(subject, draggedNode)
+        const newParentD = d3.select(newParentNode).data()[0]
+        draggedNode.remove()
+        this.reparent(newParentD.data, d.data)
+      } else if (Math.abs(d.px) < root.nodeHeight) { // 平移距离不足以调换兄弟节点顺序时复原
+        dragback(d, draggedNode)
       } else { // 调换兄弟节点顺序
         const draggedParentNode = d3.select(draggedNode.parentNode)
-        draggedParentNode.each((d) => {
-          const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${d.depth + 1}`).filter((a, i, n) => !draggedNode.isSameNode(n[i]))
-          if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
-            dragback(subject, draggedNode)
-          } else {
-            const a = { x0: Infinity, x1: -Infinity }
-            draggedBrotherNodes.each((b, i, n) => {
-              if (b.x > subject.x && b.x > a.x1 && b.x < (subject.x + subject.px)) { // 新哥哥节点
-                a.x1 = b.x
-                a.b1 = b.data
-                a.n1 = n[i]
-              }
-              if (b.x < subject.x && b.x < a.x0 && b.x > (subject.x + subject.px)) { // 新弟弟节点
-                a.x0 = b.x
-                a.b0 = b.data
-                a.n0 = n[i]
-              }
-            })
-            if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
-              const sdata = subject.data
-              if (a.b0) { // 插入在兄弟节点前面
-                this.move(sdata, a.b0)
-                draggedNode.parentNode.insertBefore(draggedNode, a.n0)
-              } else if (a.b1) { // 插入在兄弟节点后面
-                this.move(sdata, a.b1, 1)
-                draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling)
-              }
-            } else {
-              dragback(subject, draggedNode)
+        const dPdata = draggedParentNode.data()[0]
+        const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`).filter((a, i, n) => !draggedNode.isSameNode(n[i]))
+        if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
+          dragback(d, draggedNode)
+        } else {
+          const a = { x0: Infinity, x1: -Infinity }
+          draggedBrotherNodes.each((b, i, n) => {
+            if (b.x > d.x && b.x > a.x1 && b.x < (d.x + d.px)) { // 新哥哥节点
+              a.x1 = b.x
+              a.b1 = b.data
+              a.n1 = n[i]
             }
+            if (b.x < d.x && b.x < a.x0 && b.x > (d.x + d.px)) { // 新弟弟节点
+              a.x0 = b.x
+              a.b0 = b.data
+              a.n0 = n[i]
+            }
+          })
+          if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
+            const sdata = d.data
+            if (a.b0) { // 插入在兄弟节点前面
+              this.move(sdata, a.b0)
+              draggedNode.parentNode.insertBefore(draggedNode, a.n0)
+            } else if (a.b1) { // 插入在兄弟节点后面
+              this.move(sdata, a.b1, 1)
+              draggedNode.parentNode.insertBefore(draggedNode, a.n1.nextSibling)
+            }
+          } else {
+            dragback(d, draggedNode)
           }
-          
-        })
+        }
       }
     },
     // 绘制
@@ -702,14 +694,14 @@ export default {
         this.link({
           source: [
             (d.parent ? d.parent.y + d.parent.data.size[1] : 0) - d.y - this.xSpacing, // 横坐标
-            (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,// 纵坐标
+            (d.parent ? d.parent.x + d.parent.data.size[0]/2 : 0) - d.x,// 纵坐标
           ],
           target: [0, d.data.size[0]/2],
         })
       }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
     },
     nest(d, i, n) {
-      const dd = d.children ? d.children : []
+      const dd = d.children || []
       d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`).data(dd)
         .join(
           (enter) => this.appendNode(enter),
@@ -721,10 +713,7 @@ export default {
       d3.create('g').data()
     },
     appendNode(enter) {
-      const { 
-        gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, 
-        pathId, pathClass, pathColor, path, nest, fdivMouseDown
-      } = this
+      const { gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest, fdivMouseDown } = this
 
       const gNode = enter.append('g')
       gNode.attr('class', gClass).attr('transform', gTransform)
@@ -737,8 +726,7 @@ export default {
           const t = l[0].target
           const b1 = getComputedStyle(t).borderTopWidth
           const b2 = getComputedStyle(t.parentNode).borderTopWidth
-          let spacing = parseInt(b1, 10) + parseInt(b2, 10)
-          spacing = spacing ? spacing : 0
+          const spacing = (parseInt(b1, 10) + parseInt(b2, 10)) || 0
           foreign.filter((d, index) => i === index)
             .attr('width', l[0].contentRect.width + spacing*2)// div和foreign border
             .attr('height', l[0].contentRect.height + spacing*2)
@@ -753,16 +741,12 @@ export default {
       const enterData = enter.data()
       if (enterData.length) {
         if (enterData[0].data.id !== '0') {
-          gNode.append('path')
-            .attr('id', pathId)
-            .attr('class', pathClass)
-            .lower()
+          gNode.append('path').attr('id', pathId).attr('class', pathClass).lower()
             .attr('stroke', pathColor)
             .attr('d', path)
         } else if (enterData[0].data.id === '0') { // 根节点
           foreign.attr('y', (d) => foreignY(d)+d.size[0]/2)
         }
-
         gNode.each(nest)
       }
 
