@@ -120,12 +120,12 @@ export default {
     spaceKey: false,
     toRecord: true, // 判断是否需要记录mmdata的数据快照
     toUpdate: true, // 判断是否需要更新mmdata
-    dTop: null, // mmdata中纵坐标最高的数据
-    mmdata: {}, // 思维导图数据
-    root: '', // 包含位置信息的mmdata
+    dTop: Object, // mmdata中纵坐标最高的数据
+    mmdata: ImData, // 思维导图数据
+    root: Object, // 包含位置信息的mmdata
     showContextMenu: false,
     showPopUps: false,
-    showSelectedBox: false,
+    showSelectedBox: false, // 选中框
     contextMenuX: 0,
     contextMenuY: 0,
     contextMenuItems: [{ title: '删除节点', command: 0 }],
@@ -181,8 +181,7 @@ export default {
         )
       this.makeZoom(this.zoomable)
     },
-    initNodeEvent() {
-      // 绑定节点事件
+    initNodeEvent() { // 绑定节点事件
       this.makeDrag(this.draggable)
       this.makeNodeAdd(this.showNodeAdd)
       this.makeContextMenu(this.contextMenu)
@@ -344,7 +343,7 @@ export default {
       this.mmdata = this.mmdata.del(s.id)
     },
     updateName(d, name) {
-      const { data } = d // Json
+      const { data } = d
       if (data.name !== name) { // 有改变
         this.toRecord = true
         this.mmdata = this.mmdata.rename(data.id, name)
@@ -425,7 +424,7 @@ export default {
       })
       this.$refs.svg.focus()
     },
-    removeSelectedNode() {
+    removeSelectedNode() { // 清除选中节点
       this.selectedElement?.removeAttribute('id')
       this.selectedElement = null
     },
@@ -446,7 +445,7 @@ export default {
       window.getSelection().selectAllChildren(fdiv)
     },
     focusNode(fObj) { // 使节点处于可视区域
-      const { k } = d3.zoomTransform(this.$refs.svg)// 放大缩小倍数
+      const { k } = d3.zoomTransform(this.$refs.svg) // 放大缩小倍数
       const fObjPos = fObj.node().getBoundingClientRect()
       const svgPos = this.$refs.svg.getBoundingClientRect()
 
@@ -514,19 +513,18 @@ export default {
       const sele = document.getElementById('selectedNode')
       const edit = document.getElementById('editing')
       const clickedNode = n[i].parentNode
-      if (clickedNode.isSameNode(edit)) { // 正在编辑
-        return
+      if (!clickedNode.isSameNode(edit)) { // 非正在编辑
+        if (!clickedNode.isSameNode(sele)) { // 选中
+          this.selectNode(clickedNode)
+        }
+        // 显示右键菜单
+        const svgPos = this.$refs.svg.getBoundingClientRect()
+        this.contextMenuX = d3.event.pageX - svgPos.left - window.pageXOffset
+        this.contextMenuY = d3.event.pageY - svgPos.top - window.pageYOffset
+        this.showContextMenu = true
+        this.clearSelection()
+        setTimeout(() => { this.$refs.menu.focus() }, 300)
       }
-      if (!clickedNode.isSameNode(sele)) { // 选中
-        this.selectNode(clickedNode)
-      }
-      // 显示右键菜单
-      const svgPos = this.$refs.svg.getBoundingClientRect()
-      this.contextMenuX = d3.event.pageX - svgPos.left - window.pageXOffset
-      this.contextMenuY = d3.event.pageY - svgPos.top - window.pageYOffset
-      this.showContextMenu = true
-      this.clearSelection()
-      setTimeout(() => { this.$refs.menu.focus() }, 300)
     },
     gBtnClick(a, i, n) { // 添加子节点
       if (n[i].style.opacity === '1') {
@@ -707,13 +705,12 @@ export default {
             (d.parent ? d.parent.x + d.parent.data.size[0]/2: 0) - d.x,// 纵坐标
           ],
           target: [0, d.data.size[0]/2],
-          })
-        }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
+        })
+      }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
     },
     nest(d, i, n) {
       const dd = d.children ? d.children : []
-      d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
-        .data(dd)
+      d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`).data(dd)
         .join(
           (enter) => this.appendNode(enter),
           (update) => this.updateNode(update),
@@ -857,13 +854,6 @@ export default {
       } else if(window.getSelection) {
         const sel = window.getSelection()
         sel.removeAllRanges()
-      }
-    },
-    depthTraverse2(d, func) { // 深度遍历，func每个元素
-      for (let index = 0; index < d.length; index++) {
-        const dChild = d[index]
-        func(dChild)
-        if (dChild.children) { this.depthTraverse2(dChild.children, func) }
       }
     },
     addWatch() {

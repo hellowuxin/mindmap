@@ -24,7 +24,7 @@ function inheritColor(d, c) { // 继承颜色
   }
 }
 
-function initSize(d) {
+function initSize(d) { // 初始化size
   d.size = size(d.name)
   const { children } = d
   for (let i = 0; i < children?.length; i += 1) {
@@ -32,7 +32,7 @@ function initSize(d) {
   }
 }
 
-function _getSource(d) {
+function _getSource(d) { // 返回源数据
   const nd = { name: d.name }
   const { children } = d
   if (children) {
