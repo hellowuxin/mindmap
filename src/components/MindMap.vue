@@ -150,14 +150,14 @@ export default {
       this.toRecord ? this.history.record(newVal) : null
       this.updateMindmap()
       this.toUpdate = false
-      this.$emit('change', [this.mmdata.getSource('0')])
+      this.$emit('change', [this.mmdata.getSource()])
     },
     keyboard: function(val) { this.makeKeyboard(val) },
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { 
-      this.mmdata = this.mmdata.initSize(this.getTextSize)
+      this.mmdata = this.mmdata.resize()
       this.updateMindmap() 
     },
     ySpacing: function() { this.updateMindmap() },
@@ -320,14 +320,14 @@ export default {
     // 数据操作
     add(dParent, d) {
       this.toRecord = true
-      this.mmdata = this.mmdata.add(dParent.id, d).initSize(this.getTextSize, dParent.id)
+      this.mmdata = this.mmdata.add(dParent.id, d)
       return d
     },
     insert(dPosition, d, i = 0) {
       // 尝试优化动画效果
       // this.selectedElement.insertAdjacentElement('afterend', this.initG(dPosition.id.length-1))
       this.toRecord = true
-      this.mmdata = this.mmdata.insert(dPosition.id, d, i).initSize(this.getTextSize, dPosition.id.slice(0, -2))
+      this.mmdata = this.mmdata.insert(dPosition.id, d, i)
       return d
     },
     move(del, insert, i=0) {
@@ -347,7 +347,7 @@ export default {
       const { data } = d // Json
       if (data.name !== name) { // 有改变
         this.toRecord = true
-        this.mmdata = this.mmdata.rename(data.id, name).resize(data.id, this.getTextSize(name))
+        this.mmdata = this.mmdata.rename(data.id, name)
       }
     },
     // 键盘
@@ -868,7 +868,7 @@ export default {
     },
     addWatch() {
       this.$watch('value', (newVal) => {
-        this.toUpdate ? this.mmdata = new ImData(newVal[0]).initSize(this.getTextSize) : this.toUpdate = true
+        this.toUpdate ? this.mmdata = new ImData(newVal[0], this.getTextSize) : this.toUpdate = true
       }, { immediate: true, deep: true })
     },
     // 左键选中（待完成）
