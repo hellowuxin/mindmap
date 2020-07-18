@@ -60,7 +60,7 @@
     "eslint-plugin-vue": "^6.2.2",
     "jest": "^26.1.0",
     "sass": "^1.26.10",
-    "sass-loader": "^8.0.2",
+    "sass-loader": "^9.0.2",
     "vue": "^2.6.11",
     "vue-cli-plugin-vuetify": "^2.0.6",
     "vue-jest": "^3.0.6",
