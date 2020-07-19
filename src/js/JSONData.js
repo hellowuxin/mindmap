@@ -122,6 +122,7 @@ class JSONData {
     inheritColor(d, d.color)
     d.id = `${parent.id}-${parent.children.length}`
     parent.children.push(d)
+    d.children ? null : d.children = []
     this._addId(`${d.id}`, d.children)
   }
 

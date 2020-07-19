@@ -6,15 +6,14 @@ class History {
   }
 
   get canUndo() { return this.cursor > 0 }
-  get canClear() { return this.snapshots.length }
+  get canClear() { return this.snapshots.length >= 0 }
   get canRedo() { return this.snapshots.length > this.cursor + 1 }
 
   record(snapshot) { // 记录数据快照
     while (this.cursor < this.snapshots.length - 1) { // 去除旧分支
       this.snapshots.pop()
     }
-    const snapshot1 = JSON.parse(JSON.stringify(snapshot))// 深拷贝
-    this.snapshots.push(snapshot1)
+    this.snapshots.push(snapshot)
     // 确保历史记录条数限制
     if (this.snapshots.length > this.maxSnapshots) { this.snapshots.shift() }
     this.cursor = this.snapshots.length - 1

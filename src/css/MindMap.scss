@@ -1,5 +1,7 @@
 $seleColor: rgba($color: blue, $alpha: 0.15);
 $strokeWidths: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
+$minTextWidth: 16px;
+$minTextHeight: 21px;
 
 button:focus { outline: none; }
 
@@ -90,9 +92,12 @@ div#mindmap {
       
       div {
         text-align: left;
+        box-sizing: content-box;
         border: 1px solid transparent;
         width: max-content;
-        white-space:pre-wrap;
+        min-width: $minTextWidth;
+        min-height: $minTextHeight;
+        white-space: pre-wrap;
         color: rgb(109, 109, 109);
 
         &:focus {
