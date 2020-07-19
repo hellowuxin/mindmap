@@ -117,6 +117,8 @@ export default {
     canRedo() { return this.history.canRedo },
   },
   data: () => ({
+    minTextWidth: 16,
+    minTextHeight: 21,
     spaceKey: false,
     toRecord: true, // 判断是否需要记录mmdata的数据快照
     toUpdate: true, // 判断是否需要更新mmdata
@@ -369,7 +371,7 @@ export default {
           if (keyName === 'Tab') { // 添加子节点
             d3.event.preventDefault()
             this.editNew(
-              this.add(im, { name: '新建节点' }),
+              this.add(im, { name: '' }),
               seleDepth+1,
               pNode
             )
@@ -377,13 +379,13 @@ export default {
             d3.event.preventDefault()
             if (pNode.isSameNode(this.$refs.content)) { // 根节点enter时，等效tab
               this.editNew(
-                this.add(im, { name: '新建节点' }),
+                this.add(im, { name: '' }),
                 seleDepth+1,
                 pNode
               )
             } else {
               this.editNew(
-                this.insert(im, { name: '新建节点' }, 1),
+                this.insert(im, { name: '' }, 1),
                 seleDepth,
                 pNode
               )
@@ -522,7 +524,7 @@ export default {
     gBtnClick(a, i, n) { // 添加子节点
       if (n[i].style.opacity === '1') {
         const d = d3.select(n[i].parentNode).data()[0]
-        const newD = this.add(d.data, { name: '新建节点' })
+        const newD = this.add(d.data, { name: '' })
         this.mouseLeave(null, i, n)
         this.editNew(newD, d.depth+1, n[i].parentNode)
       }
@@ -805,7 +807,7 @@ export default {
       this.dTop = t
     },
     getTextSize(text) {
-      const { dummy, xSpacing } = this
+      const { dummy, xSpacing, minTextWidth, minTextHeight } = this
       let textWidth = 0
       let textHeight = 0
       dummy.selectAll('.dummyText')
@@ -818,6 +820,8 @@ export default {
           textHeight = n[i].offsetHeight
           n[i].remove() // remove them just after displaying them
         })
+      textWidth = Math.max(minTextWidth, textWidth)
+      textHeight = Math.max(minTextHeight, textHeight)
       return [textHeight, textWidth + xSpacing]
     },
     clearSelection() { // 清除右键触发的选中单词
