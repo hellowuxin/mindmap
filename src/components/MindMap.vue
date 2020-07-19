@@ -174,11 +174,7 @@ export default {
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
-        .filter(() => 
-          ( d3.event.ctrlKey // 开启双指捏合
-            || (this.spaceKey && d3.event.type !== 'wheel') // 空格键+左键可拖移
-          ) && !d3.event.button
-        )
+        .filter(() => (d3.event.ctrlKey || (this.spaceKey && d3.event.type !== 'wheel')) && !d3.event.button) // 开启双指捏合 // 空格键+左键可拖移
       this.makeZoom(this.zoomable)
     },
     initNodeEvent() { // 绑定节点事件
@@ -223,8 +219,7 @@ export default {
     },
     makeZoom(val) {
       if (val) {
-        this.mindmap_svg.call(this.mindmapSvgZoom)
-          .on('dblclick.zoom', null)
+        this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
           .on('wheel.zoom', () => {
             const { ctrlKey, deltaY, deltaX } = d3.event
             d3.event.preventDefault()
@@ -401,10 +396,8 @@ export default {
       } 
     },
     svgKeyUp() {
-      const event = d3.event
-      const keyName = event.key
       // 针对导图的操作
-      if (keyName === ' ') { this.spaceKey = false }
+      if (d3.event.key === ' ') { this.spaceKey = false }
     },
     divKeyDown() {
       if (d3.event.key === 'Enter') {
@@ -557,8 +550,10 @@ export default {
       }
     },
     // 拖拽
-    draggedNodeRenew(draggedNode, targetX, targetY, dura = 0, d) {
+    draggedNodeRenew(draggedNode, px, py, dura = 0, d) {
       const { link, xSpacing } = this
+      const targetY = d.dy + py // x轴坐标
+      const targetX = d.dx + px // y轴坐标
       const tran = d3.transition().duration(dura).ease(d3.easePoly)
       d3.select(draggedNode).transition(tran).attr('transform', `translate(${targetY},${targetX})`)
       // 更新draggedNode与父节点的path
@@ -569,20 +564,21 @@ export default {
         ],
         target: [0, d.data.size[0]/2],
       })}L${d.data.size[1] - xSpacing},${d.data.size[0]/2}`)
+
+      this.renewOffset(d, px, py)
     },
-    draggedNodeChildrenRenew(d, px, py) {
-      const { draggedNodeChildrenRenew } = this
+    renewOffset(d, px, py) { // 更新偏移量
       d.px = px
       d.py = py
       if (d.children) {
         for (let index = 0; index < d.children.length; index += 1) {
           const dChild = d.children[index]
-          draggedNodeChildrenRenew(dChild, px, py)
+          this.renewOffset(dChild, px, py)
         }
       }
     },
     dragged(a, i, n) { // 拖拽中【待完善】
-      const { draggedNodeChildrenRenew, draggedNodeRenew, mindmap_g, xSpacing } = this
+      const { mindmap_g, xSpacing } = this
       const draggedNode = n[i].parentNode
       const fObject = n[i]
       // 选中
@@ -592,14 +588,10 @@ export default {
       // 相对a原本位置的偏移
       const py = d3.event.x - a.x // x轴偏移的量
       const px = d3.event.y - a.y // y轴偏移的量
-      draggedNodeChildrenRenew(a, px, py)
-      // 相对a.parent位置的坐标
-      let targetY = a.dy + py// x轴坐标
-      let targetX = a.dx + px// y轴坐标
-      draggedNodeRenew(draggedNode, targetX, targetY, null, a)
+      this.draggedNodeRenew(draggedNode, px, py, null, a)
       // foreignObject偏移
-      targetY += parseInt(fObject.getAttribute('x'), 10)
-      targetX += parseInt(fObject.getAttribute('y'), 10)
+      const targetY = a.dy + py + ~~fObject.getAttribute('x') // x轴坐标
+      const targetX = a.dx + px + ~~fObject.getAttribute('y') // y轴坐标
 
       // 计算others相对a.parent位置的坐标
       mindmap_g.selectAll('g.node')
@@ -608,10 +600,8 @@ export default {
           const gNode = n[i]
           const gRect = gNode.getElementsByTagName('foreignObject')[0]
           const rect = { // 其他gRect相对a.parent的坐标，以及gRect的宽高
-            y: parseInt(gRect.getAttribute('x'), 10) // foreignObject的x轴偏移
-              + d.y + (d.py ? d.py : 0) - (a.parent ? a.parent.y : 0),
-            x: parseInt(gRect.getAttribute('y'), 10) // foreignObject的y轴偏移
-              + d.x + (d.px ? d.px : 0) - (a.parent ? a.parent.x : 0),
+            y: ~~gRect.getAttribute('x') + d.y + (d.py || 0) - (a.parent.y || 0), // foreignObject的x轴偏移
+            x: ~~gRect.getAttribute('y') + d.x + (d.px || 0) - (a.parent.x || 0), // foreignObject的y轴偏移
             width: d.size[1] - xSpacing,
             height: d.size[0],
           }
@@ -625,9 +615,7 @@ export default {
         })
     },
     dragback(d, draggedNode) {
-      const { draggedNodeChildrenRenew, draggedNodeRenew } = this
-      draggedNodeChildrenRenew(d, 0, 0)
-      draggedNodeRenew(draggedNode, d.dx, d.dy, 1000, d)
+      this.draggedNodeRenew(draggedNode, 0, 0, 1000, d)
     },
     dragended(d, i, n) {
       const { dragback, root } = this
