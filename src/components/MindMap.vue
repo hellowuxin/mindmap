@@ -479,7 +479,6 @@ export default {
       }
     },
     fObjectClick(d, i, n) {
-      console.log('click')
       const edit = document.getElementById('editing')
       const sele = document.getElementById('selectedNode')
       const clickedNode = n[i].parentNode

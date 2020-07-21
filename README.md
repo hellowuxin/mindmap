@@ -5,7 +5,7 @@
 ![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
 
 > 一个由[MindNode](https://mindnode.com)启发的思维导图Vue组件，基于d3.js实现  
-> 目前实现的功能有基本的编辑、拖移、缩放、撤销、上下文菜单...
+> 目前实现的功能有基本的编辑、拖移、缩放、撤销、上下文菜单、折叠...
 
 [English Readme](./README.en.md)
 
@@ -13,17 +13,13 @@
 
 ## 近期更新
 
+- 节点可折叠/展开
 - 现在节点有最小宽度和高度
 
 ## 安装
 
 ```sh
 npm install @hellowuxin/mindmap
-```
-
-```js
-// 在你的vue文件中引入思维导图组件
-import mindmap from '@hellowuxin/mindmap'
 ```
 
 ## API
@@ -51,21 +47,14 @@ import mindmap from '@hellowuxin/mindmap'
 
 ```html
 <template>
-  <div id="app">
-    <mindmap
-      v-model="data"
-    ></mindmap>
-  </div>
+  <mindmap v-model="data"></mindmap>
 </template>
 
 <script>
 import mindmap from '@hellowuxin/mindmap'
 
 export default {
-  name: 'App',
-  components: {
-    mindmap
-  },
+  components: { mindmap },
   data: () => ({
     data: [{
       "name":"如何学习D3",
@@ -75,12 +64,17 @@ export default {
           "name":"预备知识",
           "children":
           [
-            {"name":"HTML & CSS", "children": []},
-            {"name":"JavaScript", "children": []}
+            { "name":"HTML & CSS" },
+            { "name":"JavaScript" },
+            { "name":"DOM" },
+            { "name":"SVG" },
+            { "name":"test" }]
         },
         {
           "name":"安装",
-          "children": []
+          "_children": [
+            { "name": "折叠节点" }
+          ]
         },
         ...
       ]
@@ -104,6 +98,6 @@ export default {
 
 - [ ] 导出多种格式
 - [ ] 设置节点的宽高
-- [ ] 节点折叠
 - [ ] 多个根节点
+- [ ] 节点可移到左侧
 - [ ] ...

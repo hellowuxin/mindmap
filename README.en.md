@@ -5,7 +5,7 @@
 ![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
 
 > A mind map Vue component inspired by [MindNode](https://mindnode.com), based on d3.js  
-> The functions currently implemented include editing, dragging, zooming, undoing, and context menu ...
+> The functions currently implemented include collapse, editing, dragging, zooming, undoing, and context menu ...
 
 [中文说明](./README.md)
 
@@ -15,11 +15,6 @@ Online demo：<https://mindnode.5xin.xyz/>
 
 ```sh
 npm install @hellowuxin/mindmap
-```
-
-```js
-// In your vue file
-import mindmap from '@hellowuxin/mindmap'
 ```
 
 ## API
@@ -47,21 +42,14 @@ import mindmap from '@hellowuxin/mindmap'
 
 ```html
 <template>
-  <div id="app">
-    <mindmap
-      v-model="data"
-    ></mindmap>
-  </div>
+  <mindmap v-model="data"></mindmap>
 </template>
 
 <script>
 import mindmap from '@hellowuxin/mindmap'
 
 export default {
-  name: 'App',
-  components: {
-    mindmap
-  },
+  components: { mindmap },
   data: () => ({
     data: [{
       "name":"如何学习D3",
@@ -71,12 +59,17 @@ export default {
           "name":"预备知识",
           "children":
           [
-            {"name":"HTML & CSS", "children": []},
-            {"name":"JavaScript", "children": []}
+            { "name":"HTML & CSS" },
+            { "name":"JavaScript" },
+            { "name":"DOM" },
+            { "name":"SVG" },
+            { "name":"test" }]
         },
         {
           "name":"安装",
-          "children": []
+          "_children": [
+            { "name": "折叠节点" }
+          ]
         },
         ...
       ]
@@ -95,5 +88,4 @@ export default {
 - [ ] Export multiple formats
 - [ ] Set node width and height
 - [ ] Multiple root nodes
-- [ ] Collapse node
 - [ ] ...
