@@ -13,10 +13,10 @@
       @blur="showContextMenu = false"
     >
       <div 
-        class="menu-item"
+        :class="`menu-item ${item.disabled ? 'disabled' : ''}`"
         v-for="(item, index) in contextMenuItems"
         :key="index"
-        @click="clickMenu(item)"
+        @click="item.disabled ? null : clickMenu(item.name)"
       >
         <div>{{ item.title }}</div>
       </div>
@@ -130,7 +130,11 @@ export default {
     showSelectedBox: false, // 选中框
     contextMenuX: 0,
     contextMenuY: 0,
-    contextMenuItems: [{ title: '删除节点', command: 0 }],
+    contextMenuItems: [
+      { title: '删除节点', name: 'delete', disabled: false },
+      { title: '折叠节点', name: 'collapse', disabled: false },
+      { title: '展开节点', name: 'expand', disabled: false },
+    ],
     optionList: [
       { title: 'JSON', icon: 'code-json', tip: '创建一个JSON格式的文本文件', color: 'purpleOpt' },
       { title: '图像', icon: 'image', tip: '创建一个PNG格式的图像文件', color: 'greenOpt', disabled: true },
@@ -145,7 +149,6 @@ export default {
     link: d3.linkHorizontal().x((d) => d[0]).y((d) => d[1]),
     zoom: d3.zoom(),
     history: new History(),
-    selectedElement: undefined,
   }),
   watch: {
     mmdata: function(newVal) { // 不可变数据
@@ -305,7 +308,6 @@ export default {
       await d3.transition().end().then(() => {
         const rect = this.$refs.content.getBBox()
         const div = this.$refs.mindmap
-        
         const multipleX = div.offsetWidth / rect.width
         const multipleY = div.offsetHeight / rect.height
         const multiple = Math.min(multipleX, multipleY)
@@ -320,8 +322,6 @@ export default {
       return d
     },
     insert(dPosition, d, i = 0) {
-      // 尝试优化动画效果
-      // this.selectedElement.insertAdjacentElement('afterend', this.initG(dPosition.id.length-1))
       this.toRecord = true
       this.mmdata = this.mmdata.insert(dPosition.id, d, i)
       return d
@@ -335,7 +335,6 @@ export default {
       this.mmdata = this.mmdata.reparent(p.id, d.id)
     },
     del(s) {
-      this.selectedElement?.remove() // 使动画流畅
       this.toRecord = true
       this.mmdata = this.mmdata.del(s.id)
     },
@@ -345,6 +344,14 @@ export default {
         this.toRecord = true
         this.mmdata = this.mmdata.rename(data.id, name)
       }
+    },
+    collapse(d) {
+      this.toRecord = true
+      this.mmdata = this.mmdata.collapse(d.id)
+    },
+    expand(d) {
+      this.toRecord = true
+      this.mmdata = this.mmdata.expand(d.id)
     },
     // 键盘
     svgKeyDown() {
@@ -377,7 +384,7 @@ export default {
             )
           } else if (keyName === 'Enter') { // 添加弟弟节点
             d3.event.preventDefault()
-            if (pNode.isSameNode(this.$refs.content)) { // 根节点enter时，等效tab
+            if (pNode === this.$refs.content) { // 根节点enter时，等效tab
               this.editNew(
                 this.add(im, { name: '' }),
                 seleDepth+1,
@@ -419,19 +426,18 @@ export default {
       })
       this.$refs.svg.focus()
     },
-    removeSelectedNode() { // 清除选中节点
-      this.selectedElement?.removeAttribute('id')
-      this.selectedElement = null
+    removeSelectedId() { // 清除选中节点
+      const sele = document.getElementById('selectedNode')
+      sele?.removeAttribute('id')
     },
     selectNode(n) { // 选中节点
       if (n.getAttribute('id') !== 'selectedNode') {
-        this.removeSelectedNode()
-        d3.select(n).attr('id', 'selectedNode')
-        this.selectedElement = n
+        this.removeSelectedId()
+        n.setAttribute('id', 'selectedNode')
       }
     },
     editNode(n) { // 编辑节点
-      this.removeSelectedNode()
+      this.removeSelectedId()
       n.setAttribute('id', 'editing')
       const fObj = d3.select(n).selectAll('foreignObject').filter((a, b, c) => c[b].parentNode === n)
       this.focusNode(fObj)
@@ -473,6 +479,7 @@ export default {
       }
     },
     fObjectClick(d, i, n) {
+      console.log('click')
       const edit = document.getElementById('editing')
       const sele = document.getElementById('selectedNode')
       const clickedNode = n[i].parentNode
@@ -489,16 +496,16 @@ export default {
             let flag = false // 单击false 双击true
             if (document.activeElement !== fdiv) {
               fdiv.contentEditable = false
-            } else {
+            } else { // 进入编辑状态
               flag = true
-              this.removeSelectedNode()
+              this.removeSelectedId()
               clickedNode.setAttribute('id', 'editing')
               this.focusNode(fObj)
             }
             resolve(flag)
           }, 150)
         }).then((flag) => {
-          if (!flag && clickedNode.isSameNode(sele)) { // 进入编辑状态
+          if (!flag && clickedNode === sele) { // 进入编辑状态
             this.editNode(clickedNode)
           }
         })
@@ -508,10 +515,14 @@ export default {
       const sele = document.getElementById('selectedNode')
       const edit = document.getElementById('editing')
       const clickedNode = n[i].parentNode
-      if (!clickedNode.isSameNode(edit)) { // 非正在编辑
-        if (!clickedNode.isSameNode(sele)) { // 选中
+      if (clickedNode !== edit) { // 非正在编辑
+        if (clickedNode !== sele) { // 选中
           this.selectNode(clickedNode)
         }
+        // 
+        const { data } = d
+        this.contextMenuItems[1].disabled = !data.children || data.children.length === 0
+        this.contextMenuItems[2].disabled = !(data._children && data._children.length > 0)
         // 显示右键菜单
         const svgPos = this.$refs.svg.getBoundingClientRect()
         this.contextMenuX = d3.event.pageX - svgPos.left - window.pageXOffset
@@ -529,12 +540,23 @@ export default {
         this.editNew(newD, d.depth+1, n[i].parentNode)
       }
     },
-    clickMenu(item) {
+    clickMenu(key) {
       this.showContextMenu = false
-      if (item.command === 0) { // 删除节点
-        this.del(this.selectedElement.__data__.data)
+      const data = document.getElementById('selectedNode').__data__.data
+      switch (key) {
+        case 'delete': // 删除节点
+          this.del(data)
+          break
+        case 'collapse': // 折叠节点
+          this.collapse(data)
+          break
+        case 'expand':
+          this.expand(data)
+          break
+        default:
+          break
       }
-      this.removeSelectedNode()
+      this.removeSelectedId()
     },
     // 悬浮事件
     mouseLeave(d, i, n) {
@@ -545,10 +567,13 @@ export default {
       }
     },
     mouseEnter(d, i, n) {
-      if (n[i].className.baseVal.includes('gButton')) {
-        d3.select(n[i]).style('opacity', 1)
-      } else {
-        d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0.5)
+      const flag = d.data._children?.length > 0
+      if (!flag) {
+        if (n[i].className.baseVal.includes('gButton')) {
+          d3.select(n[i]).style('opacity', 1)
+        } else {
+          d3.selectAll('g.gButton').filter((a, b, c) => c[b].parentNode === n[i].parentNode).style('opacity', 0.5)
+        }
       }
     },
     // 拖拽
@@ -583,9 +608,8 @@ export default {
       const { mindmap_g, xSpacing } = this
       const draggedNode = n[i].parentNode
       const fObject = n[i]
-      // 选中
-      const sele = document.getElementById('selectedNode')
-      if (sele && !sele.isSameNode(draggedNode)) { sele.removeAttribute('id') }
+      // selectNode(draggedNode) // 小概率触发fobj的click事件并进入编辑状态
+
       // 拖拽
       // 相对a原本位置的偏移
       const py = d3.event.x - a.x // x轴偏移的量
@@ -597,7 +621,7 @@ export default {
 
       // 计算others相对a.parent位置的坐标
       mindmap_g.selectAll('g.node')
-        .filter((d, i, n) => !draggedNode.isSameNode(n[i]) && !draggedNode.parentNode.isSameNode(n[i]))
+        .filter((d, i, n) => draggedNode !== n[i] && draggedNode.parentNode !== n[i])
         .each((d, i, n) => {
           const gNode = n[i]
           const gRect = gNode.getElementsByTagName('foreignObject')[0]
@@ -626,14 +650,13 @@ export default {
       if (newParentNode) { // 建立新的父子关系
         newParentNode.removeAttribute('id')
         const newParentD = d3.select(newParentNode).data()[0]
-        draggedNode.remove()
         this.reparent(newParentD.data, d.data)
       } else if (Math.abs(d.px) < root.nodeHeight) { // 平移距离不足以调换兄弟节点顺序时复原
         dragback(d, draggedNode)
       } else { // 调换兄弟节点顺序
         const draggedParentNode = d3.select(draggedNode.parentNode)
         const dPdata = draggedParentNode.data()[0]
-        const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`).filter((a, i, n) => !draggedNode.isSameNode(n[i]))
+        const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`).filter((a, i, n) => draggedNode !== n[i])
         if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
           dragback(d, draggedNode)
         } else {
@@ -672,13 +695,15 @@ export default {
       this.draw()
       this.initNodeEvent()
     },
+    dKey(d) { return d.data.gKey },
     gClass(d) { return `depth_${d.depth} node` },
     gTransform(d) { return `translate(${d.dy},${d.dx})` },
     foreignY(d) { return -d.data.size[0]/2 - 5 },
     gBtnTransform(d) { return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2 - 12})` },
     pathId(d) { return `path_${d.data.id}` },
     pathClass(d) { return `depth_${d.depth}` },
-    pathColor(d) { return d.data.color },
+    pathColor(d) { return d.data.color || 'white' },
+    gEllTransform(d) { return `translate(${d.data.size[1] + 8 - this.xSpacing},${d.data.size[0]/2})` },
     path(d) {
       return `${
         this.link({
@@ -691,22 +716,19 @@ export default {
       }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
     },
     nest(d, i, n) {
+      const { dKey } = this
       const dd = d.children || []
-      d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`).data(dd)
+      d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
+        .data(dd, dKey)
         .join(
           (enter) => this.appendNode(enter),
           (update) => this.updateNode(update),
           (exit) => this.exitNode(exit)
         )
     },
-    initG() {
-      d3.create('g').data()
-    },
     appendNode(enter) {
-      const { gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest, fdivMouseDown } = this
-
-      const gNode = enter.append('g')
-      gNode.attr('class', gClass).attr('transform', gTransform)
+      const { expand, gEllTransform, gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest, fdivMouseDown } = this
+      const gNode = enter.append('g').attr('class', gClass).attr('transform', gTransform)
 
       const foreign = gNode.append('foreignObject').attr('x', -5).attr('y', foreignY)
       const foreignDiv = foreign.append('xhtml:div').attr('contenteditable', false).text((d) => d.data.name)
@@ -725,14 +747,27 @@ export default {
       })
       
       const gBtn = gNode.append('g').attr('class', 'gButton').attr('transform', gBtnTransform)
+        .style('visibility', (d) => !(d.data._children?.length > 0) ? 'visible' : 'hidden')
       gBtn.append('rect').attr('width', 24).attr('height', 24).attr('rx', 3).attr('ry', 3)
       gBtn.append('path').attr('d', 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z')
+
+      const ell = gNode.append('g').attr('class', 'gEllipsis').attr('transform', gEllTransform)
+        .classed('show', (d) => d.data._children?.length > 0)
+        .style('visibility', (d) => d.data._children?.length > 0 ? 'visible' : 'hidden')
+        .on('click', (d) => expand(d.data))
+      ell.append('rect').attr('x', -3).attr('y', -6).attr('width', 20).attr('height', 14).style('opacity', 0)
+      ell.append('rect').attr('x', -2).attr('y', -2).attr('width', 16).attr('height', 4)
+        .attr('rx', 2).attr('ry', 2)
+        .attr('stroke', pathColor).attr('fill', pathColor)
+        .attr('class', 'btn')
+      ell.append('circle').attr('cx', 2).attr('cy', 0).attr('r', 1)
+      ell.append('circle').attr('cx', 6).attr('cy', 0).attr('r', 1)
+      ell.append('circle').attr('cx', 10).attr('cy', 0).attr('r', 1)
       
       const enterData = enter.data()
       if (enterData.length) {
         if (enterData[0].data.id !== '0') {
-          gNode.append('path').attr('id', pathId).attr('class', pathClass).lower()
-            .attr('stroke', pathColor)
+          gNode.append('path').attr('id', pathId).attr('class', pathClass).lower().attr('stroke', pathColor)
             .attr('d', path)
         } else if (enterData[0].data.id === '0') { // 根节点
           foreign.attr('y', (d) => foreignY(d)+d.size[0]/2)
@@ -745,23 +780,18 @@ export default {
       return gNode
     },
     updateNode(update) {
-      const { 
-        gClass, gTransform, easePolyInOut, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest
-      } = this
-
+      const { gEllTransform, gClass, gTransform, easePolyInOut, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest } = this
       update.interrupt().selectAll('*').interrupt()
       update.attr('class', gClass).transition(easePolyInOut).attr('transform', gTransform)
 
-      update.each((d, i, n) => {
-        const node = d3.select(n[i])
-        const foreign = node.selectAll('foreignObject')
-          .filter((d, i, n) => n[i].parentNode === node.node())
-          .data((d) => [d]) // must rebind the children using selection.data to give them the new data.
+      update.each((d, k, m) => {
+        const node = d3.select(m[k])
+        const foreign = node.selectAll('foreignObject').filter((d, i, n) => n[i].parentNode === m[k])
+          .data([d]) // must rebind the children using selection.data to give them the new data.
           .attr('y', d.data.id !== '0' ? foreignY(d) : (foreignY(d) + d.size[0]/2))
         
         foreign.select('div').text(d.data.name)
-        node.select('path').filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('id', pathId(d))
+        node.select('path').filter((d, i, n) => n[i].parentNode === m[k]).attr('id', pathId(d))
           .attr('class', pathClass(d))
           .attr('stroke', pathColor(d))
           .transition(easePolyInOut)
@@ -769,19 +799,28 @@ export default {
         
         node.each(nest)
         
-        node.selectAll('g.gButton').filter((d, i, n) => n[i].parentNode === node.node())
-          .attr('transform', gBtnTransform(d))
+        const ellFlag = d.data._children?.length > 0
+
+        node.selectAll('g.gButton').filter((d, i, n) => n[i].parentNode === m[k]).data([d])
+          .attr('transform', gBtnTransform)
+          .style('visibility', !ellFlag ? 'visible' : 'hidden')
           .raise()
+
+        const ell = node.selectAll('g.gEllipsis').filter((d, i, n) => n[i].parentNode === m[k]).data([d])
+          .attr('transform', gEllTransform)
+          .classed('show', ellFlag)
+          .style('visibility', ellFlag ? 'visible' : 'hidden')
+        ell.select('rect.btn').attr('stroke', pathColor).attr('fill', pathColor)
       })
       return update
     },
-    exitNode(exit) { exit.filter((d, i, n) => n[i].classList[0] !== 'gButton').remove() },
+    exitNode(exit) { exit.filter((d, i, n) => n[i].classList[1] == 'node').remove() },
     draw() { // 生成svg
-      const { mindmap_g, appendNode, updateNode, exitNode } = this
+      const { dKey, mindmap_g, appendNode, updateNode, exitNode } = this
       const d = [ this.root ]
 
       mindmap_g.selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ''}`)
-        .data(d)
+        .data(d, dKey)
         .join(
           (enter) => appendNode(enter),
           (update) => updateNode(update),
@@ -795,8 +834,7 @@ export default {
       layout(t)
 
       this.root = t
-      this.root.each((a) => { // x纵轴 y横轴
-        // 相对偏移
+      this.root.each((a) => { // x纵轴 y横轴 dx dy相对偏移
         a.dx = a.x - (a.parent ? a.parent.x : 0)
         a.dy = a.y - (a.parent ? a.parent.y : 0)
       })
@@ -845,7 +883,6 @@ export default {
     // this.mindmap_svg.on('mousedown', () => { })
     // this.mindmap_svg.on('mousemove', () => { })
     this.addWatch()
-
     await this.makeCenter()
     await this.fitContent()
     this.mindmap_g.style('opacity', 1)

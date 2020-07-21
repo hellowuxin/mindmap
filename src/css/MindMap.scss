@@ -130,6 +130,25 @@ div#mindmap {
       }
     }
 
+    g.gEllipsis {
+      opacity: 0;
+
+      &.show { opacity: 1;}
+      circle {
+        fill: black;
+      }
+      &:hover {
+        > rect.btn {
+          stroke: #808080;
+          fill: white
+        }
+
+        circle {
+          fill: #5A5AD2;
+        }
+      }
+    }
+
     @each $sw in $strokeWidths {
       &.stroke-width-#{$sw} {
         path {
@@ -171,8 +190,10 @@ div#mindmap {
     box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 
       0px 8px 10px 1px rgba(0, 0, 0, 0.14),
       0px 3px 14px 2px rgba(0, 0, 0, 0.12);
-    background-color: #FAFAFA;
+    background-color: #EAE9ED;
     padding: 4px 0;
+    font-weight: 500;
+    color: #3A353D;
 
     &:focus {
       outline: none;
@@ -180,7 +201,7 @@ div#mindmap {
 
     .menu-item {
       position: relative;
-      padding: 4px 8px;
+      padding: 0px 20px;
       cursor: pointer;
 
       &::before {
@@ -196,8 +217,13 @@ div#mindmap {
         transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
       }
 
-      &:hover::before {
+      &:not(.disabled):hover::before {
         opacity: 0.09;
+      }
+
+      &.disabled {
+        color: #AEB2B5;
+        cursor: not-allowed;
       }
     }
   }

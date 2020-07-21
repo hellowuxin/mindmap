@@ -2,57 +2,66 @@ import * as d3ScaleChromatic from 'd3-scale-chromatic'
 import * as d3Scale from 'd3-scale'
 import { immerable, produce } from "immer"
 
-let colorNumber = 0
 const colorScale = d3Scale.scaleOrdinal(d3ScaleChromatic.schemePaired) // 颜色列表
+let colorNumber = 0
+let size // 生成size的函数
+let gKey = 0
 
-function initColor(children, c) { // 初始化颜色
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i]
-    child.color = c || colorScale(colorNumber+=1)
-    child.children ? initColor(child.children, child.color) : null
+function initColor(d, c) { // 初始化颜色
+  let color = undefined
+  if (d.id !== '0') {
+    color = c || colorScale(colorNumber += 1)
+    d.color = color 
   }
-}
-
-function inheritColor(d, c) { // 继承颜色
-  const { children } = d
-  if (children) {
-    for (let i = 0; i < children.length; i += 1) {
-      const dChild = children[i]
-      dChild.color = c
-      inheritColor(dChild, c)
-    }
+  const { children, _children } = d
+  for (let i = 0; i < children?.length; i += 1) {
+    initColor(children[i], color)
+  }
+  for (let i = 0; i < _children?.length; i += 1) {
+    initColor(_children[i], color)
   }
 }
 
 function initSize(d) { // 初始化size
   d.size = size(d.name)
-  const { children } = d
+  const { children, _children } = d
   for (let i = 0; i < children?.length; i += 1) {
     initSize(children[i])
+  }
+  for (let i = 0; i < _children?.length; i += 1) {
+    initSize(_children[i])
   }
 }
 
 function _getSource(d) { // 返回源数据
   const nd = { name: d.name }
-  const { children } = d
-  if (children) {
-    nd.children = new Array(children.length)
-    for (let i = 0; i < children.length; i++) {
-      nd.children[i] = _getSource(children[i])
-    }
+  const { children, _children } = d
+  const length1 = children?.length || 0
+  const length2 = _children?.length || 0
+
+  nd.children = new Array(length1)
+  for (let i = 0; i < length1; i++) {
+    nd.children[i] = _getSource(children[i])
+  }
+
+  nd._children = new Array(length2)
+  for (let i = 0; i < length2; i++) {
+    nd._children[i] = _getSource(_children[i])
   }
   return nd
 }
 
 function initId(d, id='0') { // 初始化唯一标识：待优化
   d.id = id
-  const { children } = d
+  d.gKey = d.gKey || (gKey += 1)
+  const { children, _children } = d
   for (let i = 0; i < children?.length; i += 1) {
     initId(children[i], `${id}-${i}`)
   }
+  for (let i = 0; i < _children?.length; i += 1) {
+    initId(_children[i], `${id}-${i}`)
+  }
 }
-
-let size // 生成size的函数
 
 class ImData {
   [immerable] = true
@@ -60,12 +69,10 @@ class ImData {
   constructor(d, fn) {
     size = fn
     this.name = d.name
-    const { children } = d
-    if (children) {
-      this.children = JSON.parse(JSON.stringify(children)) // 无副作用
-      initColor(this.children)
-    }
+    d.children ? this.children = JSON.parse(JSON.stringify(d.children)) : null
+    d._children ? this._children = JSON.parse(JSON.stringify(d._children)) : null
     initId(this)
+    initColor(this)
     initSize(this)
     return produce(this, () => {})
   }
@@ -99,6 +106,22 @@ class ImData {
     }
   }
 
+  collapse(id) { // 折叠
+    return produce(this, (draftState) => {
+      const d = draftState.find(id)
+      d._children = d.children
+      d.children = []
+    })
+  }
+
+  expand(id) { // 展开
+    return produce(this, (draftState) => {
+      const d = draftState.find(id)
+      d.children = d._children
+      d._children = []
+    })
+  }
+
   del(id) { // 删除指定id的数据
     if (id.length > 2) {
       return produce(this, (draftState) => {
@@ -113,9 +136,14 @@ class ImData {
     if (id.length > 0) {
       return produce(this, (draftState) => {
         const parent = draftState.find(id)
+        
+        if (parent._children?.length > 0) { // 判断是否折叠，如果折叠，展开
+          parent.children = parent._children
+          parent._children = []
+        }
+
         parent.children ? parent.children.push(child) : parent.children = [child]
-        child.color = parent.color || colorScale(colorNumber += 1)
-        inheritColor(child, child.color)
+        initColor(child, parent.color || colorScale(colorNumber += 1))
         initId(child, `${parent.id}-${parent.children.length-1}`)
         initSize(child)
       })
@@ -127,8 +155,7 @@ class ImData {
       return produce(this, (draftState) => {
         const parent = draftState.find(id.slice(0, -2))
         parent.children.splice(~~id[id.length-1] + i, 0, d)
-        d.color = parent.color || colorScale(colorNumber += 1)
-        inheritColor(d, d.color)
+        initColor(d, parent.color || colorScale(colorNumber += 1))
         initId(parent, parent.id)
         initSize(d)
       })
@@ -155,17 +182,17 @@ class ImData {
       return produce(this, (draftState) => {
         const np = draftState.find(parentId)
         const delParent = draftState.find(delId.slice(0, -2))
-        const del = delParent.children[~~delId[delId.length-1]]
+        const delIndex = ~~delId[delId.length-1]
+        const del = delParent.children.splice(delIndex, 1)[0] // 删除
+  
+        np.children?.length > 0 
+          ? np.children.push(del) 
+          : (np._children?.length > 0 ? np._children.push(del) : np.children = [del])
 
-        delParent.children.splice(~~delId[delId.length-1], 1)
-        np.children ? np.children.push(del) : np.children = [del]
+        initColor(del, parentId === '0' ? colorScale(colorNumber += 1) : np.color) 
 
-        parentId === '0' 
-          ? inheritColor(del, del.color = colorScale(colorNumber += 1)) 
-          : inheritColor(np, np.color)
-
-        const d = parentId.length >= delId.length ? delParent : np
-        initId(d, d.id)
+        initId(np, np.id)
+        initId(delParent, delParent.id)
       })
     }
   }

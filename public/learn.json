@@ -13,7 +13,12 @@
           { "name":"SVG" },
           { "name":"test" }]
       },
-      { "name":"安装" },
+      { 
+        "name":"安装",
+        "_children": [
+          { "name": "折叠节点" }
+        ]
+      },
       {
         "name":"入门",
         "children":
