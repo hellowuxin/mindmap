@@ -55,11 +55,17 @@ function initId(d, id='0') { // 初始化唯一标识：待优化
   d.id = id
   d.gKey = d.gKey || (gKey += 1)
   const { children, _children } = d
-  for (let i = 0; i < children?.length; i += 1) {
-    initId(children[i], `${id}-${i}`)
-  }
-  for (let i = 0; i < _children?.length; i += 1) {
-    initId(_children[i], `${id}-${i}`)
+  const length1 = children?.length
+  const length2 = _children?.length
+  if (length1 && length2) {
+    throw(`[Mindmap warn]: Error in data: data.children and data._children cannot contain data at the same time`)
+  } else {
+    for (let i = 0; i < length1; i += 1) {
+      initId(children[i], `${id}-${i}`)
+    }
+    for (let i = 0; i < length2; i += 1) {
+      initId(_children[i], `${id}-${i}`)
+    }
   }
 }
 
