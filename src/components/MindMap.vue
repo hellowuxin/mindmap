@@ -80,6 +80,7 @@ import ImData from '../js/ImData'
 import History from '../js/History'
 import toMarkdown from '../js/toMarkdown'
 
+let mmdata // 思维导图数据
 export default {
   name: 'mindmap',
   props: {
@@ -123,7 +124,6 @@ export default {
     toRecord: true, // 判断是否需要记录mmdata的数据快照
     toUpdate: true, // 判断是否需要更新mmdata
     dTop: Object, // mmdata中纵坐标最高的数据
-    mmdata: ImData, // 思维导图数据
     root: Object, // 包含位置信息的mmdata
     showContextMenu: false,
     showPopUps: false,
@@ -151,18 +151,12 @@ export default {
     history: new History(),
   }),
   watch: {
-    mmdata: function(newVal) { // 不可变数据
-      this.toRecord ? this.history.record(newVal) : null
-      this.updateMindmap()
-      this.toUpdate = false
-      this.$emit('change', [this.mmdata.getSource()])
-    },
     keyboard: function(val) { this.makeKeyboard(val) },
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { 
-      this.mmdata = this.mmdata.resize()
+      this.updateMmdata(mmdata.resize())
       this.updateMindmap() 
     },
     ySpacing: function() { this.updateMindmap() },
@@ -170,6 +164,13 @@ export default {
     zoomable: function(val) { this.makeZoom(val) },
   },
   methods: {
+    updateMmdata(newVal) { // 不可变数据
+      mmdata = newVal
+      this.toRecord ? this.history.record(newVal) : null
+      this.updateMindmap()
+      this.toUpdate = false
+      this.$emit('change', [mmdata.getSource()])
+    },
     init() {
       // 绑定元素
       this.mindmap_svg = d3.select(this.$refs.svg)
@@ -246,13 +247,13 @@ export default {
     undo() {
       if (this.canUndo) {
         this.toRecord = false
-        this.mmdata = this.history.undo()
+        this.updateMmdata(this.history.undo())
       }
     },
     redo() {
       if (this.canRedo) {
         this.toRecord = false
-        this.mmdata = this.history.redo()
+        this.updateMmdata(this.history.redo())
       }
     },
     downloadFile(content, filename) {
@@ -269,7 +270,7 @@ export default {
       document.body.removeChild(eleLink);
     },
     exportTo() { // 导出至
-      const data = this.mmdata.getSource()
+      const data = mmdata.getSource()
       let content = ''
       let filename = data.name
       switch (this.selectedOption) {
@@ -318,40 +319,40 @@ export default {
     // 数据操作
     add(dParent, d) {
       this.toRecord = true
-      this.mmdata = this.mmdata.add(dParent.id, d)
+      this.updateMmdata(mmdata.add(dParent.id, d))
       return d
     },
     insert(dPosition, d, i = 0) {
       this.toRecord = true
-      this.mmdata = this.mmdata.insert(dPosition.id, d, i)
+      this.updateMmdata(mmdata.insert(dPosition.id, d, i))
       return d
     },
     move(del, insert, i=0) {
       this.toRecord = true
-      this.mmdata = this.mmdata.move(del.id, insert.id, i)
+      this.updateMmdata(mmdata.move(del.id, insert.id, i))
     },
     reparent(p, d) {
       this.toRecord = true
-      this.mmdata = this.mmdata.reparent(p.id, d.id)
+      this.updateMmdata(mmdata.reparent(p.id, d.id))
     },
     del(s) {
       this.toRecord = true
-      this.mmdata = this.mmdata.del(s.id)
+      this.updateMmdata(mmdata.del(s.id))
     },
     updateName(d, name) {
       const { data } = d
       if (data.name !== name) { // 有改变
         this.toRecord = true
-        this.mmdata = this.mmdata.rename(data.id, name)
+        this.updateMmdata(mmdata.rename(data.id, name))
       }
     },
     collapse(d) {
       this.toRecord = true
-      this.mmdata = this.mmdata.collapse(d.id)
+      this.updateMmdata(mmdata.collapse(d.id))
     },
     expand(d) {
       this.toRecord = true
-      this.mmdata = this.mmdata.expand(d.id)
+      this.updateMmdata(mmdata.expand(d.id))
     },
     // 键盘
     svgKeyDown() {
@@ -827,7 +828,7 @@ export default {
         )
     },
     tree() { // 数据处理
-      const { mmdata, ySpacing } = this
+      const { ySpacing } = this
       const layout = flextree({ spacing: ySpacing })
       const t = layout.hierarchy(mmdata)
       layout(t)
@@ -871,7 +872,7 @@ export default {
     },
     addWatch() {
       this.$watch('value', (newVal) => {
-        this.toUpdate ? this.mmdata = new ImData(newVal[0], this.getTextSize) : this.toUpdate = true
+        this.toUpdate ? this.updateMmdata(new ImData(newVal[0], this.getTextSize)) : this.toUpdate = true
       }, { immediate: true, deep: true })
     },
     // 左键选中（待完成）

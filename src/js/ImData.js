@@ -189,16 +189,20 @@ class ImData {
         const np = draftState.find(parentId)
         const delParent = draftState.find(delId.slice(0, -2))
         const delIndex = ~~delId[delId.length-1]
-        const del = delParent.children.splice(delIndex, 1)[0] // 删除
-  
-        np.children?.length > 0 
-          ? np.children.push(del) 
-          : (np._children?.length > 0 ? np._children.push(del) : np.children = [del])
+        try {
+          JSON.stringify(delParent) // bug残留
+          JSON.stringify(np)
+          const del = delParent.children.splice(delIndex, 1)[0] // 删除
+          np.children?.length > 0 ? np.children.push(del) 
+            : (np._children?.length > 0 ? np._children.push(del) : np.children = [del])
 
-        initColor(del, parentId === '0' ? colorScale(colorNumber += 1) : np.color) 
+          initColor(del, parentId === '0' ? colorScale(colorNumber += 1) : np.color) 
 
-        initId(np, np.id)
-        initId(delParent, delParent.id)
+          initId(np, np.id)
+          initId(delParent, delParent.id)
+        } catch (error) {
+          console.log(error)
+        }
       })
     }
   }
