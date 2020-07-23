@@ -156,15 +156,15 @@ export default {
     contextMenu: function(val) { this.makeContextMenu(val) },
     xSpacing: function() { 
       this.updateMmdata(mmdata.resize())
-      this.updateMindmap() 
+      this.updateMindmap()
     },
     ySpacing: function() { this.updateMindmap() },
     zoomable: function(val) { this.makeZoom(val) },
   },
   methods: {
-    updateMmdata(newVal) { // 不可变数据
-      mmdata = newVal
-      this.toRecord ? this.history.record(newVal) : null
+    updateMmdata(val) { // 不可变数据
+      if (val) { mmdata.data = JSON.parse(JSON.stringify(val)) }
+      this.toRecord ? this.history.record(JSON.parse(JSON.stringify(mmdata.data))) : null
       this.updateMindmap()
       this.toUpdate = false
       this.$emit('change', [mmdata.getSource()])
@@ -839,7 +839,7 @@ export default {
     tree() { // 数据处理
       const { ySpacing } = this
       const layout = flextree({ spacing: ySpacing })
-      const t = layout.hierarchy(mmdata)
+      const t = layout.hierarchy(mmdata.data)
       layout(t)
 
       this.root = t
@@ -881,7 +881,12 @@ export default {
     },
     addWatch() {
       this.$watch('value', (newVal) => {
-        this.toUpdate ? this.updateMmdata(new ImData(newVal[0], this.getTextSize)) : this.toUpdate = true
+        if (this.toUpdate) {
+          mmdata = new ImData(newVal[0], this.getTextSize)
+          this.updateMmdata()
+        } else {
+          this.toUpdate = true
+        }
       }, { immediate: true, deep: true })
     },
     // 左键选中（待完成）
