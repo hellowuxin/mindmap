@@ -180,7 +180,10 @@ export default {
       this.makeKeyboard(this.keyboard)
       this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
       this.mindmapSvgZoom = this.zoom.on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
-        .filter(() => (d3.event.ctrlKey || (this.spaceKey && d3.event.type !== 'wheel')) && !d3.event.button) // 开启双指捏合 // 空格键+左键可拖移
+        .filter(() => (
+          (d3.event.ctrlKey && d3.event.type !== 'mousedown') 
+          || (this.spaceKey && d3.event.type !== 'wheel')
+        ) && !d3.event.button) // 开启双指捏合 // 空格键+左键可拖移
       this.makeZoom(this.zoomable)
     },
     initNodeEvent() { // 绑定节点事件
