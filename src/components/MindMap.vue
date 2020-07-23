@@ -96,7 +96,6 @@ export default {
     keyboard: { type: Boolean, default: true },
     showNodeAdd: { type: Boolean, default: true },
     contextMenu: { type: Boolean, default: true },
-    nodeClick: { type: Boolean, default: true },
     zoomable: { type: Boolean, default: true },
     showUndo: { type: Boolean, default: true },
     strokeWidth: { type: Number, default: 4 },
@@ -160,7 +159,6 @@ export default {
       this.updateMindmap() 
     },
     ySpacing: function() { this.updateMindmap() },
-    nodeClick: function(val) { this.makeNodeClick(val) },
     zoomable: function(val) { this.makeZoom(val) },
   },
   methods: {
@@ -190,7 +188,6 @@ export default {
       this.makeDrag(this.draggable)
       this.makeNodeAdd(this.showNodeAdd)
       this.makeContextMenu(this.contextMenu)
-      this.makeNodeClick(this.nodeClick)
     },
     // 事件
     makeKeyboard(val) { 
@@ -212,19 +209,14 @@ export default {
       this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.fObjectRightClick : null)
     },
     makeDrag(val) {
-      if (val) {
-        const { mindmap_g, dragged, dragended } = this
-        mindmap_g.selectAll('foreignObject').filter((d) => d.depth !== 0)// 非根节点才可以拖拽
-          .call(
-            d3.drag().container((d, i, n) => n[i].parentNode.parentNode)
-              .on('drag', dragged).on('end', dragended)
-          )
-      } else {
-        this.mindmap_g.selectAll('foreignObject').call(d3.drag().on('drag', null).on('end', null))
-      }
-    },
-    makeNodeClick(val) {
-      this.mindmap_g.selectAll('foreignObject').on('click', val ? this.fObjectClick : null)
+      const { mindmap_g, dragged, fObjMousedown, dragended } = this
+      mindmap_g.selectAll('foreignObject').filter((d) => d.depth !== 0)// 非根节点才可以拖拽
+        .call(
+          d3.drag().container((d, i, n) => n[i].parentNode.parentNode)
+            .on('start', val ? fObjMousedown : null)
+            .on('drag', val ? dragged : null)
+            .on('end', val ? dragended : null)
+        )
     },
     makeZoom(val) {
       if (val) {
@@ -432,7 +424,10 @@ export default {
     },
     removeSelectedId() { // 清除选中节点
       const sele = document.getElementById('selectedNode')
-      sele?.removeAttribute('id')
+      if (sele) {
+        sele.__click__ = 0
+        sele.removeAttribute('id')
+      }
     },
     selectNode(n) { // 选中节点
       if (n.getAttribute('id') !== 'selectedNode') {
@@ -482,36 +477,45 @@ export default {
         d3.event.stopPropagation() // 防止触发drag、click
       }
     },
-    fObjectClick(d, i, n) {
+    fObjMousedown(d, i, n) {
       const edit = document.getElementById('editing')
-      const sele = document.getElementById('selectedNode')
+      let flag = 0
       const clickedNode = n[i].parentNode
-
-      if (!edit) { // 未在编辑
+      if (edit && edit !== clickedNode) {
+        const f = d3.selectAll('foreignObject').filter((d, i, n) => n[i].parentNode === edit).node()
+          .firstElementChild
+        f.blur()
+        flag = 1
+      }
+      if (!edit || flag) { // 未在编辑
+        d3.event.sourceEvent.preventDefault()
         this.selectNode(clickedNode)
-        const fObj = d3.select(clickedNode).selectAll('foreignObject')
-          .filter((a, b, c) => c[b].parentNode === clickedNode)
-        const fdiv = fObj.select('div').node()
+        const fObj = d3.select(n[i])
+        const fdiv = n[i].firstElementChild
         fdiv.contentEditable = true
-
-        new Promise((resolve) => {
-          setTimeout(() => {
-            let flag = false // 单击false 双击true
-            if (document.activeElement !== fdiv) {
-              fdiv.contentEditable = false
-            } else { // 进入编辑状态
-              flag = true
-              this.removeSelectedId()
-              clickedNode.setAttribute('id', 'editing')
-              this.focusNode(fObj)
-            }
-            resolve(flag)
-          }, 150)
-        }).then((flag) => {
-          if (!flag && clickedNode === sele) { // 进入编辑状态
-            this.editNode(clickedNode)
+       
+        setTimeout(() => {
+          if (document.activeElement !== fdiv) {
+            fdiv.contentEditable = false
+          } else { // 双击进入编辑状态
+            this.removeSelectedId()
+            clickedNode.setAttribute('id', 'editing')
+            this.focusNode(fObj)
           }
-        })
+        }, 300)
+      }
+    },
+    fObjectClick(d, i, n) { // 两次单击进入编辑状态
+      const sele = document.getElementById('selectedNode')
+      if (sele) {
+        if (sele.__click__ === 1 
+        && n[i].parentNode === sele 
+        && document.activeElement !== n[i].firstElementChild) {
+          this.editNode(sele)
+          sele.__click__ = 0
+        } else {
+          sele.__click__ = 1
+        }
       }
     },
     fObjectRightClick(d, i, n) {
@@ -611,7 +615,6 @@ export default {
       const { mindmap_g, xSpacing } = this
       const draggedNode = n[i].parentNode
       const fObject = n[i]
-      // selectNode(draggedNode) // 小概率触发fobj的click事件并进入编辑状态
 
       // 拖拽
       // 相对a原本位置的偏移
@@ -647,21 +650,23 @@ export default {
       this.draggedNodeRenew(draggedNode, 0, 0, 1000, d)
     },
     dragended(d, i, n) {
-      const { dragback, root } = this
+      const { dragback, root, reparent, fObjectClick } = this
       const draggedNode = n[i].parentNode
       const newParentNode = document.getElementById('newParentNode')
       if (newParentNode) { // 建立新的父子关系
         newParentNode.removeAttribute('id')
         const newParentD = d3.select(newParentNode).data()[0]
-        this.reparent(newParentD.data, d.data)
-      } else if (Math.abs(d.px) < root.nodeHeight) { // 平移距离不足以调换兄弟节点顺序时复原
+        reparent(newParentD.data, d.data)
+      } else if (d.depth === 0 || (Math.abs(d.px) < root.nodeHeight)) { // 平移距离不足以调换兄弟节点顺序时复原
         dragback(d, draggedNode)
+        fObjectClick(d, i, n)
       } else { // 调换兄弟节点顺序
         const draggedParentNode = d3.select(draggedNode.parentNode)
         const dPdata = draggedParentNode.data()[0]
         const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`).filter((a, i, n) => draggedNode !== n[i])
         if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
           dragback(d, draggedNode)
+          fObjectClick(d, i, n)
         } else {
           const a = { x0: Infinity, x1: -Infinity }
           draggedBrotherNodes.each((b, i, n) => {
@@ -687,6 +692,7 @@ export default {
             }
           } else {
             dragback(d, draggedNode)
+            fObjectClick(d, i, n)
           }
         }
       }
