@@ -33,7 +33,6 @@ npm install @hellowuxin/mindmap
 | showNodeAdd | Boolean| true      | Whether to show add-node button                |
 | keyboard    | Boolean| true      | Whether to respond to keyboard event           |
 | contextMenu | Boolean| true      | Whether to respond to contextMenu event        |
-| nodeClick   | Boolean| true      | Set whether the node can be clicked and edited |
 | zoomable    | Boolean| true      | Whether it can be zoomed or dragged            |
 | showUndo    | Boolean| true      | Whether to show the undo/redo button           |
 | download    | Boolean| true      | Whether to show the download button            |

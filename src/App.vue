@@ -26,7 +26,6 @@
                     :keyboard="options.keyboard.value"
                     :showNodeAdd="options.showNodeAdd.value"
                     :contextMenu="options.contextMenu.value"
-                    :nodeClick="options.nodeClick.value"
                     :zoomable="options.zoomable.value"
                     :showUndo="options.showUndo.value"
                     :xSpacing="xSpacing"
@@ -116,7 +115,6 @@ export default {
       draggable: { value: true },
       showNodeAdd: { value: true },
       contextMenu: { value: true },
-      nodeClick: { value: true },
       zoomable: { value: true },
       showUndo: { value: true },
       download: { value: true },
