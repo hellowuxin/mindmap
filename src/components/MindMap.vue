@@ -155,8 +155,9 @@ export default {
     showNodeAdd: function(val) { this.makeNodeAdd(val) },
     draggable: function(val) { this.makeDrag(val) },
     contextMenu: function(val) { this.makeContextMenu(val) },
-    xSpacing: function() { 
-      this.updateMmdata(mmdata.resize())
+    xSpacing: function() {
+      mmdata.resize()
+      this.updateMmdata()
       this.updateMindmap()
     },
     ySpacing: function() { this.updateMindmap() },
@@ -314,40 +315,48 @@ export default {
     // 数据操作
     add(dParent, d) {
       this.toRecord = true
-      this.updateMmdata(mmdata.add(dParent.id, d))
+      mmdata.add(dParent.id, d)
+      this.updateMmdata()
       return d
     },
     insert(dPosition, d, i = 0) {
       this.toRecord = true
-      this.updateMmdata(mmdata.insert(dPosition.id, d, i))
+      mmdata.insert(dPosition.id, d, i)
+      this.updateMmdata()
       return d
     },
     move(del, insert, i=0) {
       this.toRecord = true
-      this.updateMmdata(mmdata.move(del.id, insert.id, i))
+      mmdata.move(del.id, insert.id, i)
+      this.updateMmdata()
     },
     reparent(p, d) {
       this.toRecord = true
-      this.updateMmdata(mmdata.reparent(p.id, d.id))
+      mmdata.reparent(p.id, d.id)
+      this.updateMmdata()
     },
     del(s) {
       this.toRecord = true
-      this.updateMmdata(mmdata.del(s.id))
+      mmdata.del(s.id)
+      this.updateMmdata()
     },
     updateName(d, name) {
       const { data } = d
       if (data.name !== name) { // 有改变
         this.toRecord = true
-        this.updateMmdata(mmdata.rename(data.id, name))
+        mmdata.rename(data.id, name)
+        this.updateMmdata()
       }
     },
     collapse(d) {
       this.toRecord = true
-      this.updateMmdata(mmdata.collapse(d.id))
+      mmdata.collapse(d.id)
+      this.updateMmdata()
     },
     expand(d) {
       this.toRecord = true
-      this.updateMmdata(mmdata.expand(d.id))
+      mmdata.expand(d.id)
+      this.updateMmdata()
     },
     // 键盘
     svgKeyDown() {

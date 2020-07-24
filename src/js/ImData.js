@@ -116,8 +116,11 @@ class ImData {
 
   del(id) { // 删除指定id的数据
     if (id.length > 2) {
-      const parent = this.find(id.slice(0, -2))
-      parent.children.splice(~~id[id.length-1], 1)
+      const idArr = id.split('-')
+      const delIndex = ~~idArr.pop()
+      const pId = idArr.join('-')
+      const parent = this.find(pId)
+      parent.children.splice(delIndex, 1)
       initId(parent, parent.id)
     }
   }
@@ -133,24 +136,32 @@ class ImData {
       initColor(child, parent.color || colorScale(colorNumber += 1))
       initId(child, `${parent.id}-${parent.children.length-1}`)
       initSize(child)
+      return child
     }
   }
 
   insert(id, d, i = 0) { // 插入新的节点在前（或在后）
     if (id.length > 2) {
-      const parent = this.find(id.slice(0, -2))
-      parent.children.splice(~~id[id.length-1] + i, 0, d)
+      const idArr = id.split('-')
+      const bId = ~~idArr.pop()
+      const pId = idArr.join('-')
+      const parent = this.find(pId)
+      parent.children.splice(bId + i, 0, d)
       initColor(d, parent.color || colorScale(colorNumber += 1))
       initId(parent, parent.id)
       initSize(d)
+      return d
     }
   }
 
   move(delId, insertId, i=0) { // 节点在同层移动
     if (delId.length > 2 && insertId.length > 2) {
-      const parent = this.find(delId.slice(0, -2))
-      const delIndex = ~~delId[delId.length-1]
-      let insertIndex = ~~insertId[insertId.length-1]
+      const idArr = delId.split('-')
+      const delIndex = ~~idArr.pop()
+      const pId = idArr.join('-')
+      const parent = this.find(pId)
+      let insertIndex = ~~insertId.split('-').pop()
+
       delIndex < insertIndex ? insertIndex -= 1 : null // 删除时可能会改变插入的序号
       parent.children.splice(
         insertIndex + i, 0, parent.children.splice(delIndex, 1)[0]
@@ -162,22 +173,19 @@ class ImData {
   reparent(parentId, delId) { // 节点移动到其他层
     if (delId.length > 2 && parentId.length > 0 && parentId !== delId) {
       const np = this.find(parentId)
-      const delParent = this.find(delId.slice(0, -2))
-      const delIndex = ~~delId[delId.length-1]
-      try {
-        JSON.stringify(delParent) // bug残留
-        JSON.stringify(np)
-        const del = delParent.children.splice(delIndex, 1)[0] // 删除
-        np.children?.length > 0 ? np.children.push(del) 
-          : (np._children?.length > 0 ? np._children.push(del) : np.children = [del])
+      const idArr = delId.split('-')
+      const delIndex = ~~idArr.pop()
+      const delParentId = idArr.join('-')
+      const delParent = this.find(delParentId)
 
-        initColor(del, parentId === '0' ? colorScale(colorNumber += 1) : np.color) 
+      const del = delParent.children.splice(delIndex, 1)[0] // 删除
+      np.children?.length > 0 ? np.children.push(del) 
+        : (np._children?.length > 0 ? np._children.push(del) : np.children = [del])
 
-        initId(np, np.id)
-        initId(delParent, delParent.id)
-      } catch (error) {
-        console.log(error)
-      }
+      initColor(del, parentId === '0' ? colorScale(colorNumber += 1) : np.color) 
+
+      initId(np, np.id)
+      initId(delParent, delParent.id)
     }
   }
 }
