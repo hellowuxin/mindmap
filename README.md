@@ -3,6 +3,7 @@
 # 思维导图VUE组件
 
 ![npm](https://img.shields.io/npm/v/@hellowuxin/mindmap)
+![npm](https://img.shields.io/npm/dm/@hellowuxin/mindmap)
 
 > 一个由[MindNode](https://mindnode.com)启发的思维导图Vue组件，基于d3.js实现  
 > 目前实现的功能有基本的编辑、拖移、缩放、撤销、上下文菜单、折叠...
