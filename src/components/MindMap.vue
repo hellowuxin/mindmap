@@ -117,6 +117,7 @@ export default {
     canRedo() { return this.history.canRedo },
   },
   data: () => ({
+    dragFlag: false,
     minTextWidth: 16,
     minTextHeight: 21,
     spaceKey: false,
@@ -210,13 +211,12 @@ export default {
     },
     makeDrag(val) {
       const { mindmap_g, dragged, fObjMousedown, dragended } = this
-      mindmap_g.selectAll('foreignObject').filter((d) => d.depth !== 0)// 非根节点才可以拖拽
-        .call(
-          d3.drag().container((d, i, n) => n[i].parentNode.parentNode)
-            .on('start', val ? fObjMousedown : null)
-            .on('drag', val ? dragged : null)
-            .on('end', val ? dragended : null)
-        )
+      mindmap_g.selectAll('foreignObject').call(
+        d3.drag().container((d, i, n) => n[i].parentNode.parentNode)
+          .on('start', val ? fObjMousedown : null)
+          .on('drag', val ? dragged : null)
+          .on('end', val ? dragended : null)
+      )
     },
     makeZoom(val) {
       if (val) {
@@ -510,7 +510,8 @@ export default {
       if (sele) {
         if (sele.__click__ === 1 
         && n[i].parentNode === sele 
-        && document.activeElement !== n[i].firstElementChild) {
+        && document.activeElement !== n[i].firstElementChild
+        && !this.dragFlag ) {
           this.editNode(sele)
           sele.__click__ = 0
         } else {
@@ -612,39 +613,42 @@ export default {
       }
     },
     dragged(a, i, n) { // 拖拽中【待完善】
-      const { mindmap_g, xSpacing } = this
-      const draggedNode = n[i].parentNode
-      const fObject = n[i]
+      this.dragFlag = true
+      if (a.depth !== 0) {
+        const { mindmap_g, xSpacing } = this
+        const draggedNode = n[i].parentNode
+        const fObject = n[i]
 
-      // 拖拽
-      // 相对a原本位置的偏移
-      const py = d3.event.x - a.x // x轴偏移的量
-      const px = d3.event.y - a.y // y轴偏移的量
-      this.draggedNodeRenew(draggedNode, px, py, null, a)
-      // foreignObject偏移
-      const targetY = a.dy + py + ~~fObject.getAttribute('x') // x轴坐标
-      const targetX = a.dx + px + ~~fObject.getAttribute('y') // y轴坐标
+        // 拖拽
+        // 相对a原本位置的偏移
+        const py = d3.event.x - a.x // x轴偏移的量
+        const px = d3.event.y - a.y // y轴偏移的量
+        this.draggedNodeRenew(draggedNode, px, py, null, a)
+        // foreignObject偏移
+        const targetY = a.dy + py + ~~fObject.getAttribute('x') // x轴坐标
+        const targetX = a.dx + px + ~~fObject.getAttribute('y') // y轴坐标
 
-      // 计算others相对a.parent位置的坐标
-      mindmap_g.selectAll('g.node')
-        .filter((d, i, n) => draggedNode !== n[i] && draggedNode.parentNode !== n[i])
-        .each((d, i, n) => {
-          const gNode = n[i]
-          const gRect = gNode.getElementsByTagName('foreignObject')[0]
-          const rect = { // 其他gRect相对a.parent的坐标，以及gRect的宽高
-            y: ~~gRect.getAttribute('x') + d.y + (d.py || 0) - (a.parent.y || 0), // foreignObject的x轴偏移
-            x: ~~gRect.getAttribute('y') + d.x + (d.px || 0) - (a.parent.x || 0), // foreignObject的y轴偏移
-            width: d.size[1] - xSpacing,
-            height: d.size[0],
-          }
-          // 重叠触发矩形边框
-          if ((targetY > rect.y) && (targetY < rect.y + rect.width)
-          && (targetX > rect.x) && (targetX < rect.x + rect.height)) {
-            gNode.setAttribute('id', 'newParentNode')
-          } else if (gNode.getAttribute('id') === 'newParentNode') {
-            gNode.removeAttribute('id')
-          }
-        })
+        // 计算others相对a.parent位置的坐标
+        mindmap_g.selectAll('g.node')
+          .filter((d, i, n) => draggedNode !== n[i] && draggedNode.parentNode !== n[i])
+          .each((d, i, n) => {
+            const gNode = n[i]
+            const gRect = gNode.getElementsByTagName('foreignObject')[0]
+            const rect = { // 其他gRect相对a.parent的坐标，以及gRect的宽高
+              y: ~~gRect.getAttribute('x') + d.y + (d.py || 0) - (a.parent.y || 0), // foreignObject的x轴偏移
+              x: ~~gRect.getAttribute('y') + d.x + (d.px || 0) - (a.parent.x || 0), // foreignObject的y轴偏移
+              width: d.size[1] - xSpacing,
+              height: d.size[0],
+            }
+            // 重叠触发矩形边框
+            if ((targetY > rect.y) && (targetY < rect.y + rect.width)
+            && (targetX > rect.x) && (targetX < rect.x + rect.height)) {
+              gNode.setAttribute('id', 'newParentNode')
+            } else if (gNode.getAttribute('id') === 'newParentNode') {
+              gNode.removeAttribute('id')
+            }
+          })
+      }   
     },
     dragback(d, draggedNode) {
       this.draggedNodeRenew(draggedNode, 0, 0, 1000, d)
@@ -696,6 +700,7 @@ export default {
           }
         }
       }
+      this.dragFlag = false
     },
     // 绘制
     updateMindmap() {
