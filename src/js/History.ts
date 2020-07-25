@@ -1,4 +1,7 @@
 class History {
+  maxSnapshots: number
+  snapshots: Array<object>
+  cursor: number
   constructor(maxSnapshots = 20) {
     this.maxSnapshots = maxSnapshots
     this.snapshots = []
@@ -9,7 +12,7 @@ class History {
   get canClear() { return this.snapshots.length >= 0 }
   get canRedo() { return this.snapshots.length > this.cursor + 1 }
 
-  record(snapshot) { // 记录数据快照
+  record(snapshot: object) { // 记录数据快照
     while (this.cursor < this.snapshots.length - 1) { // 去除旧分支
       this.snapshots.pop()
     }
@@ -35,7 +38,7 @@ class History {
     return null
   }
 
-  move(cursor) {
+  move(cursor: number) {
     if (this.snapshots.length > cursor) {
       this.cursor = cursor
       return this.snapshots[this.cursor]
