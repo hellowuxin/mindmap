@@ -75,11 +75,11 @@
 
 <script lang="ts">
 import { Vue, Component, Watch, Prop, Model } from 'vue-property-decorator'
-import * as d3 from '../js/d3'
+import * as d3 from '../ts/d3'
 import { flextree } from 'd3-flextree'
-import ImData from '../js/ImData'
-import History from '../js/History'
-import toMarkdown from '../js/toMarkdown'
+import ImData from '../ts/ImData'
+import History from '../ts/History'
+import toMarkdown from '../ts/toMarkdown'
 
 let mmdata: ImData // 思维导图数据
 @Component
