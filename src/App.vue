@@ -91,40 +91,40 @@
   </v-app>
 </template>
 
-<script>
+<script lang="ts">
+import { Vue, Component } from 'vue-property-decorator'
 import dataLearn from '../public/learn.json'
-import mindmap from './components/MindMap'
+import mindmap from './components/MindMap.vue'
 
-export default {
+@Component({
   components: {
     mindmap
-  },
-  data: () => ({
-    showSource: false,
-    onboarding: 0,
-    length: 3,
-    mmdata: dataLearn,
-    items: [
-      { title: 'template' },
-      { title: 'script' }
-    ],
-    options: {
-      gps: { value: true },
-      fitView: { value: true },
-      keyboard: { value: true },
-      draggable: { value: true },
-      showNodeAdd: { value: true },
-      contextMenu: { value: true },
-      zoomable: { value: true },
-      showUndo: { value: true },
-      download: { value: true },
-    },
-    xSpacing: 80,
-    ySpacing: 20,
-    strokeWidth: 4,
-  }),
-  mounted() {
   }
+})
+export default class App extends Vue {
+  showSource = false
+  onboarding = 0
+  length = 3
+  mmdata = dataLearn
+  items = [
+    { title: 'template' },
+    { title: 'script' }
+  ]
+  options = {
+    gps: { value: true },
+    fitView: { value: true },
+    keyboard: { value: true },
+    draggable: { value: true },
+    showNodeAdd: { value: true },
+    contextMenu: { value: true },
+    zoomable: { value: true },
+    showUndo: { value: true },
+    download: { value: true },
+  }
+  xSpacing = 80
+  ySpacing = 20
+  strokeWidth = 4
+  mounted() {}
 }
 </script>
 
