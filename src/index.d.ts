@@ -15,7 +15,3 @@ interface Mdata {
   children?: Array<Mdata>
   _children?: Array<Mdata>
 }
-
-interface FlexNode {
-
-}
