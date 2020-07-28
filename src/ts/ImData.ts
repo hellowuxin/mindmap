@@ -148,33 +148,35 @@ class ImData {
     }
   }
 
-  add(id: string, child: Mdata) { // 添加新的子节点
+  add(id: string, child: Data) { // 添加新的子节点
     if (id.length > 0) {
       const parent = this.find(id)
       if ((parent._children?.length || 0) > 0) { // 判断是否折叠，如果折叠，展开
         parent.children = parent._children
         parent._children = []
       }
-      parent.children ? parent.children.push(child) : parent.children = [child]
-      initColor(child, parent.color || colorScale(`${colorNumber += 1}`))
-      initId(child, `${parent.id}-${parent.children.length-1}`)
-      initSize(child)
-      return child
+      const c: Mdata = JSON.parse(JSON.stringify(child))
+      parent.children ? parent.children.push(c) : parent.children = [c]
+      initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
+      initId(c, `${parent.id}-${parent.children.length-1}`)
+      initSize(c)
+      return c
     }
   }
 
-  insert(id: string, d: Mdata, i = 0) { // 插入新的节点在前（或在后）
+  insert(id: string, d: Data, i = 0) { // 插入新的节点在前（或在后）
     if (id.length > 2) {
       const idArr = id.split('-')
       const bId = idArr.pop()
       if (bId) {
         const pId = idArr.join('-')
         const parent = this.find(pId)
-        parent.children?.splice(~~bId + i, 0, d)
-        initColor(d, parent.color || colorScale(`${colorNumber += 1}`))
+        const c: Mdata = JSON.parse(JSON.stringify(d))
+        parent.children?.splice(~~bId + i, 0, c)
+        initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
         initId(parent, parent.id)
-        initSize(d)
-        return d
+        initSize(c)
+        return c
       }
     }
   }
