@@ -681,38 +681,43 @@ export default class MindMap extends Vue {
     } else { // 调换兄弟节点顺序
       const draggedParentNode = d3.select(draggedNode.parentNode as Element)
       const dPdata = draggedParentNode.data()[0] as FlexNode
-      const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`)
-        .filter((a, i, n) => draggedNode !== n[i]) as d3.Selection<d3.BaseType, FlexNode, Element, unknown>
-      if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
-        dragback(d, draggedNode)
-        fObjectClick(d, i, n)
-      } else {
-        const a: { x0: number, x1: number, b1?: Mdata, n1?: Element, b0?: Mdata, n0?: Element } = { x0: Infinity, x1: -Infinity }
-        draggedBrotherNodes.each((b, i, n) => {
-          if (b.x > d.x && b.x > a.x1 && b.x < (d.x + d.px)) { // 新哥哥节点
-            a.x1 = b.x
-            a.b1 = b.data
-            a.n1 = n[i] as Element
-          }
-          if (b.x < d.x && b.x < a.x0 && b.x > (d.x + d.px)) { // 新弟弟节点
-            a.x0 = b.x
-            a.b0 = b.data
-            a.n0 = n[i] as Element
-          }
-        })
-        if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
-          const sdata = d.data
-          if (a.b0 && a.n0) { // 插入在兄弟节点前面
-            this.move(sdata, a.b0)
-            draggedNode.parentNode?.insertBefore(draggedNode, a.n0)
-          } else if (a.b1 && a.n1) { // 插入在兄弟节点后面
-            this.move(sdata, a.b1, 1)
-            draggedNode.parentNode?.insertBefore(draggedNode, a.n1.nextSibling)
-          }
-        } else {
+      if (dPdata) {
+        const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`)
+          .filter((a, i, n) => draggedNode !== n[i]) as d3.Selection<d3.BaseType, FlexNode, Element, unknown>
+        if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
           dragback(d, draggedNode)
           fObjectClick(d, i, n)
+        } else {
+          const a: { x0: number, x1: number, b1?: Mdata, n1?: Element, b0?: Mdata, n0?: Element } = { x0: Infinity, x1: -Infinity }
+          draggedBrotherNodes.each((b, i, n) => {
+            if (b.x > d.x && b.x > a.x1 && b.x < (d.x + d.px)) { // 新哥哥节点
+              a.x1 = b.x
+              a.b1 = b.data
+              a.n1 = n[i] as Element
+            }
+            if (b.x < d.x && b.x < a.x0 && b.x > (d.x + d.px)) { // 新弟弟节点
+              a.x0 = b.x
+              a.b0 = b.data
+              a.n0 = n[i] as Element
+            }
+          })
+          if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
+            const sdata = d.data
+            if (a.b0 && a.n0) { // 插入在兄弟节点前面
+              this.move(sdata, a.b0)
+              draggedNode.parentNode?.insertBefore(draggedNode, a.n0)
+            } else if (a.b1 && a.n1) { // 插入在兄弟节点后面
+              this.move(sdata, a.b1, 1)
+              draggedNode.parentNode?.insertBefore(draggedNode, a.n1.nextSibling)
+            }
+          } else {
+            dragback(d, draggedNode)
+            fObjectClick(d, i, n)
+          }
         }
+      } else {
+        dragback(d, draggedNode)
+        fObjectClick(d, i, n)
       }
     }
     this.dragFlag = false
