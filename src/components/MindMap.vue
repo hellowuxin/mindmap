@@ -242,15 +242,14 @@ export default class MindMap extends Vue {
         .on('wheel.zoom', () => {
           const { ctrlKey, deltaY, deltaX } = d3.event
           d3.event.preventDefault()
-          const current = {...d3.zoomTransform(this.$refs.svg)}
+          const current = d3.zoomTransform(this.$refs.svg)
           if (ctrlKey) { // 缩放
-            current.k = Math.max(current.k - deltaY * 0.01, 0.1)
-            current.k = Math.min(current.k, 8)
+            let k = Math.max(current.k - deltaY * 0.02, 0.1)
+            k = Math.min(k, 8)
+            this.zoom.scaleTo(this.mindmap_svg, k)
           } else { // 移动
-            current.y = current.y - deltaY
-            current.x = current.x - deltaX
+            this.zoom.translateBy(this.mindmap_svg, -deltaX, -deltaY)
           }
-          this.mindmap_g.attr('transform', current)
         })
     } else {
       this.mindmap_svg.on('.zoom', null)
