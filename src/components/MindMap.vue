@@ -152,7 +152,7 @@ export default class MindMap extends Vue {
   ]
   selectedOption = 0
   mindmap_svg!: d3.Selection<Element, FlexNode, null, undefined>
-  mindmap_g: any
+  mindmap_g!: d3.Selection<Element, FlexNode, null, undefined>
   dummy!: d3.Selection<HTMLDivElement, FlexNode, null, undefined>
   mindmapSvgZoom!: d3.ZoomBehavior<Element, FlexNode>
   easePolyInOut = d3.transition().duration(1000).ease(d3.easePolyInOut)
@@ -181,12 +181,13 @@ export default class MindMap extends Vue {
   init() {
     // 绑定元素
     this.mindmap_svg = d3.select(this.$refs.svg)
-    this.mindmap_g = d3.select(this.$refs.content).style('opacity', 0)
+    this.mindmap_g = d3.select(this.$refs.content)
+    this.mindmap_g.style('opacity', 0)
     this.dummy = d3.select(this.$refs.dummy)
     // 绑定svg事件
     this.makeKeyboard(this.keyboard)
     this.mindmap_svg.on('contextmenu', () => { d3.event.preventDefault() })
-    this.mindmapSvgZoom = (this.zoom.on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) }) as d3.ZoomBehavior<Element, FlexNode>)
+    this.mindmapSvgZoom = this.zoom.on('zoom', () => { this.mindmap_g.attr('transform', d3.event.transform) })
       .filter(() => (
         (d3.event.ctrlKey && d3.event.type !== 'mousedown') 
         || (this.spaceKey && d3.event.type !== 'wheel')
@@ -204,8 +205,8 @@ export default class MindMap extends Vue {
     : this.mindmap_svg.on('keydown', null).on('keyup', null)
   }
   makeNodeAdd(val: boolean) {
-    const fObject = this.mindmap_g.selectAll('foreignObject')
-    const gBtn = this.mindmap_g.selectAll('.gButton')
+    const fObject = this.mindmap_g.selectAll('foreignObject') as d3.Selection<Element, FlexNode, Element, FlexNode>
+    const gBtn = this.mindmap_g.selectAll('.gButton') as d3.Selection<Element, FlexNode, Element, FlexNode>
     if (val) {
       const { mouseLeave, mouseEnter, gBtnClick } = this
       fObject.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave)
@@ -216,29 +217,27 @@ export default class MindMap extends Vue {
     }
   }
   makeContextMenu(val: boolean) {
-    this.mindmap_g.selectAll('foreignObject').on('contextmenu', val ? this.fObjectRightClick : null)
+    const selection = this.mindmap_g.selectAll('foreignObject') as d3.Selection<Element, FlexNode, Element, FlexNode>
+    if (val) {
+      selection.on('contextmenu', this.fObjectRightClick)
+    } else {
+      selection.on('contextmenu', null)
+    }
   }
   makeDrag(val: boolean) {
     const { mindmap_g, dragged, fObjMousedown, dragended } = this
+    const selection = mindmap_g.selectAll('foreignObject') as d3.Selection<Element, FlexNode, Element, FlexNode>
+    const drag = d3.drag().container((d, i, n) => n[i].parentNode?.parentNode as d3.DragContainerElement) as d3.DragBehavior<Element, FlexNode, FlexNode>
     if (val) {
-      mindmap_g.selectAll('foreignObject').call(
-        (d3.drag().container((d, i, n) => n[i].parentNode?.parentNode as d3.DragContainerElement) as d3.DragBehavior<Element, FlexNode, unknown>)
-          .on('start', fObjMousedown)
-          .on('drag', dragged)
-          .on('end', dragended)
-      )
+      selection.call(drag.on('start', fObjMousedown).on('drag', dragged).on('end', dragended))
     } else {
-      mindmap_g.selectAll('foreignObject').call(
-        d3.drag().container((d, i, n) => n[i].parentNode?.parentNode as d3.DragContainerElement)
-          .on('start', null)
-          .on('drag', null)
-          .on('end', null)
-      )
+      selection.call(drag.on('start', null).on('drag', null).on('end', null))
     }
   }
   makeZoom(val: boolean) {
+    const { mindmap_svg, mindmapSvgZoom, zoom } = this
     if (val) {
-      this.mindmap_svg.call(this.mindmapSvgZoom).on('dblclick.zoom', null)
+      mindmap_svg.call(mindmapSvgZoom).on('dblclick.zoom', null)
         .on('wheel.zoom', () => {
           const { ctrlKey, deltaY, deltaX } = d3.event
           d3.event.preventDefault()
@@ -246,13 +245,13 @@ export default class MindMap extends Vue {
           if (ctrlKey) { // 缩放
             let k = Math.max(current.k - deltaY * 0.02, 0.1)
             k = Math.min(k, 8)
-            this.zoom.scaleTo(this.mindmap_svg, k)
+            zoom.scaleTo(mindmap_svg, k)
           } else { // 移动
-            this.zoom.translateBy(this.mindmap_svg, -deltaX, -deltaY)
+            zoom.translateBy(mindmap_svg, -deltaX, -deltaY)
           }
         })
     } else {
-      this.mindmap_svg.on('.zoom', null)
+      mindmap_svg.on('.zoom', null)
     }
   }
   // button事件
@@ -269,17 +268,17 @@ export default class MindMap extends Vue {
     }
   }
   downloadFile(content: string, filename: string) {
-    const eleLink = document.createElement('a');
-    eleLink.download = filename;
-    eleLink.style.display = 'none';
+    const eleLink = document.createElement('a')
+    eleLink.download = filename
+    eleLink.style.display = 'none'
     // 字符内容转变成blob地址
-    const blob = new Blob([content]);
-    eleLink.href = URL.createObjectURL(blob);
+    const blob = new Blob([content])
+    eleLink.href = URL.createObjectURL(blob)
     // 触发点击
-    document.body.appendChild(eleLink);
-    eleLink.click();
+    document.body.appendChild(eleLink)
+    eleLink.click()
     // 然后移除
-    document.body.removeChild(eleLink);
+    document.body.removeChild(eleLink)
   }
   exportTo() { // 导出至
     const data = mmdata.getSource()
@@ -376,7 +375,7 @@ export default class MindMap extends Vue {
   // 键盘
   svgKeyDown() {
     const event = d3.event
-    const keyName = event.key
+    const keyName = event.key as string
     // 针对导图的操作
     if (keyName === ' ' && !this.spaceKey) { this.spaceKey = true }
     if (event.metaKey) {
@@ -388,29 +387,39 @@ export default class MindMap extends Vue {
         this.redo()
       }
     } else { // 针对节点的操作
-      const sele = d3.select('#selectedNode')
-      if (sele.node()) {
-        const seleData: FlexNode = sele.data()[0] as FlexNode // FlexNode
+      const sele = d3.select('#selectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>
+      const seleNode = sele.node()
+      if (seleNode) {
+        const seleData = sele.data()[0]
         const seleDepth = seleData.depth
         const im = seleData.data
-        const pNode = (sele.node() as Element).parentNode as Element
+        const pNode = seleNode.parentNode as Element
 
-        if (keyName === 'Tab') { // 添加子节点
-          d3.event.preventDefault()
-          const nd = this.add(im, { name: '' })
-          nd ? this.editNew(nd, seleDepth+1, pNode) : null
-        } else if (keyName === 'Enter') { // 添加弟弟节点
-          d3.event.preventDefault()
-          if (pNode === this.$refs.content) { // 根节点enter时，等效tab
-          const nd = this.add(im, { name: '' })
-          nd ? this.editNew(nd, seleDepth+1, pNode) : null
-          } else {
-            const nd = this.insert(im, { name: '' }, 1)
-            nd ? this.editNew(nd, seleDepth, pNode) : null
+        switch (keyName) {
+          case 'Tab': {
+            d3.event.preventDefault()
+            const nd = this.add(im, { name: '' })
+            nd ? this.editNew(nd, seleDepth+1, pNode) : null
+            break
           }
-        } else if (keyName === 'Backspace') { // 删除节点
-          d3.event.preventDefault()
-          this.del(im)
+          case 'Enter': {
+            d3.event.preventDefault()
+            if (pNode === this.$refs.content) { // 根节点enter时，等效tab
+              const nd = this.add(im, { name: '' })
+              nd ? this.editNew(nd, seleDepth+1, pNode) : null
+            } else {
+              const nd = this.insert(im, { name: '' }, 1)
+              nd ? this.editNew(nd, seleDepth, pNode) : null
+            }
+            break
+          }
+          case 'Backspace': {
+            d3.event.preventDefault()
+            this.del(im)
+            break
+          }
+          default:
+            break
         }
       }
     } 
@@ -453,27 +462,29 @@ export default class MindMap extends Vue {
   editNode(n: Element) { // 编辑节点
     this.removeSelectedId()
     n.setAttribute('id', 'editing')
-    const fObj = d3.select(n).selectAll('foreignObject').filter((a, b, c) => (c[b] as Element).parentNode === n)
+    const fObj = d3.select(n).selectAll('foreignObject').filter((a, b, c) => (c[b] as Element).parentNode === n) as d3.Selection<Element, FlexNode, Element, FlexNode>
     this.focusNode(fObj)
     fObj.select('div').attr('contenteditable', true)
     const fdiv = document.querySelector(`#editing > foreignObject > div`)
     fdiv ? window.getSelection()?.selectAllChildren(fdiv) : null
   }
-  focusNode(fObj: any) { // 使节点处于可视区域
+  focusNode(fObj: d3.Selection<Element, FlexNode, Element | null, FlexNode | undefined>) { // 使节点处于可视区域
     const { k } = d3.zoomTransform(this.$refs.svg) // 放大缩小倍数
-    const fObjPos = fObj.node().getBoundingClientRect()
-    const svgPos = this.$refs.svg.getBoundingClientRect()
+    const fObjPos = (fObj.node() as Element).getBoundingClientRect()
+    if (fObjPos) {
+      const svgPos = this.$refs.svg.getBoundingClientRect()
 
-    const r = fObjPos.right - svgPos.right
-    const b = fObjPos.bottom - svgPos.bottom
-    const l = fObjPos.left - svgPos.left
-    const t = fObjPos.top - svgPos.top
-    const x = (r > 0 && r) || (l < 0 && l)
-    const y = (b > 0 && b) || (t < 0 && t)
-    
-    // 保持节点可视
-    if (x) { this.mindmap_svg.call(this.zoom.translateBy, -x/k, 0) }
-    if (y) { this.mindmap_svg.call(this.zoom.translateBy, 0, -y/k) }
+      const r = fObjPos.right - svgPos.right
+      const b = fObjPos.bottom - svgPos.bottom
+      const l = fObjPos.left - svgPos.left
+      const t = fObjPos.top - svgPos.top
+      const x = (r > 0 && r) || (l < 0 && l)
+      const y = (b > 0 && b) || (t < 0 && t)
+      
+      // 保持节点可视
+      if (x) { this.mindmap_svg.call(this.zoom.translateBy, -x/k, 0) }
+      if (y) { this.mindmap_svg.call(this.zoom.translateBy, 0, -y/k) }
+    }
   }
   editNew(newD: Mdata, depth: number, pNode: Element) { // 聚焦新节点
     d3.transition().end().then(() => {
@@ -507,7 +518,7 @@ export default class MindMap extends Vue {
     if (!edit || flag) { // 未在编辑
       d3.event.sourceEvent.preventDefault()
       this.selectNode(clickedNode)
-      const fObj = d3.select(n[i])
+      const fObj = d3.select(n[i]) as d3.Selection<Element, FlexNode, null, undefined>
       const fdiv = n[i].firstElementChild as HTMLDivElement
       fdiv.contentEditable = 'true'
       
@@ -536,7 +547,7 @@ export default class MindMap extends Vue {
       }
     }
   }
-  fObjectRightClick(d: {data: Mdata}, i: number, n: Element[]) {
+  fObjectRightClick(d: FlexNode, i: number, n: ArrayLike<Element>) {
     const sele = document.getElementById('selectedNode')
     const edit = document.getElementById('editing')
     const clickedNode = n[i].parentNode as Element
@@ -557,8 +568,8 @@ export default class MindMap extends Vue {
       setTimeout(() => { this.$refs.menu.focus() }, 300)
     }
   }
-  gBtnClick(a: Object, i: number, n: SVGElement[]) { // 添加子节点
-    if (n[i].style.opacity === '1') {
+  gBtnClick(a: FlexNode, i: number, n: ArrayLike<Element>) { // 添加子节点
+    if ((n[i] as SVGElement).style.opacity === '1') {
       const d: FlexNode = d3.select(n[i].parentNode as Element).data()[0] as FlexNode
       const newD = this.add(d.data, { name: '' })
       this.mouseLeave(d, i, n)
@@ -584,17 +595,17 @@ export default class MindMap extends Vue {
     this.removeSelectedId()
   }
   // 悬浮事件
-  mouseLeave(d: FlexNode, i: number, n: SVGElement[]) {
-    if (n[i].className.baseVal.includes('gButton')) {
+  mouseLeave(d: FlexNode, i: number, n: ArrayLike<Element>) {
+    if ((n[i] as SVGElement).className.baseVal.includes('gButton')) {
       d3.select(n[i]).style('opacity', 0)
     } else {
       d3.selectAll('g.gButton').filter((a, b, c) => (c[b] as Element).parentNode === n[i].parentNode).style('opacity', 0)
     }
   }
-  mouseEnter(d: FlexNode, i: number, n: SVGElement[]) {
+  mouseEnter(d: FlexNode, i: number, n: ArrayLike<Element>) {
     const flag = (d.data._children?.length || 0) > 0
     if (!flag) {
-      if (n[i].className.baseVal.includes('gButton')) {
+      if ((n[i] as SVGElement).className.baseVal.includes('gButton')) {
         d3.select(n[i]).style('opacity', 1)
       } else {
         d3.selectAll('g.gButton').filter((a, b, c) => (c[b] as Element).parentNode === n[i].parentNode).style('opacity', 0.5)
@@ -643,12 +654,12 @@ export default class MindMap extends Vue {
       this.draggedNodeRenew(draggedNode, px, py, undefined, a)
       // foreignObject偏移
       const targetY = a.dy + py + ~~(fObject.getAttribute('x') || 0) // x轴坐标
-      const targetX = a.dx + px + ~~(fObject.getAttribute('y') || 0) // y轴坐标
+      const targetX = a.dx + px + ~~(fObject.getAttribute('y') || 0); // y轴坐标
 
       // 计算others相对a.parent位置的坐标
-      mindmap_g.selectAll('g.node')
-        .filter((d: FlexNode, i: number, n: Element[]) => draggedNode !== n[i] && draggedNode.parentNode !== n[i])
-        .each((d: FlexNode, i: number, n: Element[]) => {
+      (mindmap_g.selectAll('g.node') as d3.Selection<Element, FlexNode, Element, FlexNode>)
+        .filter((d, i, n) => draggedNode !== n[i] && draggedNode.parentNode !== n[i])
+        .each((d, i, n) => {
           const gNode = n[i]
           const gRect = gNode.getElementsByTagName('foreignObject')[0]
           const rect = { // 其他gRect相对a.parent的坐标，以及gRect的宽高
@@ -683,7 +694,7 @@ export default class MindMap extends Vue {
       const dPdata = draggedParentNode.data()[0] as FlexNode
       if (dPdata) {
         const draggedBrotherNodes = draggedParentNode.selectAll(`g.depth_${dPdata.depth + 1}`)
-          .filter((a, i, n) => draggedNode !== n[i]) as d3.Selection<d3.BaseType, FlexNode, Element, unknown>
+          .filter((a, i, n) => draggedNode !== n[i]) as d3.Selection<d3.BaseType, FlexNode, Element, FlexNode>
         if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时复原
           dragback(d, draggedNode)
           fObjectClick(d, i, n)
@@ -729,7 +740,7 @@ export default class MindMap extends Vue {
     this.draw()
     this.initNodeEvent()
   }
-  dKey(d: unknown) { return (d as FlexNode).data.gKey }
+  dKey(d: FlexNode) { return d.data.gKey }
   gClass(d: FlexNode) { return `depth_${d.depth} node` }
   gTransform(d: FlexNode) { return `translate(${d.dy},${d.dx})` }
   foreignY(d: FlexNode) { return -d.data.size[0]/2 - 5 }
@@ -750,24 +761,20 @@ export default class MindMap extends Vue {
     }L${d.data.size[1] - this.xSpacing},${d.data.size[0]/2}`
   }
   nest(d: FlexNode, i: number, n: ArrayLike<Element>) {
-    const { dKey } = this
-    const dd = (d as FlexNode).children || []
-    d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`)
+    const { dKey, appendNode, updateNode, exitNode } = this
+    const dd = d.children || [];
+    (d3.select(n[i]).selectAll(`g${dd[0] ? `.depth_${dd[0].depth}.node` : ''}`) as d3.Selection<Element, FlexNode, Element, FlexNode>)
       .data(dd, dKey)
-      .join(
-        (enter) => this.appendNode(enter),
-        (update) => this.updateNode(update),
-        (exit) => this.exitNode(exit)
-      )
+      .join(appendNode, updateNode, exitNode)
   }
-  appendNode(enter: any) {
+  appendNode(enter: d3.Selection<d3.EnterElement, FlexNode, Element, FlexNode>) {
     const { expand, gEllTransform, gClass, gTransform, updateNodeName, divKeyDown, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest, fdivMouseDown } = this
     const gNode = enter.append('g').attr('class', gClass).attr('transform', gTransform)
 
     const foreign = gNode.append('foreignObject').attr('x', -5).attr('y', foreignY)
     const foreignDiv = foreign.append('xhtml:div').attr('contenteditable', false).text((d: FlexNode) => d.data.name)
     foreignDiv.on('blur', updateNodeName).on('keydown', divKeyDown).on('mousedown', fdivMouseDown)
-    foreignDiv.each((d: FlexNode, i: number, n: Element[]) => {
+    foreignDiv.each((d, i, n) => {
       const observer = new ResizeObserver((l) => {
         const t = l[0].target
         const b1 = getComputedStyle(t).borderTopWidth
@@ -777,7 +784,7 @@ export default class MindMap extends Vue {
           .attr('width', l[0].contentRect.width + spacing*2)// div和foreign border
           .attr('height', l[0].contentRect.height + spacing*2)
       })
-      observer.observe(n[i])
+      observer.observe(n[i] as Element)
     })
     
     const gBtn = gNode.append('g').attr('class', 'gButton').attr('transform', gBtnTransform)
@@ -813,12 +820,12 @@ export default class MindMap extends Vue {
     foreign.raise()
     return gNode
   }
-  updateNode(update: any) {
+  updateNode(update: d3.Selection<Element, FlexNode, Element, FlexNode>) {
     const { gEllTransform, gClass, gTransform, easePolyInOut, foreignY, gBtnTransform, pathId, pathClass, pathColor, path, nest } = this
     update.interrupt().selectAll('*').interrupt()
-    update.attr('class', gClass).transition(easePolyInOut).attr('transform', gTransform)
+    update.attr('class', gClass).transition(easePolyInOut as any).attr('transform', gTransform)
 
-    update.each((d: FlexNode, k: number, m: Element[]) => {
+    update.each((d, k, m) => {
       const node = d3.select(m[k]) as d3.Selection<Element, FlexNode, null, undefined>
       const foreign = node.selectAll('foreignObject').filter((d, i, n) => (n[i] as Element).parentNode === m[k])
         .data([d]) // must rebind the children using selection.data to give them the new data.
@@ -848,20 +855,16 @@ export default class MindMap extends Vue {
     })
     return update
   }
-  exitNode(exit: any) { 
-    exit.filter((d: FlexNode, i: number, n: Element[]) => n[i].classList[1] == 'node').remove()
+  exitNode(exit: d3.Selection<Element, FlexNode, Element, FlexNode>) { 
+    exit.filter((d, i, n) => n[i].classList[1] == 'node').remove()
   }
   draw() { // 生成svg
     const { dKey, mindmap_g, appendNode, updateNode, exitNode } = this
-    const d = [ this.root ]
+    const d = [ this.root ];
 
-    mindmap_g.selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ''}`)
+    (mindmap_g.selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ''}`) as d3.Selection<Element, FlexNode, Element, FlexNode>)
       .data(d, dKey)
-      .join(
-        (enter: unknown) => appendNode(enter),
-        (update: unknown) => updateNode(update),
-        (exit: unknown) => exitNode(exit)
-      )
+      .join(appendNode, updateNode, exitNode)
   }
   tree() { // 数据处理
     const { ySpacing } = this
