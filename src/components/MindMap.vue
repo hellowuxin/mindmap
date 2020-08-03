@@ -531,7 +531,6 @@ export default class MindMap extends Vue {
         sele.setAttribute('__click__', '1')
       }
     }
-    console.log(document.activeElement)
   }
   fObjectRightClick(d: FlexNode, i: number, n: ArrayLike<Element>) {
     const sele = document.getElementById('selectedNode')
