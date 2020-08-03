@@ -424,8 +424,7 @@ export default class MindMap extends Vue {
       }
     } 
   }
-  svgKeyUp() {
-    // 针对导图的操作
+  svgKeyUp() { // 针对导图的操作
     if (d3.event.key === ' ') { this.spaceKey = false }
   }
   divKeyDown() {
@@ -489,7 +488,7 @@ export default class MindMap extends Vue {
   editNew(newD: Mdata, depth: number, pNode: Element) { // 聚焦新节点
     d3.transition().end().then(() => {
       const node = d3.select(pNode).selectAll(`g.node.depth_${depth}`)
-        .filter((b) => (b as FlexNode).data.id === newD.id) // b: FlexNode
+        .filter((b) => (b as FlexNode).data.id === newD.id)
         .node()
 
       this.editNode(node as Element)
@@ -516,21 +515,7 @@ export default class MindMap extends Vue {
       flag = 1
     }
     if (!edit || flag) { // 未在编辑
-      d3.event.sourceEvent.preventDefault()
       this.selectNode(clickedNode)
-      const fObj = d3.select(n[i]) as d3.Selection<Element, FlexNode, null, undefined>
-      const fdiv = n[i].firstElementChild as HTMLDivElement
-      fdiv.contentEditable = 'true'
-      
-      setTimeout(() => {
-        if (document.activeElement !== fdiv) {
-          fdiv.contentEditable = 'false'
-        } else { // 双击进入编辑状态
-          this.removeSelectedId()
-          clickedNode.setAttribute('id', 'editing')
-          this.focusNode(fObj)
-        }
-      }, 300)
     }
   }
   fObjectClick(d: Object, i: number, n: ArrayLike<Element>) { // 两次单击进入编辑状态
@@ -546,6 +531,7 @@ export default class MindMap extends Vue {
         sele.setAttribute('__click__', '1')
       }
     }
+    console.log(document.activeElement)
   }
   fObjectRightClick(d: FlexNode, i: number, n: ArrayLike<Element>) {
     const sele = document.getElementById('selectedNode')
@@ -555,7 +541,6 @@ export default class MindMap extends Vue {
       if (clickedNode !== sele) { // 选中
         this.selectNode(clickedNode)
       }
-      // 
       const { data } = d
       this.contextMenuItems[1].disabled = !data.children || data.children.length === 0
       this.contextMenuItems[2].disabled = !(data._children && data._children.length > 0)
@@ -580,10 +565,10 @@ export default class MindMap extends Vue {
     this.showContextMenu = false
     const data = (d3.select('#selectedNode').data()[0] as FlexNode).data
     switch (key) {
-      case 'delete': // 删除节点
+      case 'delete':
         this.del(data)
         break
-      case 'collapse': // 折叠节点
+      case 'collapse':
         this.collapse(data)
         break
       case 'expand':
