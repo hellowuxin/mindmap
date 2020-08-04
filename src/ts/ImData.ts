@@ -120,6 +120,7 @@ class ImData {
       const d = this.find(id)
       d.name = name
       d.size = size(name)
+      return d
     }
   }
 

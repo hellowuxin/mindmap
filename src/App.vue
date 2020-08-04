@@ -32,6 +32,7 @@
                     :ySpacing="ySpacing"
                     :strokeWidth="strokeWidth"
                     :download="options.download.value"
+                    @updateNodeName="updateNodeName"
                   ></mindmap>
                   <v-divider vertical></v-divider>
                 </div>
@@ -124,6 +125,10 @@ export default class App extends Vue {
   xSpacing = 80
   ySpacing = 20
   strokeWidth = 4
+
+  updateNodeName(d: Mdata) {
+    console.log(d)
+  }
   mounted() {}
 }
 </script>

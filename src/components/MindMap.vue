@@ -358,8 +358,9 @@ export default class MindMap extends Vue {
   updateName(d: Mdata, name: string) {
     if (d.name !== name) { // 有改变
       this.toRecord = true
-      mmdata.rename(d.id, name)
+      const nd = mmdata.rename(d.id, name)
       this.updateMmdata()
+      return nd
     }
   }
   collapse(d: Mdata) {
@@ -438,11 +439,15 @@ export default class MindMap extends Vue {
     const editP = document.querySelector('#editing > foreignObject > div') as HTMLDivElement
     window.getSelection()?.removeAllRanges() // 清除选中
     const editText = editP.innerText || ''
-    d3.select('g#editing').each((d, i, n) => {
+    this.mindmap_g.select('g#editing').each((d, i, n) => {
       (n[i] as Element).removeAttribute('id')
-      this.updateName((d as FlexNode).data, editText)
+      const nd = this.updateName(d.data, editText)
+      if (nd) {
+        this.$emit('updateNodeName',  mmdata.getSource(nd.id))
+      }
     })
     editP.setAttribute('contenteditable', 'false')
+    
     // (this.$refs.svg as HTMLElement).focus()
   }
   removeSelectedId() { // 清除选中节点
@@ -562,7 +567,7 @@ export default class MindMap extends Vue {
   }
   clickMenu(key: string) {
     this.showContextMenu = false
-    const data = (d3.select('#selectedNode').data()[0] as FlexNode).data
+    const data = this.mindmap_g.select('#selectedNode').data()[0].data
     switch (key) {
       case 'delete':
         this.del(data)
