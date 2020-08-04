@@ -1,0 +1,46 @@
+[
+  {
+    "name": "如何学习D3",
+    "right": [
+      {
+        "name":"预备知识",
+        "children":
+        [
+          { "name":"HTML & CSS" },
+          { "name":"JavaScript" },
+          { "name":"DOM" },
+          { "name":"SVG" },
+          { "name":"test" }]
+      },
+      { 
+        "name":"安装",
+        "_children": [
+          { "name": "折叠节点" }
+        ]
+      },
+      {
+        "name":"入门",
+        "children":
+        [
+          {
+            "name":"简单图形",
+            "children":
+            [
+              { "name":"柱形图" },
+              { "name":"折线图" },
+              { "name":"散点图" }]
+          },
+          { "name":"比例尺" },
+          { "name":"生成器" },
+          { "name":"过渡" }]
+      },
+      { "name":"进阶" }
+    ],
+    "left": [
+      { "name":"选择集" },
+      { "name":"test" },
+      { "name":"绑定数据" },
+      { "name":"添加删除元素" }
+    ]
+  }
+]
