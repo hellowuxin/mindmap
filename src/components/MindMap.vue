@@ -447,7 +447,6 @@ export default class MindMap extends Vue {
       }
     })
     editP.setAttribute('contenteditable', 'false')
-    
     // (this.$refs.svg as HTMLElement).focus()
   }
   removeSelectedId() { // 清除选中节点
@@ -523,17 +522,21 @@ export default class MindMap extends Vue {
       this.selectNode(clickedNode)
     }
   }
-  fObjectClick(d: Object, i: number, n: ArrayLike<Element>) { // 两次单击进入编辑状态
+  fObjectClick(d: FlexNode, i: number, n: ArrayLike<Element>) { // 两次单击进入编辑状态
     const sele = document.getElementById('selectedNode')
+    const { dragFlag } = this
     if (sele) {
       if (sele.getAttribute('__click__') === '1' 
       && n[i].parentNode === sele 
       && document.activeElement !== n[i].firstElementChild
-      && !this.dragFlag ) {
+      && !dragFlag ) {
         this.editNode(sele)
         sele.setAttribute('__click__', '0')
       } else {
         sele.setAttribute('__click__', '1')
+        if (!dragFlag) {
+          this.$emit('click', mmdata.getSource(d.data.id),  d.data.id)
+        } 
       }
     }
   }

@@ -33,6 +33,7 @@
                     :strokeWidth="strokeWidth"
                     :download="options.download.value"
                     @updateNodeName="updateNodeName"
+                    @click="click"
                   ></mindmap>
                   <v-divider vertical></v-divider>
                 </div>
@@ -126,8 +127,11 @@ export default class App extends Vue {
   ySpacing = 20
   strokeWidth = 4
 
-  updateNodeName() {
-    console.log(arguments)
+  updateNodeName(...args: any) {
+    console.log('updateNodeName', ...args)
+  }
+  click(...args: any) {
+    console.log('click', ...args)
   }
   mounted() {}
 }
