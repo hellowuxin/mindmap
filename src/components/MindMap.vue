@@ -861,8 +861,18 @@ export default class MindMap extends Vue {
   tree() { // 数据处理
     const { ySpacing } = this
     const layout = flextree({ spacing: ySpacing })
-    const t = layout.hierarchy(mmdata.data)
+    const t = layout.hierarchy(
+      mmdata.data,
+      (d: Mdata) => d.id.split('-').length === 1 ? d.children?.filter(d => d.left) : d.children
+    )
+    const t1 = layout.hierarchy(
+      mmdata.data, 
+      (d: Mdata) => d.id.split('-').length === 1 ? d.children?.filter(d => !d.left) : d.children
+    )
     layout(t)
+    t.each((a: FlexNode) => { a.y = -a.y })
+    layout(t1)
+    t.children = t.children ? t1.children.concat(t.children) : t1.children 
     this.root = t
     this.root.each((a: FlexNode) => { // x纵轴 y横轴 dx dy相对偏移
       a.dx = a.x - (a.parent ? a.parent.x : 0)

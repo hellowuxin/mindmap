@@ -21,8 +21,7 @@
       },
       {
         "name":"入门",
-        "children":
-        [
+        "children":[
           { "name":"选择集" },
           { "name":"test" },
           { "name":"绑定数据" },
@@ -37,7 +36,9 @@
           },
           { "name":"比例尺" },
           { "name":"生成器" },
-          { "name":"过渡" }]
+          { "name":"过渡" }
+        ],
+        "left": true
       },
       { "name":"进阶" }]
   },

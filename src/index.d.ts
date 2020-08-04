@@ -4,6 +4,7 @@ interface Data {
   name: string
   children?: Array<Data>
   _children?: Array<Data>
+  left?: boolean
 }
 
 interface Mdata {
@@ -14,6 +15,7 @@ interface Mdata {
   size: number[]
   children?: Array<Mdata>
   _children?: Array<Mdata>
+  left?: boolean
 }
 
 interface FlexNode {

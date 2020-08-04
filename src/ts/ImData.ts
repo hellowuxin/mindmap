@@ -43,20 +43,19 @@ function initSize(d: Mdata) { // 初始化size
 
 function _getSource(d: Mdata) { // 返回源数据
   const { children, _children } = d
-  const length1 = children?.length || 0
-  const length2 = _children?.length || 0
-  const nd = { 
-    name: d.name,
-    children: new Array(length1),
-    _children: new Array(length2)
-  }
+  const nd: Data = { name: d.name }
+  d.left ? nd.left = true : null
   if (children) {
-    for (let i = 0; i < length1; i++) {
+    const { length } = children
+    nd.children = new Array(length)
+    for (let i = 0; i < length; i++) {
       nd.children[i] = _getSource(children[i])
     }
   }
   if (_children) {
-    for (let i = 0; i < length2; i++) {
+    const { length } = _children
+    nd._children = new Array(length)
+    for (let i = 0; i < length; i++) {
       nd._children[i] = _getSource(_children[i])
     }
   }
