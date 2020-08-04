@@ -126,8 +126,8 @@ export default class App extends Vue {
   ySpacing = 20
   strokeWidth = 4
 
-  updateNodeName(d: Mdata) {
-    console.log(d)
+  updateNodeName() {
+    console.log(arguments)
   }
   mounted() {}
 }

@@ -443,7 +443,7 @@ export default class MindMap extends Vue {
       (n[i] as Element).removeAttribute('id')
       const nd = this.updateName(d.data, editText)
       if (nd) {
-        this.$emit('updateNodeName',  mmdata.getSource(nd.id))
+        this.$emit('updateNodeName',  mmdata.getSource(nd.id), nd.id)
       }
     })
     editP.setAttribute('contenteditable', 'false')
