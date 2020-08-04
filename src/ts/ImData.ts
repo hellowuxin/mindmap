@@ -83,6 +83,26 @@ function initId(d: Mdata, id='0') { // 初始化唯一标识：待优化
   }
 }
 
+function initLeft(d: Mdata) {
+  const { children, _children } = d
+  if (children) {
+    for (let i = 0; i < children.length; i += 1) {
+      if (d.id.length > 1) {
+        children[i].left = d.left ? true : false
+      }
+      initLeft(children[i])
+    }
+  }
+  if (_children) {
+    for (let i = 0; i < _children.length; i += 1) {
+      if (d.id.length > 1) {
+        _children[i].left = d.left ? true : false
+      }
+      initLeft(_children[i])
+    }
+  }
+}
+
 class ImData {
   data: Mdata
   constructor(d: Data, fn: Function) {
@@ -91,6 +111,7 @@ class ImData {
     initId(this.data)
     initColor(this.data)
     initSize(this.data)
+    initLeft(this.data)
   }
 
   getSource(id = '0') {
