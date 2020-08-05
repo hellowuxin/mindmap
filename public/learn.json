@@ -40,7 +40,10 @@
         ],
         "left": true
       },
-      { "name":"进阶" }]
+      { 
+        "name":"进阶",
+        "left": true 
+      }]
   },
   {
     "name":"根节点2",
