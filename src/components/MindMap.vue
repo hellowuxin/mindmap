@@ -682,18 +682,19 @@ export default class MindMap extends Vue {
       } else {
         const a: { x0: number, x1: number, b1?: Mdata, n1?: Element, b0?: Mdata, n0?: Element } = { x0: Infinity, x1: -Infinity }
         draggedBrotherNodes.each((b, i, n) => { 
-          if ((b.x > d.x || LR) && b.x > a.x1 && b.x < (d.x + d.px)) { // 找到新哥哥节点
+          if (((b.x>d.x) || LR) && b.x > a.x1 && b.x < (d.x + d.px)) { // 找到新哥哥节点
             a.x1 = b.x
             a.b1 = b.data
             a.n1 = n[i]
           }
-          if ((b.x > d.x || LR) && b.x < a.x0 && b.x > (d.x + d.px)) { // 找到新弟弟节点
+          if (((b.x<d.x) || LR) && b.x < a.x0 && b.x > (d.x + d.px)) { // 找到新弟弟节点
             a.x0 = b.x
             a.b0 = b.data
             a.n0 = n[i]
           }
         })
         if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
+          console.log('drag', a.b0 || a.b1)
           const sdata = d.data
           if (a.b0 && a.n0) { // 插入在兄弟节点前面
             this.move(sdata, a.b0)
@@ -869,6 +870,7 @@ export default class MindMap extends Vue {
       ? (tr.children ? tr.children.concat(tl.children): tl.children) 
       : tr.children
     tr.each((a: FlexNode) => { // x纵轴 y横轴 dx dy相对偏移
+      a.data.id !== '0' ? a.x += a.size[0]/2 : null
       a.dx = a.x - (a.parent ? a.parent.x : 0)
       a.dy = a.y - (a.parent ? a.parent.y : 0)
     })

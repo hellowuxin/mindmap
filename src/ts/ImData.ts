@@ -184,7 +184,7 @@ class ImData {
       parent.children ? parent.children.push(c) : parent.children = [c]
       initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
       initId(c, `${parent.id}-${parent.children.length-1}`)
-      c.left = parent.left
+      c.left = parent.left ? true : false
       initSize(c)
       return c
     }
@@ -201,7 +201,7 @@ class ImData {
         parent.children?.splice(~~bId + i, 0, c)
         initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
         initId(parent, parent.id)
-        c.left = parent.left
+        c.left = parent.left ? true : false
         initSize(c)
         return c
       }
