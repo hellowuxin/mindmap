@@ -302,20 +302,7 @@ export default class MindMap extends Vue {
   }
   async makeCenter() { // 居中
     await d3.transition().end().then(() => {
-      const div = this.$refs.mindmap
-      const content = (this.$refs.content as SVGGElement).getBBox()
-      const { k } = d3.zoomTransform(this.$refs.svg)
-
-      const x = (
-        -(div.offsetWidth - k*content.width)/(2*k) 
-        - 5
-      )
-      const y = (
-        -(div.offsetHeight - k*content.height)/(2*k) 
-        - (-this.dTop.x - this.foreignY(this.dTop))
-      )
-
-      this.mindmap_svg.call(this.zoom.translateTo, x, y, [0, 0])
+      this.mindmap_svg.call(this.zoom.translateTo, 0, 0)
     })
   }
   async fitContent() { // 适应窗口大小
