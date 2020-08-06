@@ -180,6 +180,7 @@ class ImData {
       parent.children ? parent.children.push(c) : parent.children = [c]
       initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
       initId(c, `${parent.id}-${parent.children.length-1}`)
+      parent.left ? c.left = true : null
       initSize(c)
       return c
     }
@@ -196,6 +197,7 @@ class ImData {
         parent.children?.splice(~~bId + i, 0, c)
         initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
         initId(parent, parent.id)
+        parent.left ? c.left = true : null
         initSize(c)
         return c
       }
@@ -238,7 +240,7 @@ class ImData {
             : ((np._children?.length || 0) > 0 ? np._children?.push(del) : np.children = [del])
 
           initColor(del, parentId === '0' ? colorScale(`${colorNumber += 1}`) : np.color) 
-
+          initLeft(np)
           initId(np, np.id)
           initId(delParent, delParent.id)
         }
