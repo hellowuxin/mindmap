@@ -131,6 +131,7 @@ export default class MindMap extends Vue {
   minTextWidth = 16
   minTextHeight = 21
   gBtnSide = 24 // gBtn边长
+  foreignBorderWidth = 3
   spaceKey = false
   toRecord = true // 判断是否需要记录mmdata的数据快照
   toUpdate = true // 判断是否需要更新mmdata
@@ -614,13 +615,13 @@ export default class MindMap extends Vue {
     let textWidth = d.size[1] - xSpacing
     d.data.left ? textWidth = -textWidth : null
     const sourceX = -py + (d.data.left ? xSpacing : -xSpacing)
-    const sourceY = -targetX + (d.parent ? d.parent.size[0]/2 : 0)
+    const sourceY = -targetX
 
     d3.select(draggedNode).transition(tran as any).attr('transform', `translate(${targetY},${targetX})`)
     // 更新draggedNode与父节点的path
     d3.select(`path#path_${d.data.id}`).transition(tran as any).attr('d', `${link({
-      source: [sourceX, sourceY], target: [0, d.size[0]/2],
-    })}L${textWidth},${d.size[0]/2}`)
+      source: [sourceX, sourceY], target: [0, 0],
+    })}L${textWidth},${0}`)
 
     this.renewOffset(d, px, py)
   }
@@ -726,30 +727,34 @@ export default class MindMap extends Vue {
   dKey(d: FlexNode) { return d.data.gKey }
   gClass(d: FlexNode) { return `depth_${d.depth} node` }
   gTransform(d: FlexNode) { return `translate(${d.dy},${d.dx})` }
-  foreignX(d: FlexNode) { return d.data.id !== '0' ? (d.data.left ? -d.size[1]+this.xSpacing : -5) : -this.xSpacing/2 }
-  foreignY(d: FlexNode) { return -d.size[0]/2 - 5 + (d.data.id !== '0' ? 0 : d.size[0]/2)}
+  foreignX(d: FlexNode) {
+    const { xSpacing, foreignBorderWidth } = this
+    return -foreignBorderWidth + (d.data.id !== '0' ? (d.data.left ? -d.size[1]+xSpacing : 0) : -(d.size[1]-xSpacing)/2)
+  }
+  foreignY(d: FlexNode) { return -this.foreignBorderWidth+(d.data.id !== '0' ? -d.size[0] : -d.size[0]/2) }
   gBtnTransform(d: FlexNode) {
-    let x = d.data.id === '0' ? this.xSpacing/2 + 8 : d.size[1] + 8 - this.xSpacing
-    d.data.left ? x = -x - this.gBtnSide : null
-    return `translate(${x},${d.size[0]/2 - 12})`
+    const { xSpacing, gBtnSide } = this
+    let x = d.data.id === '0' ? (d.size[1]-xSpacing)/2+8 : d.size[1]-xSpacing+8
+    d.data.left ? x = -x - gBtnSide : null
+    return `translate(${x},${-gBtnSide/2})`
   }
   gBtnVisible(d: FlexNode) { return ((d.data._children?.length || 0) <= 0) ? 'visible' : 'hidden' }
   pathId(d: FlexNode) { return `path_${d.data.id}` }
   pathClass(d: FlexNode) { return `depth_${d.depth}` }
   pathColor(d: FlexNode) { return d.data.color || 'white' }
   gEllTransform(d: FlexNode) { 
-    let x = d.size[1] + 6 - this.xSpacing
+    let x = d.data.id === '0' ? (d.size[1]-this.xSpacing)/2+6 : d.size[1]-this.xSpacing+6
     d.data.left ? x = -x - 16 : null
-    return `translate(${x},${d.size[0]/2})` 
+    return `translate(${x},${0})` 
   }
   gEllVisible(d: FlexNode) { return (d.data._children?.length || 0) > 0 ? 'visible' : 'hidden' }
   path(d: FlexNode) {
     const sourceX = d.data.left ? this.xSpacing : -this.xSpacing
-    const sourceY = (d.parent ? d.parent.size[0]/2 : 0) - d.dx
+    const sourceY = 0 - d.dx
     let textWidth = d.size[1] - this.xSpacing
     d.data.left ? textWidth = -textWidth : null
 
-    return `${this.link({ source: [sourceX, sourceY], target: [0, d.size[0]/2] })}L${textWidth},${d.size[0]/2}`
+    return `${this.link({ source: [sourceX, sourceY], target: [0, 0] })}L${textWidth},${0}`
   }
   nest(d: FlexNode, i: number, n: ArrayLike<Element>) {
     const { dKey, appendNode, updateNode, exitNode } = this
@@ -857,29 +862,22 @@ export default class MindMap extends Vue {
   tree() { // 数据处理
     const { ySpacing } = this
     const layout = flextree({ spacing: ySpacing })
+    const gap = mmdata.data.size[1]/2
     // left
-    const t = layout.hierarchy(
-      mmdata.data, (d: Mdata) => d.id.split('-').length === 1 ? d.children?.filter(d => d.left) : d.children
-    )
-    layout(t)
-    const rootSize = t.size
-    t.each((a: FlexNode) => { a.y = -(a.y - (a.data.id === '0' ? 0 : rootSize[1]/2)) })
+    const tl = layout.hierarchy(mmdata.data, (d: Mdata) => d.id.split('-').length === 1 ? d.children?.filter(d => d.left) : d.children)
+    layout(tl)
+    tl.each((a: FlexNode) => { a.data.id !== '0' ? a.y = -a.y+gap : null })
     // right
-    const t1 = layout.hierarchy(
-      mmdata.data, (d: Mdata) => d.id.split('-').length === 1 ? d.children?.filter(d => !d.left) : d.children
-    )
-    layout(t1)
-    t1.each((a: FlexNode) => { a.y -= (a.data.id === '0' ? 0 : rootSize[1]/2) }) // 往同个方向移动固定距离
+    const tr = layout.hierarchy(mmdata.data, (d: Mdata) => d.id.split('-').length === 1 ? d.children?.filter(d => !d.left) : d.children)
+    layout(tr)
+    tr.each((a: FlexNode) => { a.data.id !== '0' ? a.y = a.y-gap : null }) // 往同个方向移动固定距离
     // all
-    t.children = t.children ? t1.children.concat(t.children) : t1.children
-    t.each((a: FlexNode) => { // x纵轴 y横轴 dx dy相对偏移
+    tr.children = tl.children ? tr.children.concat(tl.children) : tr.children
+    tr.each((a: FlexNode) => { // x纵轴 y横轴 dx dy相对偏移
       a.dx = a.x - (a.parent ? a.parent.x : 0)
-      const dy = a.parent ? (
-        a.parent.data.id === '0' ? a.parent.size[1]/2 : a.parent.size[1] // 一级节点
-      ) : 0
-      a.dy = (a.data.left ? -dy : dy)
+      a.dy = a.y - (a.parent ? a.parent.y : 0)
     })
-    this.root = t
+    this.root = tr
   }
   getDTop() {
     let t = this.root

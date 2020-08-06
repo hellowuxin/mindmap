@@ -84,9 +84,7 @@ div#mindmap {
     foreignObject {
       cursor: default;
       border-radius: 3px;
-      border-width: 2px;
-      border-color: transparent;
-      border-style: solid;
+      border: 2px solid transparent;
 
       &:focus { outline: none; }
       
