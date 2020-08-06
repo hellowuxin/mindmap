@@ -15,7 +15,7 @@ interface Mdata {
   size: number[]
   children?: Array<Mdata>
   _children?: Array<Mdata>
-  left?: boolean
+  left: boolean
 }
 
 interface FlexNode {

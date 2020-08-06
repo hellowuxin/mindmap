@@ -44,7 +44,7 @@ function initSize(d: Mdata) { // 初始化size
 function _getSource(d: Mdata) { // 返回源数据
   const { children, _children } = d
   const nd: Data = { name: d.name }
-  d.left ? nd.left = true : null
+  nd.left = d.left
   if (children) {
     const { length } = children
     nd.children = new Array(length)
@@ -87,16 +87,20 @@ function initLeft(d: Mdata) {
   const { children, _children } = d
   if (children) {
     for (let i = 0; i < children.length; i += 1) {
-      if (d.id.length > 1) {
-        children[i].left = d.left ? true : false
+      if (d.id !== '0') {
+        children[i].left = d.left
+      } else {
+        children[i].left ? null : children[i].left = false
       }
       initLeft(children[i])
     }
   }
   if (_children) {
     for (let i = 0; i < _children.length; i += 1) {
-      if (d.id.length > 1) {
-        _children[i].left = d.left ? true : false
+      if (d.id !== '0') {
+        _children[i].left = d.left
+      } else {
+        _children[i].left ? null : _children[i].left = false
       }
       initLeft(_children[i])
     }
@@ -180,7 +184,7 @@ class ImData {
       parent.children ? parent.children.push(c) : parent.children = [c]
       initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
       initId(c, `${parent.id}-${parent.children.length-1}`)
-      parent.left ? c.left = true : null
+      c.left = parent.left
       initSize(c)
       return c
     }
@@ -197,32 +201,42 @@ class ImData {
         parent.children?.splice(~~bId + i, 0, c)
         initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
         initId(parent, parent.id)
-        parent.left ? c.left = true : null
+        c.left = parent.left
         initSize(c)
         return c
       }
     }
   }
 
-  move(delId: string, insertId: string, i=0) { // 节点在同层移动
-    if (delId.length > 2 && insertId.length > 2) {
-      const idArr = delId.split('-')
-      const delIndexS = idArr.pop()
-      const pId = idArr.join('-')
-      const parent = this.find(pId)
-      const insertIndexS = insertId.split('-').pop()
+  move(delId: string, insertId?: string, i=0) { // 节点在同层移动
+    if (delId.length > 2) {
+      if(!insertId) { // 左右转换
+        const del = this.find(delId)
+        del.left = !del.left
+        initLeft(del)
+      } else if (insertId.length > 2) {
+        const insert = this.find(insertId)
+        const idArr = delId.split('-')
+        const delIndexS = idArr.pop()
+        const pId = idArr.join('-')
+        const parent = this.find(pId)
+        const insertIndexS = insertId.split('-').pop()
 
-      if (delIndexS && insertIndexS) {
-        const delIndex = ~~delIndexS
-        let insertIndex = ~~insertIndexS
-        delIndex < insertIndex ? insertIndex -= 1 : null // 删除时可能会改变插入的序号
-        parent.children?.splice(
-          insertIndex + i, 0, parent.children.splice(delIndex, 1)[0]
-        )
-        initId(parent, parent.id)
+        if (delIndexS && insertIndexS && parent.children) {
+          const delIndex = ~~delIndexS
+          let insertIndex = ~~insertIndexS
+          // 删除时可能会改变插入的序号
+          delIndex < insertIndex ? insertIndex -= 1 : null 
+          const del = parent.children.splice(delIndex, 1)[0]
+          if (del.left !== insert.left) { // 左右转换
+            del.left = insert.left
+            initLeft(del)
+          }
+          parent.children.splice(insertIndex + i, 0, del)
+          initId(parent, parent.id)
+        }
       }
-      
-    }
+    }  
   }
 
   reparent(parentId: string, delId: string) { // 节点移动到其他层

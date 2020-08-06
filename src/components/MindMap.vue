@@ -329,9 +329,9 @@ export default class MindMap extends Vue {
     this.updateMmdata()
     return nd
   }
-  move(del: Mdata, insert: Mdata, i=0) {
+  move(del: Mdata, insert?: Mdata, i=0) {
     this.toRecord = true
-    mmdata.move(del.id, insert.id, i)
+    mmdata.move(del.id, insert?.id, i)
     this.updateMmdata()
   }
   reparent(p: Mdata, d: Mdata) {
@@ -667,21 +667,27 @@ export default class MindMap extends Vue {
       const newParentD = d3.select(newParentNode).data()[0] as FlexNode
       reparent(newParentD.data, d.data)
     } else {
+      const LR = (d.y > 0 && d.y + d.py < 0) || (d.y < 0 && d.y + d.py > 0) // 左右节点变换
+      const flag = LR ? (a: FlexNode) => a.data.left !== d.data.left : (a: FlexNode) => a.data.left === d.data.left
       const draggedParentNode = d3.select(draggedNode.parentNode as Element)
       const draggedBrotherNodes = (draggedParentNode.selectAll(`g.depth_${d.depth}`) as d3.Selection<Element, FlexNode, Element, FlexNode>)
-        .filter((a, i, n) => draggedNode !== n[i] && a.data.left === d.data.left)
-      if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时直接复原
-        dragback(d, draggedNode)
-        fObjectClick(d, i, n)
+        .filter((a, i, n) => draggedNode !== n[i] && flag(a))
+      if (!draggedBrotherNodes.nodes()[0]) { // 无兄弟节点时
+        if (LR) {
+          this.move(d.data)
+        } else {
+          dragback(d, draggedNode)
+          fObjectClick(d, i, n)
+        }
       } else {
         const a: { x0: number, x1: number, b1?: Mdata, n1?: Element, b0?: Mdata, n0?: Element } = { x0: Infinity, x1: -Infinity }
-        draggedBrotherNodes.each((b, i, n) => {
-          if (b.x > d.x && b.x > a.x1 && b.x < (d.x + d.px)) { // 新哥哥节点
+        draggedBrotherNodes.each((b, i, n) => { 
+          if ((b.x > d.x || LR) && b.x > a.x1 && b.x < (d.x + d.px)) { // 找到新哥哥节点
             a.x1 = b.x
             a.b1 = b.data
             a.n1 = n[i]
           }
-          if (b.x < d.x && b.x < a.x0 && b.x > (d.x + d.px)) { // 新弟弟节点
+          if ((b.x > d.x || LR) && b.x < a.x0 && b.x > (d.x + d.px)) { // 找到新弟弟节点
             a.x0 = b.x
             a.b0 = b.data
             a.n0 = n[i]
@@ -859,7 +865,9 @@ export default class MindMap extends Vue {
     layout(tr)
     tr.each((a: FlexNode) => { a.data.id !== '0' ? a.y = a.y-gap : null }) // 往同个方向移动固定距离
     // all
-    tr.children = tl.children ? tr.children.concat(tl.children) : tr.children
+    tr.children = tl.children 
+      ? (tr.children ? tr.children.concat(tl.children): tl.children) 
+      : tr.children
     tr.each((a: FlexNode) => { // x纵轴 y横轴 dx dy相对偏移
       a.dx = a.x - (a.parent ? a.parent.x : 0)
       a.dy = a.y - (a.parent ? a.parent.y : 0)

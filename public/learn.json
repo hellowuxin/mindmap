@@ -5,13 +5,13 @@
     [
       {
         "name":"预备知识",
-        "children":
-        [
+        "children": [
           { "name":"HTML & CSS" },
           { "name":"JavaScript" },
           { "name":"DOM" },
           { "name":"SVG" },
-          { "name":"test" }]
+          { "name":"test" }
+        ]
       },
       { 
         "name":"安装",
@@ -43,14 +43,15 @@
       { 
         "name":"进阶",
         "left": true 
-      }]
-  },
-  {
-    "name":"根节点2",
-    "children": [
-      { "name":"子节点1" },
-      { "name":"子节点2" },
-      { "name":"子节点3" }
+      },
+      {
+        "name":"一级节点",
+        "children": [
+          { "name":"子节点1" },
+          { "name":"子节点2" },
+          { "name":"子节点3" }
+        ]
+      }
     ]
   }
 ]
