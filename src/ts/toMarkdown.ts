@@ -3,10 +3,14 @@ function deepTraverse(d: Array<Data>, m: string, md: string, flag: string) {
     const dChild = d[index]
     if (m.length > 3 && m[0] === '#') { // #### 替换成 -
       md += `- ${dChild.name}\n`
-      dChild.children ? md = deepTraverse(dChild.children, `  -`, md, '  ') : null
+      if (dChild.children) {
+        md = deepTraverse(dChild.children, '  -', md, '  ')
+      }
     } else {
       md += `${m} ${dChild.name}\n`
-      dChild.children ? md = deepTraverse(dChild.children, `${flag}${m}`, md, flag) : null
+      if (dChild.children) {
+        md = deepTraverse(dChild.children, `${flag}${m}`, md, flag)
+      }
     }
   }
   return md
