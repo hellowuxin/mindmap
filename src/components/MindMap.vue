@@ -86,7 +86,7 @@ let mmdata: ImData // 思维导图数据
 export default class MindMap extends Vue {
   @Prop() width: number | undefined
   @Prop() height: number | undefined
-  @Prop({ default: 80 }) xSpacing!: number
+  @Prop({ default: 50 }) xSpacing!: number
   @Prop({ default: 20 }) ySpacing!: number
   @Prop({ default: true }) draggable!: boolean
   @Prop({ default: true }) gps!: boolean
@@ -716,18 +716,19 @@ export default class MindMap extends Vue {
   gTransform(d: FlexNode) { return `translate(${d.dy},${d.dx})` }
   foreignX(d: FlexNode) {
     const { xSpacing, foreignBorderWidth } = this
-    return -foreignBorderWidth + (d.data.id !== '0' ? (d.data.left ? -d.size[1]+xSpacing : 0) : -(d.size[1]-xSpacing)/2)
+    return -foreignBorderWidth + (d.data.id !== '0' ? (d.data.left ? -d.size[1]+xSpacing : 0) : -(d.size[1]-xSpacing*2)/2)
   }
   foreignY(d: FlexNode) { return -this.foreignBorderWidth+(d.data.id !== '0' ? -d.size[0] : -d.size[0]/2) }
   gBtnTransform(d: FlexNode) {
     const { xSpacing, gBtnSide } = this
-    let x = d.data.id === '0' ? (d.size[1]-xSpacing)/2+8 : d.size[1]-xSpacing+8
+    let x = d.data.id === '0' ? (d.size[1]-xSpacing*2)/2+8 : d.size[1]-xSpacing+8
     d.data.left ? x = -x - gBtnSide : null
     return `translate(${x},${-gBtnSide/2})`
   }
   gBtnVisible(d: FlexNode) { return ((d.data._children?.length || 0) <= 0) ? 'visible' : 'hidden' }
-  gEllTransform(d: FlexNode) { 
-    let x = d.data.id === '0' ? (d.size[1]-this.xSpacing)/2+6 : d.size[1]-this.xSpacing+6
+  gEllTransform(d: FlexNode) {
+    const { xSpacing } = this
+    let x = d.data.id === '0' ? (d.size[1]-xSpacing*2)/2+6 : d.size[1]-xSpacing+6
     d.data.left ? x = -x - 16 : null
     return `translate(${x},${0})` 
   }
@@ -736,12 +737,14 @@ export default class MindMap extends Vue {
   pathClass(d: FlexNode) { return `depth_${d.depth}` }
   pathColor(d: FlexNode) { return d.data.color || 'white' }
   path(d: FlexNode) {
-    const sourceX = (d.data.left ? this.xSpacing : -this.xSpacing) - d.py
+    const { xSpacing, link } = this
+    const temp = (d.parent && d.parent.data.id==='0') ? -d.dy : (d.data.left ? xSpacing : -xSpacing)
+    const sourceX = temp - d.py
     const sourceY = 0 - d.dx - d.px
-    let textWidth = d.size[1] - this.xSpacing
+    let textWidth = d.size[1] - xSpacing
     d.data.left ? textWidth = -textWidth : null
 
-    return `${this.link({ source: [sourceX, sourceY], target: [0, 0] })}L${textWidth},${0}`
+    return `${link({ source: [sourceX, sourceY], target: [0, 0] })}L${textWidth},${0}`
   }
   nest(d: FlexNode, i: number, n: ArrayLike<Element>) {
     const { dKey, appendNode, updateNode, exitNode } = this
@@ -876,7 +879,7 @@ export default class MindMap extends Vue {
     while (t.children) { t = t.children[0] }
     this.dTop = t
   }
-  getSize(text: string) {
+  getSize(text: string, root=false) {
     const { dummy, xSpacing, minTextWidth, minTextHeight } = this
     let textWidth = 0
     let textHeight = 0
@@ -888,7 +891,7 @@ export default class MindMap extends Vue {
       })
     textWidth = Math.max(minTextWidth, textWidth)
     textHeight = Math.max(minTextHeight, textHeight)
-    return [textHeight, textWidth + xSpacing]
+    return [textHeight, textWidth + (root ? xSpacing*2 : xSpacing)]
   }
   clearSelection() { // 清除右键触发的选中单词
     if(window.getSelection) {

@@ -27,7 +27,7 @@ function initColor(d: Mdata, c?: string) { // 初始化颜色
 }
 
 function initSize(d: Mdata) { // 初始化size
-  d.size = size(d.name)
+  d.size = size(d.name, d.id === '0')
   const { children, _children } = d
   if (children) {
     for (let i = 0; i < children.length; i += 1) {
@@ -143,7 +143,7 @@ class ImData {
     if (id.length > 0) {
       const d = this.find(id)
       d.name = name
-      d.size = size(name)
+      d.size = size(name, d.id === '0')
       return d
     }
   }

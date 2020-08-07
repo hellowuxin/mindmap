@@ -123,7 +123,7 @@ export default class App extends Vue {
     showUndo: { value: true },
     download: { value: true },
   }
-  xSpacing = 80
+  xSpacing = 50
   ySpacing = 20
   strokeWidth = 4
 
