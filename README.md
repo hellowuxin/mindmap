@@ -63,23 +63,24 @@ export default {
   data: () => ({
     data: [{
       "name":"如何学习D3",
-      "children":
-      [
+      "children": [
         {
           "name":"预备知识",
-          "children":
-          [
+          "children": [
             { "name":"HTML & CSS" },
             { "name":"JavaScript" },
-            { "name":"DOM" },
-            { "name":"SVG" },
-            { "name":"test" }]
+            ...
+          ]
         },
         {
           "name":"安装",
           "_children": [
             { "name": "折叠节点" }
           ]
+        },
+        {
+          "name":"进阶",
+          "left": true
         },
         ...
       ]
