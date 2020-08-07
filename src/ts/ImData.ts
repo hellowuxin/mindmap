@@ -1,17 +1,16 @@
 import * as d3ScaleChromatic from 'd3-scale-chromatic'
 import * as d3Scale from 'd3-scale'
 
-
 const colorScale = d3Scale.scaleOrdinal(d3ScaleChromatic.schemePaired) // 颜色列表
 let colorNumber = 0
 let size: Function // 生成size的函数
 let gKey = 0
 
 function initColor(d: Mdata, c?: string) { // 初始化颜色
-  let color = undefined
+  let color
   if (d.id !== '0') {
     color = c || colorScale(`${colorNumber += 1}`)
-    d.color = color 
+    d.color = color
   }
   const { children, _children } = d
   if (children) {
@@ -38,7 +37,7 @@ function initSize(d: Mdata) { // 初始化size
     for (let i = 0; i < _children.length; i += 1) {
       initSize(_children[i])
     }
-  } 
+  }
 }
 
 function _getSource(d: Mdata) { // 返回源数据
@@ -62,13 +61,13 @@ function _getSource(d: Mdata) { // 返回源数据
   return nd
 }
 
-function initId(d: Mdata, id='0') { // 初始化唯一标识：待优化
+function initId(d: Mdata, id = '0') { // 初始化唯一标识：待优化
   d.id = id
   d.gKey = d.gKey || (gKey += 1)
   const { children, _children } = d
 
   if (children?.length && _children?.length) {
-    throw(`[Mindmap warn]: Error in data: data.children and data._children cannot contain data at the same time`)
+    console.error('[Mindmap warn]: Error in data: data.children and data._children cannot contain data at the same time')
   } else {
     if (children) {
       for (let i = 0; i < children.length; i += 1) {
@@ -89,8 +88,8 @@ function initLeft(d: Mdata) {
     for (let i = 0; i < children.length; i += 1) {
       if (d.id !== '0') {
         children[i].left = d.left
-      } else {
-        children[i].left ? null : children[i].left = false
+      } else if (!children[i].left) {
+        children[i].left = false
       }
       initLeft(children[i])
     }
@@ -99,8 +98,8 @@ function initLeft(d: Mdata) {
     for (let i = 0; i < _children.length; i += 1) {
       if (d.id !== '0') {
         _children[i].left = d.left
-      } else {
-        _children[i].left ? null : _children[i].left = false
+      } else if (!_children[i].left) {
+        _children[i].left = false
       }
       initLeft(_children[i])
     }
@@ -133,7 +132,7 @@ class ImData {
       if (data.children) {
         data = data.children[array[i]]
       } else {
-        throw(`[Mindmap warn]: Error in id: No data matching id`)
+        console.error('[Mindmap warn]: Error in id: No data matching id')
       }
     }
     return data
@@ -183,8 +182,8 @@ class ImData {
       const c: Mdata = JSON.parse(JSON.stringify(child))
       parent.children ? parent.children.push(c) : parent.children = [c]
       initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
-      initId(c, `${parent.id}-${parent.children.length-1}`)
-      c.left = parent.left ? true : false
+      initId(c, `${parent.id}-${parent.children.length - 1}`)
+      c.left = parent.left
       initSize(c)
       return c
     }
@@ -201,16 +200,16 @@ class ImData {
         parent.children?.splice(~~bId + i, 0, c)
         initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
         initId(parent, parent.id)
-        c.left = parent.left ? true : false
+        c.left = parent.left
         initSize(c)
         return c
       }
     }
   }
 
-  move(delId: string, insertId?: string, i=0) { // 节点在同层移动
+  move(delId: string, insertId?: string, i = 0) { // 节点在同层移动
     if (delId.length > 2) {
-      if(!insertId) { // 左右转换
+      if (!insertId) { // 左右转换
         const del = this.find(delId)
         del.left = !del.left
         initLeft(del)
@@ -226,7 +225,9 @@ class ImData {
           const delIndex = ~~delIndexS
           let insertIndex = ~~insertIndexS
           // 删除时可能会改变插入的序号
-          delIndex < insertIndex ? insertIndex -= 1 : null 
+          if (delIndex < insertIndex) {
+            insertIndex -= 1
+          }
           const del = parent.children.splice(delIndex, 1)[0]
           if (del.left !== insert.left) { // 左右转换
             del.left = insert.left
@@ -236,7 +237,7 @@ class ImData {
           initId(parent, parent.id)
         }
       }
-    }  
+    }
   }
 
   reparent(parentId: string, delId: string) { // 节点移动到其他层
@@ -250,10 +251,10 @@ class ImData {
 
         const del = delParent.children?.splice(~~delIndex, 1)[0] // 删除
         if (del) {
-          (np.children?.length || 0) > 0 ? np.children?.push(del) 
+          (np.children?.length || 0) > 0 ? np.children?.push(del)
             : ((np._children?.length || 0) > 0 ? np._children?.push(del) : np.children = [del])
 
-          initColor(del, parentId === '0' ? colorScale(`${colorNumber += 1}`) : np.color) 
+          initColor(del, parentId === '0' ? colorScale(`${colorNumber += 1}`) : np.color)
           initLeft(np)
           initId(np, np.id)
           initId(delParent, delParent.id)
