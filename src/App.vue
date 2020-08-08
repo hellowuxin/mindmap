@@ -7,7 +7,7 @@
             <v-row no-gutters class="fill-height">
               <v-col md="9" cols="12" class="d-flex flex-column">
                 <div class="d-flex grey lighten-3">
-                  <div class="d-flex px-3 title font-weight-regular align-center" 
+                  <div class="d-flex px-3 title font-weight-regular align-center"
                     style="height: 48px; width: 100%"
                   >
                     <v-btn icon href="https://github.com/hellowuxin/mindmap">
@@ -19,7 +19,7 @@
                 <v-divider></v-divider>
                 <div class="d-flex flex-grow-1">
                   <mindmap
-                    v-model="mmdata"  
+                    v-model="mmdata"
                     :gps="options.gps.value"
                     :fitView="options.fitView.value"
                     :draggable="options.draggable.value"
@@ -40,23 +40,23 @@
               </v-col>
               <v-col md="3" cols="12">
                 <div class="grey lighten-3">
-                  <div class="d-flex px-3 title font-weight-regular align-center" 
+                  <div class="d-flex px-3 title font-weight-regular align-center"
                     style="height: 48px"
                   >Options</div>
                 </div>
                 <v-divider></v-divider>
                 <div class="py-3">
                   <v-col class="pb-0" cols="12" v-for="(opt, key) in options" :key="key">
-                    <v-switch class="mt-0" 
-                      hide-details 
-                      inset 
+                    <v-switch class="mt-0"
+                      hide-details
+                      inset
                       v-model="opt.value"
                       :label="key"
                     ></v-switch>
                   </v-col>
                   <v-col class="pb-0" cols="12">
                     <v-slider
-                      hide-details 
+                      hide-details
                       v-model="strokeWidth"
                       label="strokeWidth"
                       :thumb-size="20"
@@ -67,7 +67,7 @@
                   </v-col>
                   <v-col class="pb-0" cols="12">
                     <v-slider
-                      hide-details 
+                      hide-details
                       v-model="xSpacing"
                       label="xSpacing"
                       :thumb-size="20"
@@ -76,7 +76,7 @@
                   </v-col>
                   <v-col class="pb-0" cols="12">
                     <v-slider
-                      hide-details 
+                      hide-details
                       v-model="ySpacing"
                       label="ySpacing"
                       :thumb-size="20"
@@ -98,11 +98,7 @@ import { Vue, Component } from 'vue-property-decorator'
 import dataLearn from '../public/learn.json'
 import mindmap from './components/MindMap.vue'
 
-@Component({
-  components: {
-    mindmap
-  }
-})
+@Component({ components: { mindmap } })
 export default class App extends Vue {
   showSource = false
   onboarding = 0
@@ -110,7 +106,7 @@ export default class App extends Vue {
   mmdata = dataLearn
   items = [
     { title: 'template' },
-    { title: 'script' }
+    { title: 'script' },
   ]
   options = {
     gps: { value: true },
