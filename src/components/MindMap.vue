@@ -2,7 +2,9 @@
   <div ref="mindmap" id="mindmap" :style="mmStyle">
     <svg ref="svg" tabindex="0" :class="svgClass">
       <g ref="content" id="content" ></g>
-      <rect v-show="showSelectedBox" id="selectedBox" width='24' height='24'></rect>
+      <rect v-show="showSelectedBox" id="selectedBox" ref='selectedBox' :width='seleBox.width' :height='seleBox.height'
+        :transform="`translate(${seleBox.x},${seleBox.y})`"
+      ></rect>
     </svg>
     <div ref="dummy" id="dummy"></div>
     <div ref="menu"
@@ -125,9 +127,11 @@ export default class MindMap extends Vue {
     content: Element
     dummy: HTMLDivElement
     menu: HTMLDivElement
+    selectedBox: SVGRectElement
   }
 
   dragFlag = false
+  multiSeleFlag = false
   minTextWidth = 16
   minTextHeight = 21
   gBtnSide = 24 // gBtn边长
@@ -142,6 +146,7 @@ export default class MindMap extends Vue {
   showSelectedBox = false // 选中框
   contextMenuX = 0
   contextMenuY = 0
+  mouse = { x0: 0, y0: 0, x1: 0, y1: 0 }
   contextMenuItems = [
     { title: '删除节点', name: 'delete', disabled: false },
     { title: '折叠节点', name: 'collapse', disabled: false },
@@ -172,6 +177,14 @@ export default class MindMap extends Vue {
   get optionTip() { return this.optionList[this.selectedOption].tip }
   get canUndo() { return this.history.canUndo }
   get canRedo() { return this.history.canRedo }
+  get seleBox() {
+    const { x0, x1, y0, y1 } = this.mouse
+    const x = Math.min(x0, x1)
+    const y = Math.min(y0, y1)
+    const width = Math.abs(x0 - x1)
+    const height = Math.abs(y0 - y1)
+    return { x, y, width, height }
+  }
 
   updateMmdata(val?: Mdata | null) { // 不可变数据
     if (val) { mmdata.data = JSON.parse(JSON.stringify(val)) }
@@ -935,8 +948,30 @@ export default class MindMap extends Vue {
   // 左键选中（待完成）
   async mounted() {
     this.init()
-    // this.mindmapSvg.on('mousedown', () => { })
-    // this.mindmapSvg.on('mousemove', () => { })
+    this.mindmapSvg.on('mousedown', () => {
+      console.log('multiSele')
+      this.multiSeleFlag = true
+      const { mouse } = this
+      const svgPos = this.$refs.svg.getBoundingClientRect()
+      mouse.x0 = d3.event.pageX - svgPos.left - window.pageXOffset
+      mouse.y0 = d3.event.pageY - svgPos.top - window.pageYOffset
+    })
+    this.mindmapSvg.on('mousemove', () => {
+      if (this.multiSeleFlag) {
+        this.showSelectedBox = true
+        d3.event.preventDefault()
+        const { mouse } = this
+        const svgPos = this.$refs.svg.getBoundingClientRect()
+        mouse.x1 = d3.event.pageX - svgPos.left - window.pageXOffset
+        mouse.y1 = d3.event.pageY - svgPos.top - window.pageYOffset
+      }
+    })
+    this.mindmapSvg.on('mouseup', () => {
+      this.multiSeleFlag = false
+      this.showSelectedBox = false
+      const { mouse } = this
+      mouse.x0 = mouse.x1 = mouse.y0 = mouse.y1 = 0
+    })
     this.addWatch()
     await this.makeCenter()
     await this.fitContent()
