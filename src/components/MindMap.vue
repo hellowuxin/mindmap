@@ -247,8 +247,8 @@ export default class MindMap extends Vue {
           d3.event.preventDefault()
           const current = d3.zoomTransform(this.$refs.svg)
           if (ctrlKey) { // 缩放
-            let k = Math.max(current.k - deltaY * 0.02, 0.1)
-            k = Math.min(k, 8)
+            const s = current.k * (deltaY > 0 ? 1.2 : 0.8)
+            const k = Math.min(Math.max(s, 0.1), 8)
             zoom.scaleTo(mindmapSvg, k)
           } else { // 移动
             zoom.translateBy(mindmapSvg, -deltaX, -deltaY)
@@ -390,7 +390,7 @@ export default class MindMap extends Vue {
         switch (keyName) {
           case 'Tab': {
             d3.event.preventDefault()
-            const nd = this.add(im, { name: '' })
+            const nd = this.add(im, { name: 'new node' })
             if (nd) {
               this.editNew(nd, seleDepth + 1, pNode)
             }
@@ -399,12 +399,12 @@ export default class MindMap extends Vue {
           case 'Enter': {
             d3.event.preventDefault()
             if (pNode === this.$refs.content) { // 根节点enter时，等效tab
-              const nd = this.add(im, { name: '' })
+              const nd = this.add(im, { name: 'new node' })
               if (nd) {
                 this.editNew(nd, seleDepth + 1, pNode)
               }
             } else {
-              const nd = this.insert(im, { name: '' }, 1)
+              const nd = this.insert(im, { name: 'new node' }, 1)
               if (nd) {
                 this.editNew(nd, seleDepth, pNode)
               }
@@ -562,7 +562,7 @@ export default class MindMap extends Vue {
   gBtnClick(a: FlexNode, i: number, n: ArrayLike<Element>) { // 添加子节点
     if ((n[i] as SVGElement).style.opacity === '1') {
       const d: FlexNode = d3.select(n[i].parentNode as Element).data()[0] as FlexNode
-      const newD = this.add(d.data, { name: '' })
+      const newD = this.add(d.data, { name: 'new node' })
       this.mouseLeave(d, i, n)
       if (newD) {
         this.editNew(newD, d.depth + 1, n[i].parentNode as Element)
