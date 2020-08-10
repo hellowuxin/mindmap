@@ -1,5 +1,3 @@
-declare module 'd3-flextree'
-
 interface Data {
   name: string
   children?: Array<Data>
