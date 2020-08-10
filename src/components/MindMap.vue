@@ -196,6 +196,7 @@ export default class MindMap extends Vue {
         (d3.event.ctrlKey && d3.event.type !== 'mousedown')
         || (this.spaceKey && d3.event.type !== 'wheel')
       ) && !d3.event.button) // 开启双指捏合 空格键+左键可拖移
+      .scaleExtent([0.1, 8]) // 缩放倍数: 0.1～8
     this.makeZoom(this.zoomable)
   }
   initNodeEvent() { // 绑定节点事件
@@ -243,13 +244,15 @@ export default class MindMap extends Vue {
     if (val) {
       mindmapSvg.call(mindmapSvgZoom).on('dblclick.zoom', null)
         .on('wheel.zoom', () => {
-          const { ctrlKey, deltaY, deltaX } = d3.event
+          const { ctrlKey, deltaY, deltaX, x, y } = d3.event
           d3.event.preventDefault()
           const current = d3.zoomTransform(this.$refs.svg)
           if (ctrlKey) { // 缩放
-            let k = Math.max(current.k - deltaY * 0.02, 0.1)
-            k = Math.min(k, 8)
-            zoom.scaleTo(mindmapSvg, k)
+            const svgPos = this.$refs.svg.getBoundingClientRect()
+            const px = svgPos.left + window.pageXOffset
+            const py = svgPos.top + window.pageYOffset
+            const k = current.k - deltaY * 0.02
+            zoom.scaleTo(mindmapSvg, k, [x - px, y - py])
           } else { // 移动
             zoom.translateBy(mindmapSvg, -deltaX, -deltaY)
           }
