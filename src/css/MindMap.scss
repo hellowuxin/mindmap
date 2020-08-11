@@ -168,6 +168,15 @@ div#mindmap {
       outline-color: $seleColor;
     }
 
+    .multiSelectedNode:not(.depth_0) > foreignObject {
+      background-color: $seleColor;
+    }
+
+    .multiSelectedNode.depth_0 > foreignObject {
+      outline: 3px solid;
+      outline-color: $seleColor;
+    }
+
     #newParentNode > foreignObject {
       border-color: $seleColor;
     }

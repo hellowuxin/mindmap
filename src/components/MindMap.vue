@@ -183,9 +183,22 @@ export default class MindMap extends Vue {
     const y = Math.min(y0, y1)
     const width = Math.abs(x0 - x1)
     const height = Math.abs(y0 - y1)
-    return { x, y, width, height }
+    return { x, y, width, height, left: x, top: y, right: x + width, bottom: y + height }
   }
 
+  getViewPos(p?: DOMRect) {
+    const svgPos = this.$refs.svg.getBoundingClientRect()
+    const { pageX, pageY } = d3.event
+    const viewLeft = svgPos.left + window.pageXOffset
+    const viewTop = svgPos.top + window.pageYOffset
+    const { left, top, right, bottom } = p || { left: pageX, top: pageY, right: pageX, bottom: pageY }
+    return {
+      left: left - viewLeft,
+      top: top - viewTop,
+      right: right - viewLeft,
+      bottom: bottom - viewTop,
+    }
+  }
   updateMmdata(val?: Mdata | null) { // 不可变数据
     if (val) { mmdata.data = JSON.parse(JSON.stringify(val)) }
     if (this.toRecord) {
@@ -732,6 +745,51 @@ export default class MindMap extends Vue {
     }
     this.dragFlag = false
   }
+  // 多选
+  multiSelectStart() { // 开始多选
+    if (d3.event.button === 0) { // 左键
+      console.log('multiSele')
+      this.multiSeleFlag = true
+      const { mouse, getViewPos } = this
+      const vp = getViewPos()
+      mouse.x0 = vp.left
+      mouse.y0 = vp.top
+    }
+  }
+  multiSelect() { // 多选中
+    if (this.multiSeleFlag) {
+      this.showSelectedBox = true
+      d3.event.preventDefault()
+      const { mouse, getViewPos } = this
+      const vp = getViewPos()
+      mouse.x1 = vp.left
+      mouse.y1 = vp.top
+
+      const { mindmapG, seleBox } = this
+      ;(mindmapG.selectAll('foreignObject') as d3.Selection<Element, FlexNode, Element, FlexNode>)
+        .each((d, i, n) => {
+          const f = n[i]
+          const g = (f.parentNode as Element)
+          const pos = getViewPos(f.getBoundingClientRect())
+          const flag = pos.left < seleBox.right && pos.bottom > seleBox.top && pos.right > seleBox.left && pos.top < seleBox.bottom
+          if (flag) {
+            g.classList.add('multiSelectedNode')
+          } else {
+            g.classList.remove('multiSelectedNode')
+          }
+        })
+    }
+  }
+  multiSelectEnd() { // 结束多选
+    this.multiSeleFlag = false
+    this.showSelectedBox = false
+    const { mouse } = this
+    mouse.x0 = mouse.x1 = mouse.y0 = mouse.y1 = 0
+    // ;(mindmapG.selectAll('g.multiSelectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>)
+    //   .each((d, i, n) => {
+    //     n[i].classList.remove('multiSelectedNode')
+    //   })
+  }
   // 绘制
   updateMindmap() {
     this.tree()
@@ -948,30 +1006,9 @@ export default class MindMap extends Vue {
   // 左键选中（待完成）
   async mounted() {
     this.init()
-    this.mindmapSvg.on('mousedown', () => {
-      console.log('multiSele')
-      this.multiSeleFlag = true
-      const { mouse } = this
-      const svgPos = this.$refs.svg.getBoundingClientRect()
-      mouse.x0 = d3.event.pageX - svgPos.left - window.pageXOffset
-      mouse.y0 = d3.event.pageY - svgPos.top - window.pageYOffset
-    })
-    this.mindmapSvg.on('mousemove', () => {
-      if (this.multiSeleFlag) {
-        this.showSelectedBox = true
-        d3.event.preventDefault()
-        const { mouse } = this
-        const svgPos = this.$refs.svg.getBoundingClientRect()
-        mouse.x1 = d3.event.pageX - svgPos.left - window.pageXOffset
-        mouse.y1 = d3.event.pageY - svgPos.top - window.pageYOffset
-      }
-    })
-    this.mindmapSvg.on('mouseup', () => {
-      this.multiSeleFlag = false
-      this.showSelectedBox = false
-      const { mouse } = this
-      mouse.x0 = mouse.x1 = mouse.y0 = mouse.y1 = 0
-    })
+    this.mindmapSvg.on('mousedown', this.multiSelectStart)
+    this.mindmapSvg.on('mousemove', this.multiSelect)
+    this.mindmapSvg.on('mouseup', this.multiSelectEnd)
     this.addWatch()
     await this.makeCenter()
     await this.fitContent()
