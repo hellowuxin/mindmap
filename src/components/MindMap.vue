@@ -688,7 +688,7 @@ export default class MindMap extends Vue {
       const newParentD = d3.select(newParentNode).data()[0] as FlexNode
       reparent(newParentD.data, d.data)
     } else {
-      const LR = (d.y > 0 && d.y + d.py < 0) || (d.y < 0 && d.y + d.py > 0) // 左右节点变换
+      const LR = (d.data.id.split('-').length === 2) && ((d.y > 0 && d.y + d.py < 0) || (d.y < 0 && d.y + d.py > 0)) // 左右节点变换
       const flag = LR ? (a: FlexNode) => a.data.left !== d.data.left : (a: FlexNode) => a.data.left === d.data.left
       const draggedParentNode = d3.select(draggedNode.parentNode as Element)
       const draggedBrotherNodes = (draggedParentNode.selectAll(`g.depth_${d.depth}`) as d3.Selection<Element, FlexNode, Element, FlexNode>)
