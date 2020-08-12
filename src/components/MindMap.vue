@@ -241,10 +241,10 @@ export default class MindMap extends Vue {
     if (val) {
       const { mouseLeave, mouseEnter, gBtnClick } = this
       fObject.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave)
-      gBtn.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave).on('click', gBtnClick)
+      gBtn.on('mouseenter', mouseEnter).on('mouseleave', mouseLeave).on('mousedown', gBtnClick)
     } else {
       fObject.on('mouseenter', null).on('mouseleave', null)
-      gBtn.on('mouseenter', null).on('mouseleave', null).on('click', null)
+      gBtn.on('mouseenter', null).on('mouseleave', null).on('mousedown', null)
     }
   }
   makeContextMenu(val: boolean) {
@@ -591,6 +591,7 @@ export default class MindMap extends Vue {
   }
   gBtnClick(a: FlexNode, i: number, n: ArrayLike<Element>) { // 添加子节点
     if ((n[i] as SVGElement).style.opacity === '1') {
+      d3.event.stopPropagation()
       const d: FlexNode = d3.select(n[i].parentNode as Element).data()[0] as FlexNode
       const newD = this.add(d.data, { name: '' })
       this.mouseLeave(d, i, n)
@@ -1007,7 +1008,6 @@ export default class MindMap extends Vue {
       }
     }, { immediate: true, deep: true })
   }
-  // 左键选中（待完成）
   async mounted() {
     this.init()
     this.mindmapSvg.on('mousedown', this.multiSelectStart)
