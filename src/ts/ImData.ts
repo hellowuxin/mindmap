@@ -235,10 +235,13 @@ class ImData {
         const pId = idArr.join('-')
         const parent = this.find(pId)
         const c: Mdata = JSON.parse(JSON.stringify(d))
-        parent.children?.splice(~~bId + i, 0, c)
+        const pChildren = parent.children
+        if (pChildren) {
+          pChildren.splice(~~bId + i, 0, c)
+          c.left = pChildren[~~bId].left
+        }
         initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
         initId(parent, parent.id)
-        c.left = parent.left
         initSize(c)
         return c
       }
