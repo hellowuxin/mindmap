@@ -483,6 +483,7 @@ export default class MindMap extends Vue {
     }
   }
   selectNode(n: Element) { // 选中节点
+    this.removeMultiSelected()
     if (n.getAttribute('id') !== 'selectedNode') {
       this.removeSelectedId()
       n.setAttribute('id', 'selectedNode')
@@ -746,7 +747,14 @@ export default class MindMap extends Vue {
     this.dragFlag = false
   }
   // 多选
+  removeMultiSelected() {
+    (this.mindmapG.selectAll('g.multiSelectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>)
+      .each((d, i, n) => { n[i].classList.remove('multiSelectedNode') })
+  }
   multiSelectStart() { // 开始多选
+    this.removeSelectedId()
+    this.removeMultiSelected()
+
     if (d3.event.button === 0) { // 左键
       console.log('multiSele')
       this.multiSeleFlag = true
@@ -785,10 +793,6 @@ export default class MindMap extends Vue {
     this.showSelectedBox = false
     const { mouse } = this
     mouse.x0 = mouse.x1 = mouse.y0 = mouse.y1 = 0
-    // ;(mindmapG.selectAll('g.multiSelectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>)
-    //   .each((d, i, n) => {
-    //     n[i].classList.remove('multiSelectedNode')
-    //   })
   }
   // 绘制
   updateMindmap() {
