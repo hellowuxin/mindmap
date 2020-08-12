@@ -392,14 +392,30 @@ export default class MindMap extends Vue {
       return nd
     }
   }
-  collapse(d: Mdata) {
+  collapse(s: Mdata | Mdata[]) {
     this.toRecord = true
-    mmdata.collapse(d.id)
+    if (Array.isArray(s)) {
+      const idArr = []
+      for (let i = 0; i < s.length; i++) {
+        idArr.push(s[i].id)
+      }
+      mmdata.collapse(idArr)
+    } else {
+      mmdata.collapse(s.id)
+    }
     this.updateMmdata()
   }
-  expand(d: Mdata) {
+  expand(s: Mdata | Mdata[]) {
     this.toRecord = true
-    mmdata.expand(d.id)
+    if (Array.isArray(s)) {
+      const idArr = []
+      for (let i = 0; i < s.length; i++) {
+        idArr.push(s[i].id)
+      }
+      mmdata.expand(idArr)
+    } else {
+      mmdata.expand(s.id)
+    }
     this.updateMmdata()
   }
   // 键盘
@@ -594,8 +610,10 @@ export default class MindMap extends Vue {
       const t: Mdata[] = []
       ;(this.mindmapG.selectAll('g.multiSelectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>)
         .each((d, i, n) => { t.push(d.data) })
-      this.contextMenuItems[1].disabled = true
-      this.contextMenuItems[2].disabled = true
+      const collapseFlag = t.filter((d) => d.children && d.children.length > 0).length > 0
+      const expandFlag = t.filter((d) => d._children && d._children.length > 0).length > 0
+      this.contextMenuItems[1].disabled = !collapseFlag
+      this.contextMenuItems[2].disabled = !expandFlag
       this.contextMenuTarget = t
       show()
     } else if (clickedNode !== edit) { // 非正在编辑
@@ -603,9 +621,8 @@ export default class MindMap extends Vue {
         this.selectNode(clickedNode)
       }
       const { data } = d
-      const collapseFlag = !data.children || data.children.length === 0
-      this.contextMenuItems[1].disabled = collapseFlag
-      this.contextMenuItems[2].disabled = !collapseFlag
+      this.contextMenuItems[1].disabled = !(data.children && data.children.length > 0)
+      this.contextMenuItems[2].disabled = !(data._children && data._children.length > 0)
       this.contextMenuTarget = data
       show()
     }

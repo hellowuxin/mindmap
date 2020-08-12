@@ -160,16 +160,28 @@ class ImData {
     }
   }
 
-  collapse(id: string) { // 折叠
-    const d = this.find(id)
-    d._children = d.children
-    d.children = []
+  collapse(id: string | string[]) { // 折叠
+    const arr = Array.isArray(id) ? id : [id]
+    for (let i = 0; i < arr.length; i++) {
+      const idChild = arr[i]
+      const d = this.find(idChild)
+      if (d && (!d._children || d._children.length === 0)) {
+        d._children = d.children
+        d.children = []
+      }
+    }
   }
 
-  expand(id: string) { // 展开
-    const d = this.find(id)
-    d.children = d._children
-    d._children = []
+  expand(id: string | string[]) { // 展开
+    const arr = Array.isArray(id) ? id : [id]
+    for (let i = 0; i < arr.length; i++) {
+      const idChild = arr[i]
+      const d = this.find(idChild)
+      if (d && (!d.children || d.children.length === 0)) {
+        d.children = d._children
+        d._children = []
+      }
+    }
   }
 
   del(id: string | string[]) { // 删除指定id的数据
