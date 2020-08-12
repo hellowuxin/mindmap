@@ -593,9 +593,7 @@ export default class MindMap extends Vue {
     if (clickedNode.classList.contains('multiSelectedNode')) {
       const t: Mdata[] = []
       ;(this.mindmapG.selectAll('g.multiSelectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>)
-        .each((d, i, n) => {
-          t.push(d.data)
-        })
+        .each((d, i, n) => { t.push(d.data) })
       this.contextMenuItems[1].disabled = true
       this.contextMenuItems[2].disabled = true
       this.contextMenuTarget = t

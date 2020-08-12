@@ -173,37 +173,28 @@ class ImData {
   }
 
   del(id: string | string[]) { // 删除指定id的数据
-    if (Array.isArray(id)) {
-      let p
-      for (let i = 0; i < id.length; i++) {
-        const idChild = id[i]
-        if (idChild.length > 2) {
-          const idArr = idChild.split('-')
-          const delIndex = idArr.pop()
-          if (delIndex) {
-            const parent = this.find(idArr.join('-'))
-            if (parent.children) {
-              parent.children[~~delIndex].id = 'del'
-            }
-            if (p === undefined) {
-              p = parent
-            } else if (p.id.split('-').length > parent.id.split('-').length) {
-              p = parent
-            }
+    const arr = Array.isArray(id) ? id : [id]
+    let p
+    for (let i = 0; i < arr.length; i++) {
+      const idChild = arr[i]
+      const idArr = idChild.split('-')
+      if (idArr.length > 2) { // 有parent
+        const delIndex = idArr.pop()
+        if (delIndex) {
+          const parent = this.find(idArr.join('-'))
+          if (parent.children) {
+            parent.children[~~delIndex].id = 'del' // 更新id时删除
+          }
+          if (p === undefined) {
+            p = parent
+          } else if (p.id.split('-').length > parent.id.split('-').length) {
+            p = parent
           }
         }
       }
-      if (p) {
-        initId(p, p.id)
-      }
-    } else if (id.length > 2) {
-      const idArr = id.split('-')
-      const delIndex = idArr.pop()
-      if (delIndex) {
-        const parent = this.find(idArr.join('-'))
-        parent.children?.splice(~~delIndex, 1)
-        initId(parent, parent.id)
-      }
+    }
+    if (p) {
+      initId(p, p.id)
     }
   }
 
