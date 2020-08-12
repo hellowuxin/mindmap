@@ -70,13 +70,23 @@ function initId(d: Mdata, id = '0') { // 初始化唯一标识：待优化
     console.error('[Mindmap warn]: Error in data: data.children and data._children cannot contain data at the same time')
   } else {
     if (children) {
-      for (let i = 0; i < children.length; i += 1) {
-        initId(children[i], `${id}-${i}`)
+      for (let i = 0; i < children.length;) {
+        if (children[i].id === 'del') {
+          children.splice(i, 1)
+        } else {
+          initId(children[i], `${id}-${i}`)
+          i += 1
+        }
       }
     }
     if (_children) {
-      for (let i = 0; i < _children.length; i += 1) {
-        initId(_children[i], `${id}-${i}`)
+      for (let i = 0; i < _children.length;) {
+        if (_children[i].id === 'del') {
+          _children.splice(i, 1)
+        } else {
+          initId(_children[i], `${id}-${i}`)
+          i += 1
+        }
       }
     }
   }
@@ -162,13 +172,35 @@ class ImData {
     d._children = []
   }
 
-  del(id: string) { // 删除指定id的数据
-    if (id.length > 2) {
+  del(id: string | string[]) { // 删除指定id的数据
+    if (Array.isArray(id)) {
+      let p
+      for (let i = 0; i < id.length; i++) {
+        const idChild = id[i]
+        if (idChild.length > 2) {
+          const idArr = idChild.split('-')
+          const delIndex = idArr.pop()
+          if (delIndex) {
+            const parent = this.find(idArr.join('-'))
+            if (parent.children) {
+              parent.children[~~delIndex].id = 'del'
+            }
+            if (p === undefined) {
+              p = parent
+            } else if (p.id.split('-').length > parent.id.split('-').length) {
+              p = parent
+            }
+          }
+        }
+      }
+      if (p) {
+        initId(p, p.id)
+      }
+    } else if (id.length > 2) {
       const idArr = id.split('-')
       const delIndex = idArr.pop()
       if (delIndex) {
-        const pId = idArr.join('-')
-        const parent = this.find(pId)
+        const parent = this.find(idArr.join('-'))
         parent.children?.splice(~~delIndex, 1)
         initId(parent, parent.id)
       }

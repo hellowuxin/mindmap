@@ -147,6 +147,7 @@ export default class MindMap extends Vue {
   contextMenuX = 0
   contextMenuY = 0
   mouse = { x0: 0, y0: 0, x1: 0, y1: 0 }
+  contextMenuTarget!: Mdata | Mdata[]
   contextMenuItems = [
     { title: '删除节点', name: 'delete', disabled: false },
     { title: '折叠节点', name: 'collapse', disabled: false },
@@ -370,9 +371,17 @@ export default class MindMap extends Vue {
     mmdata.reparent(p.id, d.id)
     this.updateMmdata()
   }
-  del(s: Mdata) {
+  del(s: Mdata | Mdata[]) {
     this.toRecord = true
-    mmdata.del(s.id)
+    if (Array.isArray(s)) {
+      const idArr = []
+      for (let i = 0; i < s.length; i++) {
+        idArr.push(s[i].id)
+      }
+      mmdata.del(idArr)
+    } else {
+      mmdata.del(s.id)
+    }
     this.updateMmdata()
   }
   updateName(d: Mdata, name: string) {
@@ -573,20 +582,34 @@ export default class MindMap extends Vue {
     const sele = document.getElementById('selectedNode')
     const edit = document.getElementById('editing')
     const clickedNode = n[i].parentNode as Element
-    if (clickedNode !== edit) { // 非正在编辑
+    const show = () => { // 显示右键菜单
+      const pos = this.getViewPos()
+      this.contextMenuX = pos.left
+      this.contextMenuY = pos.top
+      this.showContextMenu = true
+      this.clearSelection()
+      setTimeout(() => { this.$refs.menu.focus() }, 300)
+    }
+    if (clickedNode.classList.contains('multiSelectedNode')) {
+      const t: Mdata[] = []
+      ;(this.mindmapG.selectAll('g.multiSelectedNode') as d3.Selection<Element, FlexNode, Element, FlexNode>)
+        .each((d, i, n) => {
+          t.push(d.data)
+        })
+      this.contextMenuItems[1].disabled = true
+      this.contextMenuItems[2].disabled = true
+      this.contextMenuTarget = t
+      show()
+    } else if (clickedNode !== edit) { // 非正在编辑
       if (clickedNode !== sele) { // 选中
         this.selectNode(clickedNode)
       }
       const { data } = d
-      this.contextMenuItems[1].disabled = !data.children || data.children.length === 0
-      this.contextMenuItems[2].disabled = !(data._children && data._children.length > 0)
-      // 显示右键菜单
-      const svgPos = this.$refs.svg.getBoundingClientRect()
-      this.contextMenuX = d3.event.pageX - svgPos.left - window.pageXOffset
-      this.contextMenuY = d3.event.pageY - svgPos.top - window.pageYOffset
-      this.showContextMenu = true
-      this.clearSelection()
-      setTimeout(() => { this.$refs.menu.focus() }, 300)
+      const collapseFlag = !data.children || data.children.length === 0
+      this.contextMenuItems[1].disabled = collapseFlag
+      this.contextMenuItems[2].disabled = !collapseFlag
+      this.contextMenuTarget = data
+      show()
     }
   }
   gBtnClick(a: FlexNode, i: number, n: ArrayLike<Element>) { // 添加子节点
@@ -602,16 +625,16 @@ export default class MindMap extends Vue {
   }
   clickMenu(key: string) {
     this.showContextMenu = false
-    const data = this.mindmapG.select('#selectedNode').data()[0].data
+    const { contextMenuTarget } = this
     switch (key) {
       case 'delete':
-        this.del(data)
+        this.del(contextMenuTarget)
         break
       case 'collapse':
-        this.collapse(data)
+        this.collapse(contextMenuTarget as Mdata)
         break
       case 'expand':
-        this.expand(data)
+        this.expand(contextMenuTarget as Mdata)
         break
       default:
         break
@@ -754,9 +777,9 @@ export default class MindMap extends Vue {
   }
   multiSelectStart() { // 开始多选
     this.removeSelectedId()
-    this.removeMultiSelected()
 
     if (d3.event.button === 0) { // 左键
+      this.removeMultiSelected()
       console.log('multiSele')
       this.multiSeleFlag = true
       const { mouse, getViewPos } = this
