@@ -82,26 +82,17 @@ function initId(d: Mdata, id = '0') { // 初始化唯一标识：待优化
   }
 }
 
-function initLeft(d: Mdata) {
+function initLeft(d: Mdata, left = false) {
+  d.left = left
   const { children, _children } = d
   if (children) {
     for (let i = 0; i < children.length; i += 1) {
-      if (d.id !== '0') {
-        children[i].left = d.left
-      } else if (!children[i].left) {
-        children[i].left = false
-      }
-      initLeft(children[i])
+      initLeft(children[i], d.left)
     }
   }
   if (_children) {
     for (let i = 0; i < _children.length; i += 1) {
-      if (d.id !== '0') {
-        _children[i].left = d.left
-      } else if (!_children[i].left) {
-        _children[i].left = false
-      }
-      initLeft(_children[i])
+      initLeft(_children[i], d.left)
     }
   }
 }
@@ -114,7 +105,19 @@ class ImData {
     initId(this.data)
     initColor(this.data)
     initSize(this.data)
-    initLeft(this.data)
+
+    this.data.left = false
+    const { children, _children } = this.data
+    if (children) {
+      for (let i = 0; i < children.length; i += 1) {
+        initLeft(children[i], children[i].left)
+      }
+    }
+    if (_children) {
+      for (let i = 0; i < _children.length; i += 1) {
+        initLeft(_children[i], _children[i].left)
+      }
+    }
   }
 
   getSource(id = '0') {
@@ -211,8 +214,7 @@ class ImData {
     if (delId.length > 2) {
       if (!insertId) { // 左右转换
         const del = this.find(delId)
-        del.left = !del.left
-        initLeft(del)
+        initLeft(del, !del.left)
       } else if (insertId.length > 2) {
         const insert = this.find(insertId)
         const idArr = delId.split('-')
@@ -230,8 +232,7 @@ class ImData {
           }
           const del = parent.children.splice(delIndex, 1)[0]
           if (del.left !== insert.left) { // 左右转换
-            del.left = insert.left
-            initLeft(del)
+            initLeft(del, insert.left)
           }
           parent.children.splice(insertIndex + i, 0, del)
           initId(parent, parent.id)
@@ -255,7 +256,7 @@ class ImData {
             : ((np._children?.length || 0) > 0 ? np._children?.push(del) : np.children = [del])
 
           initColor(del, parentId === '0' ? colorScale(`${colorNumber += 1}`) : np.color)
-          initLeft(np)
+          initLeft(del, parentId === '0' ? del.left : np.left)
           initId(np, np.id)
           initId(delParent, delParent.id)
         }
