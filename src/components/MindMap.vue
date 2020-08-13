@@ -768,7 +768,6 @@ export default class MindMap extends Vue {
           }
         })
         if (a.b0 || a.b1) { // 存在新兄弟节点时调换节点顺序
-          console.log('drag', a.b0 || a.b1)
           const sdata = d.data
           if (a.b0 && a.n0) { // 插入在兄弟节点前面
             this.move(sdata, a.b0)
@@ -795,7 +794,6 @@ export default class MindMap extends Vue {
 
     if (d3.event.button === 0) { // 左键
       this.removeMultiSelected()
-      console.log('multiSele')
       this.multiSeleFlag = true
       const { mouse, getViewPos } = this
       const vp = getViewPos()
