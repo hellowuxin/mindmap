@@ -196,7 +196,7 @@ class ImData {
     for (let i = 0; i < arr.length; i++) {
       const idChild = arr[i]
       const idArr = idChild.split('-')
-      if (idArr.length > 2) { // 有parent
+      if (idArr.length >= 2) { // 有parent
         const delIndex = idArr.pop()
         const parent = this.find(idArr.join('-'))
         if (delIndex && parent) {
