@@ -498,7 +498,6 @@ export default class MindMap extends Vue {
       }
     })
     editP.setAttribute('contenteditable', 'false')
-    // (this.$refs.svg as HTMLElement).focus()
   }
   removeSelectedId() { // 清除选中节点
     const sele = document.getElementById('selectedNode')
@@ -654,6 +653,7 @@ export default class MindMap extends Vue {
       default:
         break
     }
+    (this.$refs.svg as HTMLElement).focus()
     this.removeSelectedId()
   }
   // 悬浮事件
