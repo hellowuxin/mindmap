@@ -646,10 +646,10 @@ export default class MindMap extends Vue {
         this.del(contextMenuTarget)
         break
       case 'collapse':
-        this.collapse(contextMenuTarget as Mdata)
+        this.collapse(contextMenuTarget)
         break
       case 'expand':
-        this.expand(contextMenuTarget as Mdata)
+        this.expand(contextMenuTarget)
         break
       default:
         break

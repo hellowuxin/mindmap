@@ -131,21 +131,25 @@ class ImData {
   }
 
   getSource(id = '0') {
-    return _getSource(this.find(id))
+    const d = this.find(id)
+    return d ? _getSource(d) : { name: '' }
   }
 
   resize(id = '0') { // 更新size
-    initSize(this.find(id))
+    const d = this.find(id)
+    if (d) {
+      initSize(d)
+    }
   }
 
   find(id: string) { // 根据id找到数据
     const array = id.split('-').map(n => ~~n)
     let data = this.data
     for (let i = 1; i < array.length; i++) {
-      if (data.children) {
+      if (data && data.children) {
         data = data.children[array[i]]
-      } else {
-        console.error('[Mindmap warn]: Error in id: No data matching id')
+      } else { // No data matching id
+        return null
       }
     }
     return data
@@ -154,8 +158,10 @@ class ImData {
   rename(id: string, name: string) { // 修改名称
     if (id.length > 0) {
       const d = this.find(id)
-      d.name = name
-      d.size = size(name, d.id === '0')
+      if (d) {
+        d.name = name
+        d.size = size(name, d.id === '0')
+      }
       return d
     }
   }
@@ -192,14 +198,12 @@ class ImData {
       const idArr = idChild.split('-')
       if (idArr.length > 2) { // 有parent
         const delIndex = idArr.pop()
-        if (delIndex) {
-          const parent = this.find(idArr.join('-'))
+        const parent = this.find(idArr.join('-'))
+        if (delIndex && parent) {
           if (parent.children) {
             parent.children[~~delIndex].id = 'del' // 更新id时删除
           }
-          if (p === undefined) {
-            p = parent
-          } else if (p.id.split('-').length > parent.id.split('-').length) {
+          if (p === undefined || (p.id.split('-').length > parent.id.split('-').length)) { // 找出最高的parent
             p = parent
           }
         }
@@ -213,17 +217,19 @@ class ImData {
   add(id: string, child: Data) { // 添加新的子节点
     if (id.length > 0) {
       const parent = this.find(id)
-      if ((parent._children?.length || 0) > 0) { // 判断是否折叠，如果折叠，展开
-        parent.children = parent._children
-        parent._children = []
+      if (parent) {
+        if ((parent._children?.length || 0) > 0) { // 判断是否折叠，如果折叠，展开
+          parent.children = parent._children
+          parent._children = []
+        }
+        const c: Mdata = JSON.parse(JSON.stringify(child))
+        parent.children ? parent.children.push(c) : parent.children = [c]
+        initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
+        initId(c, `${parent.id}-${parent.children.length - 1}`)
+        c.left = parent.left
+        initSize(c)
+        return c
       }
-      const c: Mdata = JSON.parse(JSON.stringify(child))
-      parent.children ? parent.children.push(c) : parent.children = [c]
-      initColor(c, parent.color || colorScale(`${colorNumber += 1}`))
-      initId(c, `${parent.id}-${parent.children.length - 1}`)
-      c.left = parent.left
-      initSize(c)
-      return c
     }
   }
 
@@ -231,9 +237,9 @@ class ImData {
     if (id.length > 2) {
       const idArr = id.split('-')
       const bId = idArr.pop()
-      if (bId) {
-        const pId = idArr.join('-')
-        const parent = this.find(pId)
+      const pId = idArr.join('-')
+      const parent = this.find(pId)
+      if (bId && parent) {
         const c: Mdata = JSON.parse(JSON.stringify(d))
         const pChildren = parent.children
         if (pChildren) {
@@ -252,7 +258,9 @@ class ImData {
     if (delId.length > 2) {
       if (!insertId) { // 左右转换
         const del = this.find(delId)
-        initLeft(del, !del.left)
+        if (del) {
+          initLeft(del, !del.left)
+        }
       } else if (insertId.length > 2) {
         const insert = this.find(insertId)
         const idArr = delId.split('-')
@@ -261,7 +269,7 @@ class ImData {
         const parent = this.find(pId)
         const insertIndexS = insertId.split('-').pop()
 
-        if (delIndexS && insertIndexS && parent.children) {
+        if (delIndexS && insertIndexS && insert && parent && parent.children) {
           const delIndex = ~~delIndexS
           let insertIndex = ~~insertIndexS
           // 删除时可能会改变插入的序号
@@ -284,10 +292,9 @@ class ImData {
       const np = this.find(parentId)
       const idArr = delId.split('-')
       const delIndex = idArr.pop()
-      if (delIndex) {
-        const delParentId = idArr.join('-')
-        const delParent = this.find(delParentId)
-
+      const delParentId = idArr.join('-')
+      const delParent = this.find(delParentId)
+      if (delIndex && delParent && np) {
         const del = delParent.children?.splice(~~delIndex, 1)[0] // 删除
         if (del) {
           (np.children?.length || 0) > 0 ? np.children?.push(del)
