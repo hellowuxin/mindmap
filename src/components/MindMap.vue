@@ -46,7 +46,7 @@
         <i class="redo"></i>
       </button>
     </div>
-    <div class="pop-ups" v-show="showPopUps">
+    <div id="pop-ups" class="pop-ups" v-show="showPopUps">
       <div class="layer"></div>
       <div class="content">
         <div class="exportTo">
@@ -67,7 +67,7 @@
           <div class="action">
             <div class="spacer"></div>
             <button class="cancel" @click="showPopUps=false">取消</button>
-            <button @click="exportTo(); showPopUps=false">导出</button>
+            <button @click="showPopUps=false; exportTo(); ">导出</button>
           </div>
         </div>
       </div>
@@ -82,6 +82,7 @@ import { flextree } from 'd3-flextree'
 import ImData from '../ts/ImData'
 import History from '../ts/History'
 import toMarkdown from '../ts/toMarkdown'
+import toPng from '../ts/toPng'
 
 let mmdata: ImData // 思维导图数据
 @Component
@@ -155,7 +156,7 @@ export default class MindMap extends Vue {
   ]
   optionList = [
     { title: 'JSON', icon: 'code-json', tip: '创建一个JSON格式的文本文件', color: 'purpleOpt' },
-    { title: '图像', icon: 'image', tip: '创建一个PNG格式的图像文件', color: 'greenOpt', disabled: true },
+    { title: '图像', icon: 'image', tip: '创建一个PNG格式的图像文件', color: 'greenOpt', disabled: false },
     { title: 'Markdown', icon: 'markdown', tip: '创建一个Markdown格式的文本文件', color: 'grassOpt' },
   ]
   selectedOption = 0
@@ -318,19 +319,31 @@ export default class MindMap extends Vue {
     const data = mmdata.getSource()
     let content = ''
     let filename = data.name
+    // svg to png
+    const mindmap = document.getElementById('mindmap')!
+    const width = mindmap.clientWidth + 20
+    const height = mindmap.clientHeight
+    // end svg to png
     switch (this.selectedOption) {
       case 0: // JSON
         content = JSON.stringify(data, null, 2)
         filename += '.json'
+        this.downloadFile(content, filename)
+        break
+      case 1: // png
+        if (mindmap) {
+          document.getElementById('pop-ups')!.style.display = 'none'
+          toPng(mindmap, filename, width, height)
+        }
         break
       case 2: // Markdown
         content = toMarkdown(data)
         filename += '.md'
+        this.downloadFile(content, filename)
         break
       default:
         break
     }
-    this.downloadFile(content, filename)
   }
   async makeCenter() { // 居中
     await d3.transition().end().then(() => {
@@ -1058,5 +1071,5 @@ export default class MindMap extends Vue {
 </script>
 
 <style lang="scss">
-  @import '../css/MindMap.scss'
+  @import '../css/MindMap.scss';
 </style>
