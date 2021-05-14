@@ -5,8 +5,6 @@
 > 一个由[MindNode](https://mindnode.com)启发的思维导图Vue组件，基于d3.js实现  
 > 目前实现的功能有基本的编辑、拖移、缩放、撤销、上下文菜单、折叠...
 
-在线演示：<https://mindnode.5xin.xyz/>
-
 ## 近期更新
 
 > 该项目基本不会再维护  
